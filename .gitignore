@@ -1,0 +1,20 @@
+# Build output
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+
+# Host helpers embedded into the client at build time (see justfile: helpers)
+/internal/client/helpers/*
+!/internal/client/helpers/embed.go
+!/internal/client/helpers/README.md
+
+# Notes that must never reach git history (clean-room material, private notes)
+/docs/research/private/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

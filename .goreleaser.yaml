@@ -1,0 +1,68 @@
+# Release configuration. Binary names come from APP_NAME, which the justfile and the
+# release workflow read from internal/brand, so a rename needs no change here.
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    # The client embeds the host helpers, so build them first.
+    - sh -c 'for arch in amd64 arm64; do CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags "-s -w -X {{ .Env.MODULE }}/internal/version.Version={{ .Version }}" -o internal/client/helpers/host-linux-$arch ./cmd/host; done'
+
+builds:
+  - id: host
+    main: ./cmd/host
+    binary: "{{ .Env.APP_NAME }}-host"
+    env: [CGO_ENABLED=0]
+    goos: [linux]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags: ["-s -w -X {{ .Env.MODULE }}/internal/version.Version={{ .Version }}"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: cli
+    main: ./cmd/cli
+    binary: "{{ .Env.APP_NAME }}"
+    env: [CGO_ENABLED=0]
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags: ["-s -w -X {{ .Env.MODULE }}/internal/version.Version={{ .Version }}"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: cli
+    ids: [cli]
+    formats: [tar.gz]
+    name_template: "{{ .Env.APP_NAME }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files: [LICENSE, NOTICE, README.md]
+  - id: host
+    ids: [host]
+    formats: [tar.gz]
+    name_template: "{{ .Env.APP_NAME }}-host_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files: [LICENSE, NOTICE]
+
+checksum:
+  name_template: checksums.txt
+
+sboms:
+  - artifacts: archive
+
+changelog:
+  use: github
+  filters:
+    exclude: ["^docs:", "^ci:", "^chore:"]
+
+release:
+  draft: true
+  prerelease: auto
+
+# Enable once a tap repository exists, and an Apple Developer ID is set up for notarisation.
+# homebrew_casks:
+#   - name: "{{ .Env.APP_NAME }}"
+#     ids: [cli]
+#     repository: { owner: iAmLakshya, name: homebrew-tap }
+# notarize:
+#   macos:
+#     - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'
+#       sign: { certificate: "{{.Env.MACOS_SIGN_P12}}", password: "{{.Env.MACOS_SIGN_PASSWORD}}" }
+#       notarize: { issuer_id: "{{.Env.MACOS_NOTARY_ISSUER_ID}}", key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}", key: "{{.Env.MACOS_NOTARY_KEY}}" }
