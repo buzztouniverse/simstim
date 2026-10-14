@@ -1,0 +1,280 @@
+# simstim architecture
+
+**Status:** proposed, 15 October 2026. The decisions it depends on are listed in [the plan](plan.md#8-decisions-for-the-owner).
+
+## 1. The picture
+
+```
+ Laptop: macOS or Linux                       Host: any provider, Linux
+┌──────────────────────────────┐            ┌───────────────────────────────────────────────┐
+│ Ghostty tab                  │            │ simstim-host bridge   (one per client channel)│
+│ └ simstim  (client)          │  system    │    │                                          │
+│    ├ screens: hosts,         │  OpenSSH   │    │ Unix sockets, 0600                       │
+│    │  sessions, dialogs      │ ─────────▶ │    ├─ holder "auth-refactor" ─ PTY ─ claude   │
+│    ├ attach pump (raw bytes) │  your      │    │    ├ output ring, 8 MiB, byte offsets    │
+│    ├ input filter (2 keys)   │  ssh       │    │    ├ manifest.json, status engine        │
+│    └ private ControlMaster   │  config:   │    │    └ vt child (libghostty-vt)            │
+│                              │  ProxyJump,│    ├─ holder "api-tests" ─ PTY ─ codex        │
+│ ~/.config/simstim/           │  IAP, SSM, │    └─ holder "notes" ─ PTY ─ zsh              │
+│   config.toml, hosts.toml    │  Tailscale │                                               │
+└──────────────────────────────┘            │ systemd --user: one service per session,      │
+                                            │ in simstim.slice, with memory caps            │
+                                            └───────────────────────────────────────────────┘
+```
+
+There is no daemon on the laptop and no central daemon on the host. Each session is one holder process, with a small vt child. The bridge lives only while a client is connected.
+
+## 2. Components
+
+### 2.1 Client: `simstim`
+
+One static binary (Go in the proposed design).
+
+| Part | Job |
+| --- | --- |
+| Screens | Setup wizard, host browser, session list with preview, dialogs, palette, help. They run in the alternate screen and are built with Bubble Tea v2. See [UX](ux.md). |
+| CLI | `simstim host …`, `new`, `ls`, `attach`, `kill`, `doctor`, `update`, `completion`. `--json` on every list. |
+| SSH layer | Runs the system `ssh` with a generated config. Owns a private ControlMaster per host. Opens the bridge channel. Uploads files. |
+| Attach pump | Raw mode, an output pump with a passive mode tracker, the input filter, resize forwarding, the reset list on detach. |
+| Reconnect | Heartbeat, wake detection, backoff, and resume by byte offset. |
+| Clipboard | Reads images from the local clipboard. Rewrites dropped file paths. |
+| Capability probe | One batch of terminal queries at start-up, cached per terminal. It drives simstim's own screens and `doctor`. |
+
+### 2.2 Host: `simstim-host` and `simstim-vt`
+
+Installed by the client into `~/.local/share/simstim/bin/<version>/`, with a `current` link.
+
+| Subcommand | Role | Lives for |
+| --- | --- | --- |
+| `bridge` | Speaks framed RPC on stdin and stdout to one client. Connects to holder sockets. Runs `ls`, `watch`, `new`, `kill` and uploads for that client. | One client channel |
+| `new` | Resolves the environment, writes the manifest, starts a holder as a systemd user service | Seconds |
+| `holder <id>` (internal) | Owns one session's PTY, ring, socket, manifest and status | The session |
+| `simstim-vt` (internal) | The shadow terminal. A child of the holder, restarted on a crash. | The session |
+| `attach <id>` | Raw fallback: bridges a plain `ssh -t` to one holder, for any SSH client | One attach |
+| `ls --json`, `watch --json` | Reads manifests and probes holders in parallel. `watch` streams status events as NDJSON. | Seconds, or one client |
+| `hook <event>` | Called by agent hooks. Forwards the event to the holder named in `SIMSTIM_SESSION`. | Milliseconds |
+| `kill`, `rm` | Stops the session's whole cgroup. Removes the manifest, and in v2 the worktree when it is safe. | Seconds |
+| `doctor` | Checks linger, cgroups, terminfo, agents on `PATH` and the disk, and prints fixes | Seconds |
+| `restore`, `gc` (v2) | Respawns sessions after a reboot. Cleans old binaries, dead manifests and orphan worktrees. | Run at boot, then exit |
+
+### 2.3 The agent table
+
+All agent knowledge is data, shipped with the host helper and overridable by the user.
+
+| Field | Example for Claude Code |
+| --- | --- |
+| `kind`, `binaries` | `claude`, `["claude"]` |
+| `launch_argv` | `claude --session-id {uuid} -n {name}` |
+| `resume_argv`, `continue_argv` (v2) | `claude --resume {agent_session_id}`, `claude --continue` |
+| `id_capture` | `choose` (we pick the ID), `create`, `hook`, `scan` or `none` |
+| `hooks` | `SessionStart` calls `simstim-host hook session-start`, because the ID changes on `/clear` |
+| `quirks` | For Codex: add `--no-daemon`, so its work stays inside the session |
+| `status_rules` (v1.x) | Screen rules for L3, as in Herdr's manifests |
+
+The full resume table for eight agents is in [the host runtime note](research/host-runtime.md#71-resume-commands).
+
+## 3. Flows
+
+### 3.1 Add a host
+
+1. The user picks a host from `~/.ssh/config` (resolved with `ssh -G`), or types `user@host`, with an optional jump host.
+2. simstim writes the host to its own `hosts.conf`. It never edits `~/.ssh/config`.
+3. It opens the private master and runs `uname -sm`. It checks `PATH` for an installed helper.
+4. If there is no helper, or the wrong version, it asks first, then uploads the static helper over an exec channel. It checks the SHA-256 against a signed manifest and installs into a versioned folder.
+5. A `hello` handshake exchanges the protocol version and features.
+6. `simstim-host doctor` runs:
+   - Turn on linger, or warn that sessions die at logout.
+   - Install Ghostty's terminfo (`infocmp -x xterm-ghostty | tic -x -`).
+   - Find agents through the login shell.
+   - Check cgroup delegation.
+7. The host appears in the browser with its facts: provider label, latency, CPU, memory and sessions.
+
+### 3.2 Start a session
+
+1. In the host browser, the user presses Enter on a host. A dialog asks for the agent, the folder and the name.
+2. The client sends `new` over the bridge.
+3. `simstim-host new` resolves the environment from the login shell, once, with a timeout. It adds:
+   - `TERM=xterm-ghostty` (or `xterm-256color` if the terminfo is missing);
+   - `COLORTERM=truecolor`;
+   - the client's `TERM_PROGRAM` and its version;
+   - `SIMSTIM_SESSION`.
+4. It writes the manifest and starts the holder:
+
+   ```
+   systemd-run --user --unit=simstim-s-<id> --slice=simstim.slice \
+     -p MemoryHigh=… -p MemoryMax=… -p MemorySwapMax=0 -p OOMPolicy=continue \
+     simstim-host holder <id>
+   ```
+
+5. The holder forks the PTY at the client's size and runs the agent's `launch_argv`. It starts the vt child, and opens its socket.
+6. The client attaches at once (3.3).
+
+### 3.3 Attach
+
+1. The client sends `attach{cols, rows, xpx, ypx, client_id, caps, last_offset}`.
+2. The holder decides how to catch the client up:
+   - **Same client, offset still in the ring:** it sends the raw bytes from `last_offset`. Local scrollback continues with no duplicates, and missed notifications arrive. Repeated ones are collapsed.
+   - **New client, or offset too old:** the vt child makes a snapshot at the client's size. The client prints one dim separator line, then the snapshot redraws the screen, including the kitty keyboard flags and other modes.
+3. The holder resizes the PTY and sends SIGWINCH to the foreground process group, even if the size is unchanged, so the agent repaints.
+4. Then it is pure pass-through:
+   - Output frames go straight to stdout.
+   - Input bytes go straight to the PTY, except the two filtered keys.
+   - Terminal queries from the agent go to the leader client's terminal, and only the leader's replies reach the PTY.
+
+### 3.4 Detach
+
+Triggers: the detach key, closing the tab, `simstim kill` from elsewhere, or SIGTERM.
+
+1. The client closes its attach stream, but the holder keeps running.
+2. The client writes the ordered reset list in one write, and never sends RIS (`ESC c`), which wipes Ghostty's scrollback. The list:
+   - pop the kitty keyboard flags the session pushed;
+   - turn off mouse modes (1000, 1002, 1003, 1006), focus (1004) and bracketed paste (2004);
+   - end synchronized output;
+   - show the cursor and reset its shape;
+   - reset colours (OSC 110, 111, 112) and the pointer (OSC 22);
+   - leave the alternate screen if the session entered it;
+   - reset SGR, and pop the title stack.
+
+   The full 19-step list is in [the client stack note](research/client-stack.md#22-what-to-reset-on-detach-in-order).
+3. While no client is attached, the vt child answers the agent's terminal queries from a cached profile of the last client. If the agent turned on focus reporting, the holder sends focus-out.
+
+### 3.5 Sleep and reconnect
+
+1. A heartbeat runs over the bridge: a ping every 5 s, with a 15 s deadline.
+2. On wake, the client probes at once. A timer gap much longer than the interval means the laptop slept; on macOS the client also listens for the wake event.
+3. While disconnected:
+   - the title shows "reconnecting";
+   - an OSC 9;4 progress mark appears in Ghostty;
+   - after 3 s, one banner line is drawn;
+   - keystrokes are dropped, never replayed.
+4. Reconnect tries in the background with `BatchMode`, backing off from 1 s to 30 s. If a person is needed, for example a password or FIDO touch, it says "press Enter".
+5. On success the client re-attaches with `last_offset` (3.3). The replay or snapshot redraws over the banner.
+
+### 3.6 Image paste and dropped files
+
+1. The input filter sees Ctrl+V in any encoding: legacy `0x16`, kitty CSI u (with lock bits masked and event types), or modifyOtherKeys.
+2. The client reads the local clipboard. On macOS this takes about 20 µs warm.
+   - If it holds no image, the key is passed through unchanged.
+3. If it holds an image (16 MiB at most), the client uploads it over the bridge. The holder stores it under the session's `paste/` folder, mode 0700, and deletes it after 24 hours.
+4. The client sends the remote path as one bracketed paste. Claude Code, Codex, Gemini CLI, opencode and Amp all attach an image when you paste its path. So no agent needs special code.
+5. **Dropped files:** a bracketed paste is rewritten only when every token in it is an existing local file. Each file is uploaded, and its path replaced with the remote one.
+
+### 3.7 A session ends
+
+- **The agent exits:** the holder records the exit code and signal, keeps the final screen, and marks the session `exited`. The session stays in the list until the user removes it, or respawns it in v2.
+- **Out of memory:** the cgroup's `memory.events` shows the kill, and the session is marked `errored: oom` with its last screen. The host and the other sessions are unharmed.
+
+### 3.8 Upgrade
+
+- The client and the helper upgrade independently. New sessions use the new helper, and old holders keep running their own version.
+- `hello` feature flags let a new client drive an old holder. If a feature is missing, the UI says "restart this session to get X".
+- The vt child can be upgraded live: start the new one and replay the ring.
+- In v1.x, a holder can re-exec into the new version in place and keep the PTY.
+
+### 3.9 Host reboot and respawn (v2)
+
+1. A user unit `simstimd.service` (`WantedBy=default.target`, with linger on) runs `simstim-host restore` at boot.
+2. For each manifest whose `boot_id` differs from the current boot and whose holder is gone:
+   1. start a new holder in its `cwd`;
+   2. run `resume_argv` with the stored `agent_session_id`, or `continue_argv` if the ID is unknown;
+   3. count retries, with backoff.
+3. The old screen snapshot is printed above the resumed agent. It is only used if the same pinned vt build wrote it.
+4. The session is marked `restored`. A turn that was running when the host went down is not resumed.
+
+## 4. Protocol
+
+- **Framing:** `u32` little-endian length, `u8` type, payload. Control payloads are JSON; `input` and `output` payloads are raw bytes. Every frame has a size limit.
+- **Hello first, both ways:** `{magic, protocol: "1.0", features: […], version}`.
+- **Compatibility:** message types are append-only. A peer ignores unknown types. A missing feature degrades with a clear message.
+- **Bridge to client:**
+  - `hello`, `ping`/`pong`;
+  - `hosts.info`, `ls`, `watch`/`event`, `new`, `kill`, `rename`;
+  - `upload.begin`/`upload.chunk`/`upload.end`;
+  - `attach`, `detach`, `take_size`, `input`, `resize`, `output{offset}`, `snapshot`.
+- **Holder socket:** the same `attach` family, plus `info`, `subscribe`, `hook`, `set_meta` and `kill`.
+- **Back-pressure:**
+  - Each client's buffer is capped at 4 MiB.
+  - A client that falls behind is dropped to a fresh snapshot.
+  - The holder never blocks reading the PTY.
+- **Leader rule:** the last client to type real input owns the size. Replies and mouse events do not count. A device can claim the size without typing by sending `take_size`.
+
+## 5. Terminal fidelity contract
+
+This table is the promise behind spec item 8. Every row has a test.
+
+| Feature | How simstim keeps it | Test |
+| --- | --- | --- |
+| Keys: kitty protocol, modifyOtherKeys, Shift+Enter, Option/Alt | Raw input bytes. The filter matches only two keys and never re-encodes. On reattach, the snapshot restores the kitty flags. | `simstim doctor keys`, run end to end |
+| Truecolour, styled underlines | `TERM=xterm-ghostty` with its terminfo installed on the host. `COLORTERM=truecolor`. The client's `TERM_PROGRAM` is passed through. | Fixture replay |
+| Native scrollback and Cmd+F | Output lands in the local terminal's normal screen. No RIS. Replay by offset avoids duplicates. | Manual check plus fixture |
+| OSC 52 clipboard | Passed through. Clipboard reads go to the local terminal's own prompt. | Manual |
+| OSC 8 links, OSC 9 and 777 notifications, OSC 9;4 progress | Passed through. Missed ones are collapsed into one notice on reconnect. | Fixture |
+| Synchronized output (mode 2026) | Passed through, so no flicker | Fixture |
+| Mouse, focus, bracketed paste | Passed through, and reset on detach | `x/vt` baseline after detach |
+| Terminal queries (DA, XTVERSION, OSC 10/11, kitty query) | The leader's terminal answers. With no client attached, the vt child answers from a cached profile. | Fixture with no client |
+| Resize | The leader rule, plus SIGWINCH on every attach | Manual, two devices |
+| Kitty graphics, sixel | Passed through while attached. **Not** restored on reattach. This is a known limit. | Documented |
+| Added delay per keystroke | Target: under 1 ms on the client | Performance overlay |
+
+## 6. Files and paths
+
+**Laptop:**
+
+| Path | Contents |
+| --- | --- |
+| `~/.config/simstim/config.toml` | Settings and keymap overrides, with a JSON Schema |
+| `~/.config/simstim/hosts.toml` | Saved hosts: name, SSH target, labels, optional provider block (v2) |
+| `~/.config/simstim/ssh/hosts.conf` | Generated SSH blocks for hosts added in simstim. Included by the wrapper. |
+| `~/.cache/simstim/cm/%C` | ControlMaster sockets. The path is kept under 86 bytes because of macOS. |
+| `~/.cache/simstim/helpers/<version>/<os>-<arch>/` | Static host helpers, ready to upload |
+| `~/.local/state/simstim/` | Logs, and each session's last byte offset |
+
+**Host:**
+
+| Path | Contents |
+| --- | --- |
+| `~/.local/share/simstim/bin/<version>/` and `current` | `simstim-host` and `simstim-vt` |
+| `~/.local/state/simstim/sessions/<id>/` | `manifest.json`, `paste/` (0700), screen snapshot, logs |
+| `$XDG_RUNTIME_DIR/simstim/s/<id>.sock` | Holder sockets, 0600. Falls back to `/tmp/simstim-<uid>` (0700, owner checked) without linger. |
+| `~/.local/share/simstim/worktrees/<repo>/<slug>-<id>` (v2) | Worktrees per task |
+
+## 7. Security model
+
+**Rules:**
+
+- **Nothing new listens on a host.** sshd is the only door. There is no relay and no telemetry.
+- **simstim stores no secrets.** Agent logins live on the host, scoped to that host. Fine-grained GitHub tokens should be per host.
+- **SSH agent forwarding is off by default.** If a user turns it on, the stable `SSH_AUTH_SOCK` link makes it work across reconnects. The risk is written in the docs.
+- **Helpers are released signed,** and checked by SHA-256 before install.
+- **Sockets and staged files are private:** 0600 and 0700, owner checked.
+- **Forwarded ports (v2) bind to `127.0.0.1` only.** Nothing is ever public.
+- **Untrusted host mode** filters OSC 52, OSC 8 and report sequences from the host.
+
+**Threat model, in short:**
+
+- **A compromised host** can see everything its agents can see. It cannot reach the laptop beyond the escape sequences it prints, and untrusted mode filters those.
+- **A compromised laptop** can drive every host it has keys for, as it already can through `ssh`.
+
+## 8. Providers
+
+simstim knows nothing about providers in v1. If OpenSSH can reach the host, simstim can. [The connectivity note](research/connectivity-and-providers.md#4-provider-recipes) has a ready `ssh_config` block for each recipe.
+
+| Recipe | Notes |
+| --- | --- |
+| Tailscale + plain OpenSSH | The recommended default for a VPS or a homelab. It roams best. |
+| homelab (homelab) | `ProxyJump bastion` over Tailscale. Guests have no Tailscale of their own. |
+| Plain SSH (Hetzner, DigitalOcean, Linode, Vultr) | Simple. TCP dies when the laptop's IP changes, so reconnect handles it. |
+| GCP IAP | A `gcloud` ProxyCommand. It drops after 1 hour idle, and the heartbeat keeps traffic flowing. |
+| AWS SSM, EC2 Instance Connect Endpoint | SSM is slow (about 0.6 MB/s). EICE ends every connection at 1 hour, and simstim reconnects. |
+| Azure Bastion, Cloudflare Access | Weak fits. Bastion has no ProxyCommand mode, and Cloudflare does not reconnect. |
+
+**Host size:** at least 2 vCPU and 4 GB plus swap. Comfortable: 4 vCPU, 8 GB and 80 GB of disk. One VM with many sessions beats one VM per session: about 5–6 busy Claude sessions fit in 6.5 GiB, against about 4 with a VM each.
+
+## 9. What we borrow, and from where
+
+| Source | Licence | What |
+| --- | --- | --- |
+| zmx | MIT | One process per session. Restore rules. The leader rule. Its bug list as a checklist. Restore code adapted for `simstim-vt`. |
+| Herdr | Apache-2.0 | The managed SSH config and banner skipping. Remote install with consent. The reconnect ladder and wake detection. The image paste bridge. The resume table and hooks. The agent detection manifests. Safe file writes. The pane environment clean-up. Exact files are listed in [the Herdr note](research/herdr.md#83-modules-worth-borrowing). |
+| Amp | Proprietary | **Patterns only, clean-room.** No code, prompts or assets. See [UX](ux.md). |
+| VS Code Remote, Zed | — | The login-shell environment resolution. Uploading a versioned server over SSH. |
