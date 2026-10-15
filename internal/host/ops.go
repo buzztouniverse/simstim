@@ -70,22 +70,9 @@ func expandHome(p string) string {
 
 // New starts a session and returns its row.
 func New(a NewArgs) (*SessionInfo, error) {
-	var argv []string
-	kind := a.Agent
-	agent, known := agents.Find(a.Agent)
-	switch {
-	case len(a.Argv) > 0:
-		argv = a.Argv
-		if kind == "" {
-			kind = "custom"
-		}
-	case known:
-		argv = agent.Launch
-	case a.Agent == "":
-		agent, _ = agents.Find("shell")
-		argv, kind = agent.Launch, "shell"
-	default:
-		return nil, UserError("unknown_agent", fmt.Sprintf("unknown agent %q", a.Agent), "Pick one of the listed agents, or pass a command.")
+	argv, kind, agent, known, err := pickAgent(a)
+	if err != nil {
+		return nil, err
 	}
 	cwd := expandHome(a.Cwd)
 	if st, err := os.Stat(cwd); err != nil || !st.IsDir() {
@@ -116,44 +103,9 @@ func New(a NewArgs) (*SessionInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	term := a.Term
-	if !HasTerminfo(term) {
-		term = "xterm-256color"
-	}
-	colorterm := a.ColorTerm
-	if colorterm == "" {
-		colorterm = "truecolor"
-	}
-	extra := map[string]string{
-		"TERM": term, "COLORTERM": colorterm,
-		"TERM_PROGRAM": a.TermProgram, "TERM_PROGRAM_VERSION": a.TermProgramVersion,
-		brand.Env("SESSION"): id, brand.Env("SOCK"): paths.Socket(id),
-	}
 	inline := a.Inline && known && len(a.Argv) == 0 && agent.Inline.Has()
-	if inline {
-		for k, v := range agent.Inline.Env {
-			extra[k] = v
-		}
-	}
-	env := AgentEnv(login, extra)
-	vars := map[string]string{"session_uuid": newUUID()}
-	argv = agents.Expand(argv, vars)
-	for i, s := range argv {
-		if s == "$SHELL" {
-			argv[i] = LoginShell()
-		}
-	}
-	if strings.HasPrefix(argv[0], "~/") {
-		argv[0] = expandHome(argv[0])
-	}
-	var hooks []string
-	if known && len(agent.Hooks) > 0 && len(a.Argv) == 0 {
-		hooks = hookArgs(agent.Hooks)
-		argv = append(argv, hooks...)
-	}
-	if inline {
-		argv = append(argv, agent.Inline.Args...)
-	}
+	env, term := sessionEnv(a, id, login, agent, inline)
+	argv, hooks, sessionUUID := agentArgv(argv, a, agent, known, inline)
 	if _, err := lookPath(argv[0], envValue(env, "PATH")); err != nil {
 		return nil, UserError("agent_missing", fmt.Sprintf("%s is not installed on this host", argv[0]), "Install it on the host, then try again.")
 	}
@@ -188,10 +140,90 @@ func New(a NewArgs) (*SessionInfo, error) {
 			m.Agent.Inline = agent.Inline.Args
 		}
 		if agent.IDCapture == "choose" {
-			m.Agent.AgentSessionID = vars["session_uuid"]
+			m.Agent.AgentSessionID = sessionUUID
 			m.Agent.IDSource = "chosen"
 		}
 	}
+	return startSession(m, a.Secrets)
+}
+
+// pickAgent returns the command a new session runs and its kind, and the
+// agent from the table that it runs, if any; known is true when the caller
+// named that agent.
+func pickAgent(a NewArgs) (argv []string, kind string, agent agents.Agent, known bool, err error) {
+	kind = a.Agent
+	agent, known = agents.Find(a.Agent)
+	switch {
+	case len(a.Argv) > 0:
+		argv = a.Argv
+		if kind == "" {
+			kind = "custom"
+		}
+	case known:
+		argv = agent.Launch
+	case a.Agent == "":
+		agent, _ = agents.Find("shell")
+		argv, kind = agent.Launch, "shell"
+	default:
+		return nil, "", agent, known, UserError("unknown_agent", fmt.Sprintf("unknown agent %q", a.Agent), "Pick one of the listed agents, or pass a command.")
+	}
+	return argv, kind, agent, known, nil
+}
+
+// sessionEnv returns the agent's environment: the login environment, the
+// terminal's identity, the session's own variables and those of the agent's
+// inline mode. It also returns the TERM it chose.
+func sessionEnv(a NewArgs, id string, login []string, agent agents.Agent, inline bool) (env []string, term string) {
+	term = a.Term
+	if !HasTerminfo(term) {
+		term = "xterm-256color"
+	}
+	colorterm := a.ColorTerm
+	if colorterm == "" {
+		colorterm = "truecolor"
+	}
+	extra := map[string]string{
+		"TERM": term, "COLORTERM": colorterm,
+		"TERM_PROGRAM": a.TermProgram, "TERM_PROGRAM_VERSION": a.TermProgramVersion,
+		brand.Env("SESSION"): id, brand.Env("SOCK"): paths.Socket(id),
+	}
+	if inline {
+		for k, v := range agent.Inline.Env {
+			extra[k] = v
+		}
+	}
+	return AgentEnv(login, extra), term
+}
+
+// agentArgv fills in the agent's command: its variables, the login shell,
+// the home folder, its hooks and its inline mode. It returns the command,
+// the hooks' arguments, and the session UUID it chose for the agent.
+func agentArgv(argv []string, a NewArgs, agent agents.Agent, known, inline bool) (out, hooks []string, sessionUUID string) {
+	vars := map[string]string{"session_uuid": newUUID()}
+	argv = agents.Expand(argv, vars)
+	for i, s := range argv {
+		if s == "$SHELL" {
+			argv[i] = LoginShell()
+		}
+	}
+	if strings.HasPrefix(argv[0], "~/") {
+		argv[0] = expandHome(argv[0])
+	}
+	if known && len(agent.Hooks) > 0 && len(a.Argv) == 0 {
+		hooks = hookArgs(agent.Hooks)
+		argv = append(argv, hooks...)
+	}
+	if inline {
+		argv = append(argv, agent.Inline.Args...)
+	}
+	return argv, hooks, vars["session_uuid"]
+}
+
+// startSession saves a new session's manifest, starts its holder, hands the
+// holder the secrets and waits for the agent to start. It returns the
+// session's row.
+func startSession(m *Manifest, secrets map[string]api.Secret) (*SessionInfo, error) {
+	id := m.ID
 	if err := paths.EnsurePrivateDir(paths.SessionDir(id)); err != nil {
 		return nil, err
 	}
@@ -201,7 +233,7 @@ func New(a NewArgs) (*SessionInfo, error) {
 	if err := launchHolder(m); err != nil {
 		return nil, UserError("start_failed", err.Error(), "Check the session log with the host doctor.")
 	}
-	if err := deliverSecrets(id, a.Secrets); err != nil {
+	if err := deliverSecrets(id, secrets); err != nil {
 		_ = deleteSession(id, &DeleteResult{})
 		return nil, UserError("secrets_failed", "the session could not get its secrets, so it was removed", "Try again.")
 	}

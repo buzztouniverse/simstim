@@ -32,61 +32,81 @@ func Folders(prefix string, limit int) FoldersResult {
 		return p
 	}
 	res := FoldersResult{Matches: []string{}, Recent: []string{}, Repos: []string{}}
-
 	if prefix != "" {
-		full := expandHome(prefix)
-		dir, base := full, ""
-		if !strings.HasSuffix(prefix, "/") {
-			dir, base = filepath.Dir(full), filepath.Base(full)
+		res.Matches = folderMatches(res.Matches, prefix, limit, tilde)
+	}
+	res.Recent = recentFolders(res.Recent, tilde)
+	res.Repos = gitRepos(res.Repos, home, limit, tilde)
+	sort.Strings(res.Repos)
+	return res
+}
+
+// folderMatches adds to out the folders that complete prefix, up to limit.
+func folderMatches(out []string, prefix string, limit int, tilde func(string) string) []string {
+	full := expandHome(prefix)
+	dir, base := full, ""
+	if !strings.HasSuffix(prefix, "/") {
+		dir, base = filepath.Dir(full), filepath.Base(full)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return out
+	}
+	for _, e := range entries {
+		name := e.Name()
+		if !strings.HasPrefix(name, base) || (strings.HasPrefix(name, ".") && !strings.HasPrefix(base, ".")) {
+			continue
 		}
-		if entries, err := os.ReadDir(dir); err == nil {
-			for _, e := range entries {
-				name := e.Name()
-				if !strings.HasPrefix(name, base) || (strings.HasPrefix(name, ".") && !strings.HasPrefix(base, ".")) {
-					continue
-				}
-				p := filepath.Join(dir, name)
-				if st, err := os.Stat(p); err == nil && st.IsDir() {
-					res.Matches = append(res.Matches, tilde(p)+"/")
-				}
-				if len(res.Matches) >= limit {
-					break
-				}
-			}
+		p := filepath.Join(dir, name)
+		if st, err := os.Stat(p); err == nil && st.IsDir() {
+			out = append(out, tilde(p)+"/")
+		}
+		if len(out) >= limit {
+			break
 		}
 	}
+	return out
+}
 
-	// Folders of recent sessions, newest first (worktrees count as their repository).
-	if list, err := List(); err == nil {
-		seen := map[string]bool{}
-		for _, s := range list {
-			d := s.Cwd
-			if m, err := LoadManifest(s.ID); err == nil && m.Git != nil {
-				d = m.Git.RepoRoot
-			}
-			if t := tilde(d); !seen[t] {
-				seen[t] = true
-				res.Recent = append(res.Recent, t)
-			}
-			if len(res.Recent) >= 8 {
-				break
-			}
+// recentFolders adds to out the folders of recent sessions, newest first, up
+// to 8. A worktree counts as its repository.
+func recentFolders(out []string, tilde func(string) string) []string {
+	list, err := List()
+	if err != nil {
+		return out
+	}
+	seen := map[string]bool{}
+	for _, s := range list {
+		d := s.Cwd
+		if m, err := LoadManifest(s.ID); err == nil && m.Git != nil {
+			d = m.Git.RepoRoot
+		}
+		if t := tilde(d); !seen[t] {
+			seen[t] = true
+			out = append(out, t)
+		}
+		if len(out) >= 8 {
+			break
 		}
 	}
+	return out
+}
 
-	// Git repositories under home, three levels deep, within a small time budget.
+// gitRepos adds to out the git repositories under home, three levels deep,
+// up to limit, within a small time budget.
+func gitRepos(out []string, home string, limit int, tilde func(string) string) []string {
 	deadline := time.Now().Add(300 * time.Millisecond)
 	skip := map[string]bool{"node_modules": true, "vendor": true, "target": true, "dist": true, "build": true}
 	var walk func(dir string, depth int)
 	walk = func(dir string, depth int) {
-		if depth > 3 || len(res.Repos) >= limit || time.Now().After(deadline) {
+		if depth > 3 || len(out) >= limit || time.Now().After(deadline) {
 			return
 		}
 		if dir == paths.DataDir() || dir == paths.StateDir() {
 			return
 		}
 		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil && dir != home {
-			res.Repos = append(res.Repos, tilde(dir))
+			out = append(out, tilde(dir))
 			return
 		}
 		entries, err := os.ReadDir(dir)
@@ -102,6 +122,5 @@ func Folders(prefix string, limit int) FoldersResult {
 		}
 	}
 	walk(home, 0)
-	sort.Strings(res.Repos)
-	return res
+	return out
 }
