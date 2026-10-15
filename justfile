@@ -31,7 +31,14 @@ helpers:
 vt:
     #!/usr/bin/env sh
     set -eu
-    (cd vt && zig build linux)
+    # Zig fetches Ghostty's dependencies on the first build; a download can
+    # fail now and then, so try three times before giving up.
+    for try in 1 2 3; do
+        (cd vt && zig build linux) && break
+        [ "$try" -lt 3 ] || exit 1
+        echo "zig build failed; trying again in $((try * 10)) s" >&2
+        sleep $((try * 10))
+    done
     for arch in amd64 arm64; do
         cp vt/zig-out/linux/shadow-vt-$arch {{helpers}}/vt-linux-$arch
     done
