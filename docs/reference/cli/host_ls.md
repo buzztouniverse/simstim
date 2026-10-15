@@ -6,17 +6,17 @@ title: "simstim host ls"
 
 List hosts
 
-```
+```text
 simstim host ls [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for ls
       --json   print JSON
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

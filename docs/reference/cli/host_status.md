@@ -6,16 +6,16 @@ title: "simstim host status"
 
 Ask the provider script whether the host is running
 
-```
+```text
 simstim host status <name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for status
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

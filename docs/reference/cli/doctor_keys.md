@@ -6,22 +6,22 @@ title: "simstim doctor keys"
 
 Show every key as the terminal sends it, and which keys simstim keeps
 
-### Synopsis
+## Synopsis
 
 Turns on the kitty keyboard protocol, then prints each key press as bytes.
 To check the path to a host, start a session that runs the same tester there:
   simstim new <host> -- simstim-host keytest
 
-```
+```text
 simstim doctor keys [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for keys
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim doctor](doctor.md)	 - Check this machine and its terminal
+* [simstim doctor](doctor.md)     - Check this machine and its terminal

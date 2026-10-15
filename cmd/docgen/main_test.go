@@ -11,7 +11,7 @@ import (
 
 func TestPageName(t *testing.T) {
 	for in, want := range map[string]string{
-		brand.Name:                  "index.md",
+		brand.Name:                  "_index.md",
 		brand.Name + " host":        "host.md",
 		brand.Name + " host add":    "host_add.md",
 		brand.Name + " config path": "config_path.md",
@@ -50,7 +50,7 @@ func TestRunIsStable(t *testing.T) {
 	if second := snapshot(t, dir); second != first {
 		t.Error("a second run changed the pages")
 	}
-	for _, f := range []string{"config.md", "keymap.md", "agents.md", "cli/index.md", "cli/host_add.md"} {
+	for _, f := range []string{"config.md", "keymap.md", "agents.md", "cli/_index.md", "cli/host_add.md"} {
 		b, err := os.ReadFile(filepath.Join(dir, f))
 		if err != nil || !strings.Contains(string(b), "Do not edit by hand") {
 			t.Errorf("%s: missing or not marked generated", f)

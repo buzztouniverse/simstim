@@ -4,7 +4,7 @@ How the client, the host helper and the shadow terminal fit together, and how a 
 
 ## 1. The picture
 
-```
+```text
  Laptop: macOS or Linux                       Host: any provider, Linux
 ┌──────────────────────────────┐            ┌───────────────────────────────────────────────┐
 │ Ghostty tab                  │            │ simstim-host bridge   (one per client channel)│
@@ -115,7 +115,7 @@ The full resume table for eight agents is in [the host runtime note](../research
    - `SIMSTIM_SESSION`.
 4. It writes the manifest and starts the holder:
 
-   ```
+   ```text
    systemd-run --user --unit=simstim-s-<id> --slice=simstim.slice \
      -p MemoryHigh=… -p MemoryMax=… -p MemorySwapMax=0 -p OOMPolicy=continue \
      simstim-host holder <id>

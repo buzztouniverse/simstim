@@ -6,16 +6,16 @@ title: "simstim host rm"
 
 Forget a host (its sessions keep running)
 
-```
+```text
 simstim host rm <name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for rm
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

@@ -6,16 +6,16 @@ title: "simstim doctor terminal"
 
 Ask this terminal what it supports (keys, colours, synchronized output…)
 
-```
+```text
 simstim doctor terminal [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for terminal
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim doctor](doctor.md)	 - Check this machine and its terminal
+* [simstim doctor](doctor.md)     - Check this machine and its terminal

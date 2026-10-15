@@ -1,0 +1,22 @@
+# External link checks (scripts/docs-check.sh --external, and CI on main).
+max_retries = 3
+retry_wait_time = 5
+timeout = 30
+max_concurrency = 16
+accept = [200, 203, 204, 206, 301, 302, 307, 308, 429]
+cache = true
+max_cache_age = "3d"
+# Sites that refuse automated requests, or need a login, and the repository
+# itself while it is private.
+exclude = [
+  "^https?://(www\\.|old\\.)?reddit\\.com",
+  "^https?://(www\\.)?(x|twitter)\\.com",
+  "^https?://(www\\.)?linkedin\\.com",
+  "^https?://github\\.com/iAmLakshya/",
+  "^https?://claude\\.ai/",
+  "^https?://(www\\.)?npmjs\\.com",
+  "^https?://localhost",
+  "^https?://127\\.0\\.0\\.1",
+  "example\\.(com|org|net)",
+]
+exclude_path = ["docs/research/private", "private", "build"]

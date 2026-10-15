@@ -233,6 +233,7 @@ Orbs show what people value in remote sessions: zero setup, sessions that surviv
 Each pattern has three parts: what Amp does, why it works, and where it fits in simstim. The simstim screens are: the setup wizard, the host browser, the session list, attach and detach, notifications, and errors.
 
 **P1. One anchor box that carries status in its border.**
+
 - Amp: the prompt box is the only fixed element. Its border holds the mode (top-right), the cost (top-right), live status (bottom-left: "Thinking 78 tok", "Running tools", "Enter to steer") and the location (bottom-right: "~/code/app (main)" or "In the Orb (tucan)").
 - Why it works: there is no separate status bar, the eye has one place to look, and the frame changes when the state changes.
 - simstim:
@@ -240,11 +241,13 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - Do **not** draw this frame while attached. The agent owns the whole screen there.
 
 **P2. Dialogs with the title in the top border and hints in the bottom border.**
+
 - Amp: "I scanned the project. Which improvement should I implement?" sits in the top border. "Enter submit · Esc cancel" sits in the bottom border. Key names are in an accent colour, verbs are dim, and a middle dot separates them. The background is dimmed.
 - Why it works: the dialog is compact and the keys are always visible. Every dialog looks the same, so users learn it once.
 - simstim: use this for every confirmation and form: "Kill session `api-refactor` on gcp-dev?", the add-host fields, and rename. Use the same hint grammar everywhere: `Enter confirm · Esc cancel · Tab next field`.
 
 **P3. A command palette instead of slash commands.**
+
 - Amp: Ctrl+O (and `/`) opens a fuzzy palette. Rows read "category action". Bindings are right-aligned. Entries can take context from what is selected (`prompt queue prompt "then run the build"`). Plugins add entries.
 - Why it works: you can always find every action. You do not have to remember syntax, and the palette teaches the shortcuts.
 - simstim:
@@ -253,6 +256,7 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - Plain `simstim` with no arguments should open on this model.
 
 **P4. A welcome or empty state that teaches the three things you need.**
+
 - Amp: an animated orb, "Welcome to Amp", "ctrl+o for commands", "? for shortcuts", and one "NEW:" line.
 - Why it works: it is calm and it shows exactly the next step. The "NEW" line announces changes without a changelog popup.
 - simstim:
@@ -261,11 +265,13 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - One "NEW:" line after an update.
 
 **P5. Fold the steps and show the outcome ("Less Noise").**
+
 - Amp: tool steps fold to one line ("✓ Edited 2 files +28 -3 ▸"), and Alt+T expands them. The reason given is that people run many agents and care about the result.
 - Why it works: you can scan the screen, and the detail is one key away.
 - simstim: each session row is one line: name, agent, host, state, last activity, and a short tail of recent output or the agent's title. Space expands a preview of the last screen, like Amp's Agents Panel. Enter attaches.
 
 **P6. A list with keys that do one job each (Amp's Agents Panel, January 2026).**
+
 - Amp: `j`/`k` or arrows to move, Space to expand the last message, Enter to open, `e` to archive or unarchive, Esc to switch focus between the list and an input that starts a new thread.
 - Why it works: the keys are vim-like and need no mode, so the list and creating a new item feel like one place.
 - simstim: use this as the session list keymap:
@@ -274,6 +280,7 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - Group the rows the way the Amp web sidebar does: "Running", "Waiting for input", "Idle", "Exited", with relative ages ("6m", "2h").
 
 **P7. Chips and pickers to set up new work (the Amp web runner picker).**
+
 - Amp: the new-thread box has chips for the machine ("mac-mini"), the folder and the mode ("medium"). The folder picker (Ctrl+J) lists name, origin badge ("GitHub", "Amp") and path. A Tab toggle chooses "Current" or "New Worktree".
 - Why it works: it takes three choices, each with a good default, and Tab cycles a binary choice without a menu.
 - simstim: the new-session flow is Host ▸ Folder ▸ Agent ▸ (Current folder | New worktree).
@@ -281,6 +288,7 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - The agent picker lists the agents found on the host (claude, codex, opencode, gemini, amp, shell), each with its version.
 
 **P8. Always show where the work runs.**
+
 - Amp: the prompt border says "In the Orb (tucan)". The web shows "● Connected Amp CLI · /path · main". The Mac app shows "This Mac" in the runner picker. `--executor local|orb|runner:<id>` makes the choice explicit.
 - Why it works: remote and local look the same, so a label stops mistakes.
 - simstim:
@@ -289,11 +297,13 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - Pass the agent's own OSC title through in a way the user can see, for example in the session name column.
 
 **P9. Set the terminal title.**
+
 - Amp: "amp - <thread title> - <cwd>", with a spinner glyph while it works.
 - Why it works: Ghostty tabs become a status display at no cost.
 - simstim: set the title in the browser and list. While attached, let the agent's own title through, or prefix it, as the user chooses.
 
 **P10. A keymap with a leader key, chords and double-press guards.**
+
 - Amp: Ctrl+X is the leader. Destructive actions need a double press (Ctrl+C Ctrl+C to quit, Esc Esc to interrupt). JSON settings take chords, arrays add keys, and `null` unbinds. `amp config keymap` prints everything.
 - Why it works: few clashes with other keys, hard to quit by accident, and the user stays in control.
 - simstim:
@@ -302,16 +312,19 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - Ship `simstim keymap` to print the map.
 
 **P11. Write down what the terminal and multiplexer need.**
+
 - Amp: the docs name the terminals that support Shift+Enter, give the exact tmux `extended-keys` lines, and say Amp can set them up for you.
 - Why it works: it heads off the most common "my key does nothing" bug report.
 - simstim: the owner wants agent TUIs exactly as if they were local in Ghostty. Whatever simstim uses on the host must pass through extended keys (or the kitty keyboard protocol), true colour, OSC 8 links, OSC 52 clipboard and focus events. Check each one with `simstim doctor` and fix them on the host on its own, without the user asking. Amp's docs do not cover the kitty protocol or true colour, so simstim can do better here.
 
 **P12. Leave multiplexing to the terminal.**
+
 - Amp: removed its TUI sidebar because doing its own multiplexing on top of terminal tabs and panes was poor UX.
 - Why it works: Ghostty already has excellent tabs and splits.
 - simstim: attach mode is a clean full-screen passthrough. To watch two sessions, open two Ghostty tabs or splits, each running `simstim attach <id>`. Keep the session list as a fast, separate screen to switch from, not a frame around the agent.
 
 **P13. Start in the background and print a handle.**
+
 - Amp: `amp -ox "…"` creates a thread, prints its URL and exits. `amp threads continue T-…` attaches later. `--stream-json` streams JSON until the turn ends.
 - Why it works: it fits scripts and fits "send the prompt, close the laptop".
 - simstim:
@@ -320,21 +333,25 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - `simstim ls --json` lists sessions as JSON.
 
 **P14. Behave well when not on a TTY.**
+
 - Amp: execute mode turns on when stdout is redirected. Piped stdin becomes the prompt. `--timings` goes to stderr, so stdout stays clean. `--stream-json` prints JSONL.
 - Why it works: the same binary works by hand and in scripts.
 - simstim: when stdout is not a TTY, print plain text or JSON and no TUI. Respect `NO_COLOR`. Put diagnostics on stderr. Pick stable exit codes, and document them.
 
 **P15. An installer that is polite and safe.**
+
 - Amp: one line to install. It checks the TTY, `NO_COLOR` and UTF-8, with ASCII fallbacks. It shows step glyphs, checks prerequisites, verifies SHA-256, stages the file and then moves it into place in one step, asks before editing the shell profile, and supports a pinned version. There is a Homebrew tap that downloads the same binaries.
 - Why it works: it builds trust and does not surprise the user.
 - simstim: copy all of it for the setup wizard's first step and for `install.sh`. Also turn on signature checking, which Amp's script has commented out. Publish a Homebrew tap from the start, since macOS comes first.
 
 **P16. Updates that never break running work.**
+
 - Amp: runners update in the background but restart only when no thread is running, at most every 12 hours, and keep their flags. Clients warn or auto-update according to `amp.updates.mode`.
 - Why it works: an update never cuts off a running agent.
 - simstim: this is a hard rule for simstim. Updating the client or the host helper must never kill a session. Design the session process so that it outlives the helper. Offer `updates.mode = auto | warn | off`.
 
 **P17. Lifecycle hooks with timeouts and logs.**
+
 - Amp: `.agents/setup` runs once per snapshot, must be idempotent, and is stopped after 20 minutes. `.agents/resume` runs after each wake, gets 10 seconds, and does not block. Each logs to a fixed path (`~/.cache/amp/logs/setup.log` and `resume.log`).
 - Why it works: setup becomes predictable, and when it fails you know where to look.
 - simstim:
@@ -343,11 +360,13 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - Each with a timeout and a log at a known path, which the wizard and `simstim doctor` print on failure.
 
 **P18. Notifications that respect attention.**
+
 - Amp: a sound when a task completes or needs input. Over SSH, or with `AMP_FORCE_BEL`, it uses the terminal bell. The apps send "ready for your next message" and never notify for the thread you are viewing. You can turn them off while the app is in front.
 - Why it works: you get the signal without the noise.
 - simstim: when a detached session rings the bell or emits an OSC 9 or OSC 777 notification, or goes from "busy" to "quiet" for N seconds, raise a local notification. Ghostty shows OSC 9 and 777 as desktop notifications. Never notify for the session you are attached to. Mark the state in the list as "waiting".
 
 **P19. Error and doctor UX.**
+
 - Amp: error and warning glyphs in the installer. Inline red exit codes, for example "(exit code: 127)". The installer prints the exact `export PATH=…` line to add. `amp mcp doctor` explains "awaiting approval". When orbs are paced, the thread shows the estimated wait instead of failing.
 - Why it works: every error says what happened and what to do next.
 - simstim:
@@ -356,16 +375,19 @@ Each pattern has three parts: what Amp does, why it works, and where it fits in 
   - An exited session shows its exit code inline.
 
 **P20. Stable IDs, archive versus delete, labels.**
+
 - Amp: `T-…` IDs. Archive keeps the history and stops the orb. Delete removes it. Labels and snooze.
 - Why it works: cleaning up is safe, and you can always refer to a session.
 - simstim: give each session a short, stable ID and a name the user can change. "Kill" ends the process. "Hide" or "archive" keeps a record and the scrollback log of an exited session. Rows can carry labels.
 
 **P21. Opinionated choices, sometimes taken too far.**
+
 - Amp: removed themes, the sidebar, editor extensions, handoff, Amp Tab and public threads, each with a public reason.
 - Why it works: fewer features, each done well, and users trust a team that explains its cuts.
 - simstim: keep the scope small. But the owner's rule is "no compromise on keybindings or visuals", so simstim must never remove the ability to rebind keys or to fit the user's terminal theme.
 
 **P22. Colour that fits the user's terminal.**
+
 - Amp: the official screenshots appear to take on the terminal's palette (Gruvbox in May 2026), with accents in amber, teal, green and red, and dim grey for secondary text. **UNVERIFIED.**
 - Why it works: the TUI looks native in any theme.
 - simstim: use ANSI palette roles (fg, bg, dim, accent, success, warning, error) for all chrome, so it matches the user's Ghostty theme. Use 24-bit colour only for small decorative accents. Test on light and dark themes.

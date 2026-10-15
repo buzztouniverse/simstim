@@ -4,6 +4,7 @@
 //
 //	go run ./cmd/docgen                       # docs/reference
 //	go run ./cmd/docgen -man build/man -completions build/completions
+//	go run ./cmd/docgen -site build/site      # the docs site's content
 package main
 
 import (
@@ -18,8 +19,13 @@ func main() {
 	out := flag.String("out", "docs/reference", "where to write the reference pages")
 	man := flag.String("man", "", "also write man pages into this folder")
 	comp := flag.String("completions", "", "also write shell completions into this folder")
+	site := flag.String("site", "", "also write the docs site's content and static files into this folder")
 	flag.Parse()
-	if err := run(*out, *man, *comp); err != nil {
+	err := run(*out, *man, *comp)
+	if err == nil && *site != "" {
+		err = sitePages("docs", *site)
+	}
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "docgen:", err)
 		os.Exit(1)
 	}

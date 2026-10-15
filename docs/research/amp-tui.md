@@ -38,7 +38,7 @@ This note is clean-room. It describes what Amp's terminal UI looks like and how 
   - Dialogs queue: they never stack.
 - **The command palette.** Inside the frame, top to bottom:
   - a blank row;
-  - `> ` and a block cursor;
+  - `>` and a block cursor;
   - a blank row;
   - the rows.
 

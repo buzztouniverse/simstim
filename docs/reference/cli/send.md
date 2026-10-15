@@ -6,23 +6,23 @@ title: "simstim send"
 
 Type text into a session without attaching, then press Enter
 
-```
+```text
 simstim send <host>/<session> <text> [flags]
 ```
 
-### Examples
+## Examples
 
-```
+```text
   simstim send my-vps/auth-fix "run the tests and fix what fails"
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help       help for send
       --no-enter   do not press Enter after the text
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

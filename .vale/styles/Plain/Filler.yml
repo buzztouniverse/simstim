@@ -1,0 +1,12 @@
+# Words that add nothing, or that make a reader feel slow.
+extends: existence
+message: "Leave out '%s'."
+level: warning
+ignorecase: true
+tokens:
+  - simply
+  - obviously
+  - clearly
+  - basically
+  - of course
+  - easily

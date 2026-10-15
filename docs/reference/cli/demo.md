@@ -6,17 +6,17 @@ title: "simstim demo"
 
 Try the launcher with sample hosts and sessions (nothing connects anywhere)
 
-```
+```text
 simstim demo [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
       --empty   start with no hosts, as on the first run
   -h, --help    help for demo
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

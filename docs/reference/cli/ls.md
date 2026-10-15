@@ -6,18 +6,18 @@ title: "simstim ls"
 
 List sessions on every host
 
-```
+```text
 simstim ls [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help          help for ls
       --host string   only this host
       --json          print JSON
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

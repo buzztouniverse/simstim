@@ -99,14 +99,14 @@ Environment variables: `SHELL`, `ZMX_DIR`, `ZMX_SESSION`, `ZMX_SESSION_PREFIX`, 
 
 One line per session, tab-separated `key=value` fields, sorted by name (`util.zig` `writeSessionLine`):
 
-```
+```text
 name=dev<TAB>pid=123<TAB>clients=2<TAB>created=1789495314<TAB>cwd=/home/u/src<TAB>cmd=claude<TAB>ended=…<TAB>exit_code=…<TAB>label1=v1
 ```
 
 - `cwd`, `cmd`, `ended` and `exit_code` appear only when set. `ended` and `exit_code` exist only for `run` tasks.
 - Labels follow as more `k=v` fields in the same key space. Only `name`, `start_dir` and `cmd` are reserved, so a label called `pid` or `cwd` would collide.
 - Label keys and values may hold only `[A-Za-z0-9._-]`: no spaces, no slashes, no colons.
-- When `ZMX_SESSION` is set, each line starts with `→ ` (current session) or two spaces.
+- When `ZMX_SESSION` is set, each line starts with `→` (current session) or two spaces.
 - A session that does not answer prints `name=x<TAB>err=Timeout<TAB>status=unreachable`. A refused socket prints `status=cleaning up`, and zmx deletes it.
 - `cmd` and `cwd` come from fixed 256-byte fields in the `Info` reply. A longer `cmd` is cut and ends in `...`.
 - `created` is Unix seconds. There is no last-activity field and no status field. `clients` counts every connected socket, including `tail` clients.
@@ -428,6 +428,7 @@ Sources: the systemd source tree and man pages (October 2026), distro packaging,
 ### 6.2 One unit per session
 
 - **Use a transient service per session.** Its parent is the user manager, not the SSH session, so stopping a terminal's service (zmx #226) or logging out does not touch it.
+
   ```sh
   systemd-run --user --unit=simstim-s-<id> --slice=simstim.slice --collect \
     -p Type=exec -p KillMode=control-group -p OOMPolicy=continue \
@@ -435,6 +436,7 @@ Sources: the systemd source tree and man pages (October 2026), distro packaging,
     --working-directory=<dir> --setenv=K=V ... \
     -- simstim-host holder <id> -- <agent argv>
   ```
+
 - **The unit gets a clean environment.** It does not inherit the caller's. Pass the agent's environment explicitly (see 9.6).
 - **Why not `--scope`?** A scope keeps the caller's parent and environment. Scopes gained `OOMPolicy=` only in systemd v253. Before that, and by default today (`DefaultOOMPolicy=stop`), an OOM kill of the agent also stops the scope, which kills the holder and loses the screen.
 - **Change limits live:** `systemctl --user set-property --runtime simstim-s-<id>.service MemoryMax=12G`.
@@ -825,12 +827,14 @@ These claims come from reading code or docs, or from estimates. I did not test t
 ## Sources
 
 **zmx**
+
 - github.com/neurosnap/zmx at 2d23c0d. Files read: `README.md`, `CHANGELOG.md`, `src/ipc.zig`, `src/loop.zig`, `src/main.zig`, `src/util.zig`, `src/daemonize.zig`, `src/cfg.zig`, `src/label.zig` and `build.zig`.
 - Issues #14, #76, #127, #182, #211, #215, #220, #221, #226, #246, #247, #249, #259, #264, #267 and #268.
 - PRs #243, #265 and #271.
 - Release binaries from zmx.sh/a/.
 
 **Ghostty and libghostty-vt**
+
 - github.com/ghostty-org/ghostty at ad97d331: `include/ghostty/vt.h`, `include/ghostty/vt/terminal.h`, `formatter.h`, `snapshot.h`, `src/terminal/Terminal.zig` (`fullReset`) and `src/terminal/Screen.zig` (`reset`).
 - PRs #13394, #13524, #14560, #14670, #14711 and #12182.
 - `.github/workflows/release-tip.yml`.
@@ -838,6 +842,7 @@ These claims come from reading code or docs, or from estimates. I did not test t
 - mitchellh.com posts "Libghostty Is Coming", "Ghostty Is Leaving GitHub" and the OSC 7501 post.
 
 **Bindings and alternatives**
+
 - github.com/mitchellh/go-libghostty
 - github.com/Uzaaft/libghostty-rs and crates.io/crates/libghostty-vt
 - herdr's `crates/ghostty-vt`, `scripts/vendor_libghostty_vt.py` and `src/server/handoff.rs`
@@ -846,6 +851,7 @@ These claims come from reading code or docs, or from estimates. I did not test t
 - github.com/charmbracelet/x (vt) and github.com/vito/midterm
 
 **Status detection**
+
 - herdr 916fcf8: `src/detect/`, `src/pane/osc.rs`, CHANGELOG and docs
 - agent-deck 8d0f1fe: `internal/tmux/tmux.go` and `cmd/agent-deck/hook_handler.go`
 - Agent of Empires d3c5fb6: `src/tmux/detect/` and `src/agents.rs`
@@ -856,6 +862,7 @@ These claims come from reading code or docs, or from estimates. I did not test t
 - Claude Code docs: terminal-config, hooks, settings, cli-reference, sessions and agent-view
 
 **Host lifecycle**
+
 - systemd source and man pages (October 2026): `systemd.resource-control`, `systemd-run`, `systemd.scope`, `systemd.service`, `logind.conf`, `loginctl`, `units/user@.service.in`, NEWS, and `src/core/scope.c` at v252
 - man7.org pam_systemd(8) and getrlimit(2)
 - Distro packaging: Debian, Ubuntu, Fedora and Arch systemd rules
@@ -867,6 +874,7 @@ These claims come from reading code or docs, or from estimates. I did not test t
 - OpenRC NEWS
 
 **Resume and worktrees**
+
 - Claude Code: code.claude.com/docs/en/cli-reference, sessions and worktrees
 - openai/codex rust-v0.162.1
 - anomalyco/opencode v1.19.0 and `main`

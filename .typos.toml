@@ -1,0 +1,34 @@
+# Spelling checks for the docs (`just docs-check`, and CI). British English.
+[files]
+extend-exclude = ["CODE_OF_CONDUCT.md", "docs/research/private/", "*.golden", "*.svg", "go.sum", "vt/", "internal/tui/testdata/"]
+
+[default]
+locale = "en-gb"
+extend-ignore-re = [
+  # Code, URLs and hashes are not prose.
+  "`[^`\\n]+`",
+  "https?://\\S+",
+  "\\b[0-9a-f]{7,64}\\b",
+  # Environment variables and constants, such as NO_COLOR.
+  "\\b[A-Z][A-Z0-9]*_[A-Z0-9_]+\\b",
+  # Quotes from sources keep their own spelling.
+  "\"[^\"\\n]{4,}\"",
+]
+
+[default.extend-words]
+# Names of projects, products and tools.
+intoto = "intoto"
+ratatui = "ratatui"
+tucan = "tucan"
+als = "als"              # Azure B2als
+pn = "pn"                # Fly's 6PN network
+modernize = "modernize"  # a linter
+labeler = "labeler"      # a GitHub action
+labelers = "labelers"
+center = "center"        # Notification Center
+# Terms of art that keep their US spelling.
+artifact = "artifact"    # GitHub Actions artifacts
+artifacts = "artifacts"
+synchronized = "synchronized"  # the terminal's synchronized output mode
+dialog = "dialog"
+dialogs = "dialogs"

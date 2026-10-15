@@ -1,0 +1,35 @@
+{{- /*
+  Links in docs/ are relative paths to Markdown files, so they work on
+  GitHub. On the site:
+  - a link to a page becomes the page's URL; README.md means its section;
+  - a link to any other file in the repository goes to it on GitHub.
+*/ -}}
+{{- $dest := .Destination -}}
+{{- $url := urls.Parse $dest -}}
+{{- $fragment := cond (ne $url.Fragment "") (printf "#%s" $url.Fragment) "" -}}
+{{- $local := and $dest (not $url.IsAbs) (not (hasPrefix $dest "#")) (not (hasPrefix $dest "/")) (not (hasPrefix $dest "mailto:")) -}}
+{{- if $local -}}
+  {{- $resolved := false -}}
+  {{- if strings.HasSuffix $url.Path ".md" -}}
+    {{- $p := path.Join .PageInner.File.Dir (strings.TrimSuffix ".md" $url.Path) -}}
+    {{- if in (slice "README" "_index") (path.Base $p) -}}
+      {{- $p = path.Dir $p -}}
+    {{- end -}}
+    {{- with .PageInner.GetPage (printf "/%s" (strings.TrimPrefix "./" $p)) -}}
+      {{- $dest = printf "%s%s" .RelPermalink $fragment -}}
+      {{- $resolved = true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $resolved -}}
+    {{- $repoPath := path.Clean (path.Join "docs" .PageInner.File.Dir $url.Path) -}}
+    {{- if hasPrefix $repoPath "docs/images/" -}}
+      {{- $dest = relURL (strings.TrimPrefix "docs/" $repoPath) -}}
+    {{- else -}}
+      {{- $kind := cond (strings.HasSuffix $url.Path "/") "tree" "blob" -}}
+      {{- $dest = printf "%s/%s/main/%s%s" site.Params.repo $kind $repoPath $fragment -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $external := strings.HasPrefix $dest "http" -}}
+<a href="{{ $dest | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if $external }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>
+{{- /* */ -}}

@@ -6,16 +6,16 @@ title: "simstim kill"
 
 Stop a session and remove it
 
-```
+```text
 simstim kill <host>/<session> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for kill
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

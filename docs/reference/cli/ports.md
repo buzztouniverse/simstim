@@ -6,16 +6,16 @@ title: "simstim ports"
 
 List the TCP ports a session's processes listen on
 
-```
+```text
 simstim ports <host>/<session> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for ports
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

@@ -6,16 +6,16 @@ title: "simstim host start"
 
 Start the host through its provider script
 
-```
+```text
 simstim host start <name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for start
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

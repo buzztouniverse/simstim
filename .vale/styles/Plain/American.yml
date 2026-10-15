@@ -1,0 +1,8 @@
+# British spelling for the words typos does not know as American.
+extends: substitution
+message: "Use British spelling: '%s', not '%s'."
+level: error
+ignorecase: true
+swap:
+  catalog: catalogue
+  gray: grey

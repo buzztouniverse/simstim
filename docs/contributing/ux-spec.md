@@ -1,6 +1,7 @@
 # simstim UX
 
 **Status:** accepted, 15 October 2026. This is the third design of the client's screens:
+
 - the first was one home screen with panes;
 - the second was a light launcher that followed Amp's CLI ([decision 0009](decisions/0009-light-launcher.md));
 - this one keeps that launcher's flow, with a look and motion of our own ([decision 0012](decisions/0012-own-look.md)).
@@ -35,7 +36,7 @@ The mockups are 80 columns wide and come from the golden tests in `internal/tui/
 
 With no hosts, the screen is a centred welcome.
 
-```
+```text
                             ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
                         ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
                   ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
@@ -49,6 +50,7 @@ With no hosts, the screen is a centred welcome.
 ```
 
 The welcome plays as a short sequence:
+
 1. **The mark** opens out from its middle. It is three strands of a signal woven into a ribbon that pinches at both ends, drawn in braille, in the brand gradient. Then it flows, a pulse runs along it, and the strands are brighter where they cross.
 2. **The name** decodes out of braille noise, letter by letter.
 3. **The tagline**, then **the keys**, come in under it. The first key says how many hosts your SSH config already has.
@@ -57,7 +59,7 @@ The welcome plays as a short sequence:
 
 Every list screen has the same parts, top to bottom:
 
-```
+```text
   ⢄⡠⠊ simstim  › atlas-dev                      9ms · 4 sessions · 1 needs you   ← header
   ────────────────────────────────────────────────────────────────────────────   ← rule
 
@@ -90,7 +92,7 @@ Every list screen has the same parts, top to bottom:
 
 ### 2.3 Hosts
 
-```
+```text
   ⢄⡠⠊ simstim  hosts                                     3 hosts · 1 needs you
   ────────────────────────────────────────────────────────────────────────────
 
@@ -110,7 +112,7 @@ Every list screen has the same parts, top to bottom:
 
 ### 2.4 Sessions
 
-```
+```text
   ⢄⡠⠊ simstim  › atlas-dev                      9ms · 4 sessions · 1 needs you
   ────────────────────────────────────────────────────────────────────────────
 
@@ -141,7 +143,7 @@ Every list screen has the same parts, top to bottom:
   - The line under the list says "last seen before this run" until the live list arrives ([decision 0011](decisions/0011-instant-launcher.md)).
 - **Offline:** a red `✕` and the message, then a cyan `→` and the step to try:
 
-  ```
+  ```text
     ✕ Cannot reach aws-gpu: ssh: connect to host 198.51.100.4 port 22: Operation
       timed out.
     → ssh aws-gpu   (check that this works first)
@@ -154,7 +156,7 @@ Every list screen has the same parts, top to bottom:
 
 `/` from either list opens the prompt line in search mode. The list shows the sessions of every host that match. A result can match its name, agent, folder or ID, or its host's name. Matched letters are cyan and underlined.
 
-```
+```text
   ⢄⡠⠊ simstim  › search                                             every host
   ────────────────────────────────────────────────────────────────────────────
 
@@ -171,7 +173,7 @@ Enter attaches the selected result, and Esc closes the search.
 
 `n` opens the prompt line for a new session on the host in play. The whole session is one line: `claude ~/src/app auth`.
 
-```
+```text
     claude  codex  opencode  shell   ~/src/api/  ~/src/app/
   ────────────────────────────────────────────────────────────────────────────
     atlas-dev ❯ claude ~/src/api/
@@ -189,7 +191,7 @@ Enter attaches the selected result, and Esc closes the search.
 
 Every dialog is a sheet. It rises from the bottom of the screen over the dimmed list, full width, with no side borders. Its title is in cyan, set into a rule across its top, its body is indented, and its keys are on its last line. A sheet's facts sit at the right of its rule.
 
-```
+```text
   ── New session on atlas-dev ───────────────────────────────────────────────
 
     Agent      claude  codex  opencode  shell  other…   not installed: anti…
@@ -232,7 +234,7 @@ The agent owns the whole terminal: every row and every column. There is no borde
 - **Detach:** Ctrl+\ goes back to the launcher, on the same session, and the rows fade back in. Press it twice quickly to send it to the agent.
 - **Lost connection** is the only thing the client draws on the screen:
   - At once, the title shows `⧗ reconnecting · atlas-dev/s4`, and an OSC 9;4 progress mark appears.
-  - After 3 s, one faint line is drawn on the bottom row: ` simstim · connection lost · reconnecting · keys are not sent · ctrl+\ to leave`.
+  - After 3 s, one faint line is drawn on the bottom row: `simstim · connection lost · reconnecting · keys are not sent · ctrl+\ to leave`.
   - On reconnect, a replay or a snapshot redraws the agent's screen over the line, and the title comes back. A notice follows in the launcher.
 - **System notifications** (OSC 777) tell you when another session needs you or ends, and when an image upload fails. They draw nothing on the screen.
 
@@ -387,6 +389,7 @@ It shows what the agent will get through the pass-through.
 ## 5. Feedback
 
 **Notices** (2.8):
+
 - "Detached. auth-refactor keeps running on atlas-dev."
 - "Reconnected to atlas-dev."
 - "Copied: simstim attach atlas-dev/auth-refactor."
@@ -399,7 +402,7 @@ A repeat extends the notice instead of adding a line.
 - In the launcher and in sheets, an error is a red `✕` and the message, then a cyan `→` and the step.
 - On the command line it prints as a bold red `Error:` and the message, a blank line, then the step:
 
-  ```
+  ```text
   Error: cannot reach atlas-dev through the jump host bastion.
 
   Try: simstim host test atlas-dev --verbose

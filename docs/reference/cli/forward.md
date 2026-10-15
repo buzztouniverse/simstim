@@ -6,28 +6,28 @@ title: "simstim forward"
 
 Forward a session's ports to localhost (all of them if none are given)
 
-### Synopsis
+## Synopsis
 
 Forwards ports from the host to 127.0.0.1 on this machine, through your SSH connection,
 until you press Ctrl+C. Write local:remote to use another local port. Nothing is exposed beyond this machine.
 
-```
+```text
 simstim forward <host>/<session> [port…] [flags]
 ```
 
-### Examples
+## Examples
 
-```
+```text
   simstim forward my-vps/web 3000
   simstim forward my-vps/web 8080:3000
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for forward
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

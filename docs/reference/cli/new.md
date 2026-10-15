@@ -6,20 +6,20 @@ title: "simstim new"
 
 Start a session on a host, and attach to it
 
-```
+```text
 simstim new <host> [-- command…] [flags]
 ```
 
-### Examples
+## Examples
 
-```
+```text
   simstim new my-vps --agent claude --dir ~/src/app
   simstim new my-vps --detach -- htop
 ```
 
-### Options
+## Options
 
-```
+```text
   -a, --agent string   the agent: claude, codex, opencode, antigravity, gemini, amp, cursor, aider, goose or shell (default "shell")
       --base string    the commit or branch the worktree starts from (default: HEAD)
       --detach         start it without attaching
@@ -29,6 +29,6 @@ simstim new <host> [-- command…] [flags]
   -w, --worktree       give the session its own git worktree and branch
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

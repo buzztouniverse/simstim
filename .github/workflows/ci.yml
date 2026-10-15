@@ -45,6 +45,8 @@ jobs:
         run: scripts/check-name.sh
       - name: Private-detail check
         run: scripts/check-private.sh
+      - name: Shell script check
+        run: scripts/check-scripts.sh
       - name: Generated docs are current
         run: |
           go run ./cmd/docgen

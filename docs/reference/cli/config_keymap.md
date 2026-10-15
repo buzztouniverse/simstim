@@ -6,17 +6,17 @@ title: "simstim config keymap"
 
 Print every home-screen command and its keys (rebind them under [keymap] in config.toml)
 
-```
+```text
 simstim config keymap [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for keymap
       --json   print JSON
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim config](config.md)	 - Show the configuration
+* [simstim config](config.md)     - Show the configuration

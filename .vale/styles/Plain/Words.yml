@@ -1,0 +1,17 @@
+# Plain words for longer ones (Writing style: short sentences, plain words).
+extends: substitution
+message: "Use '%s' instead of '%s'."
+level: error
+ignorecase: true
+swap:
+  utili[sz]e: use
+  utili[sz]ation: use
+  in order to: to
+  leverage: use
+  facilitate: help
+  e\.g\.: for example
+  i\.e\.: that is
+  prior to: before
+  subsequently: then
+  commence: start
+  terminate: end

@@ -32,3 +32,6 @@ coverage.*
 .drop-test.txt
 __pycache__/
 .clip-test.png
+
+# Link checker cache
+.lycheecache

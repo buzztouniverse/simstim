@@ -6,16 +6,16 @@ title: "simstim version"
 
 Print the version
 
-```
+```text
 simstim version [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for version
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

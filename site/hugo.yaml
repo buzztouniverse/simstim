@@ -1,0 +1,71 @@
+# The docs site: Hugo with the Hextra theme (record 0015). Build it with
+# `just docs-site`, which first writes the content from docs/ into
+# build/site (go run ./cmd/docgen -site build/site). The title and the
+# repository link come from the environment (HUGO_TITLE, HUGO_PARAMS_REPO),
+# so this file never spells the product's name.
+baseURL: /
+locale: en-gb
+title: Docs
+enableRobotsTXT: true
+enableGitInfo: false
+disableKinds: [taxonomy, term]
+
+module:
+  imports:
+    - path: github.com/imfing/hextra
+  mounts:
+    - source: ../build/site/content
+      target: content
+    - source: ../build/site/static
+      target: static
+    - source: layouts
+      target: layouts
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true # the docs use HTML comments and the odd <a id>
+  highlight:
+    noClasses: false
+
+params:
+  repo: ""
+  version: dev
+  navbar:
+    displayTitle: true
+    displayLogo: false
+    width: wide
+  page:
+    width: wide
+  theme:
+    default: system
+    displayToggle: true
+  search:
+    enable: true
+    type: flexsearch
+    flexsearch:
+      index: content
+  footer:
+    enable: true
+    displayCopyright: false
+    displayPoweredBy: false
+  editURL:
+    enable: false
+  externalLinkDecoration: true
+
+menu:
+  main:
+    - name: Docs
+      pageRef: /
+      weight: 1
+    - name: Reference
+      pageRef: /reference
+      weight: 2
+    - name: Search
+      weight: 3
+      params:
+        type: search
+    - name: Theme
+      weight: 4
+      params:
+        type: theme-toggle

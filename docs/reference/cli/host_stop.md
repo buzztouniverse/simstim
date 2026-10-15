@@ -6,16 +6,16 @@ title: "simstim host stop"
 
 Stop the host through its provider script (its sessions stop too)
 
-```
+```text
 simstim host stop <name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for stop
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

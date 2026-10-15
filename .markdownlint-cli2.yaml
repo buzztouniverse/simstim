@@ -1,0 +1,20 @@
+# Markdown lint for the docs (`just docs-check`, and CI).
+config:
+  default: true
+  MD013: false          # line length: one paragraph is one line here
+  MD033: false          # inline HTML: the docs use a few anchors and comments
+  MD024:
+    siblings_only: true # the same heading may recur under different parents
+  MD041: false          # generated pages start with front matter, not a heading
+  MD060: false          # table column alignment: tables are not padded by hand
+  MD029: false          # a list may continue its numbering after a break
+globs:
+  - "*.md"
+  - "docs/**/*.md"
+  - ".github/**/*.md"
+ignores:
+  - "docs/research/private/**"
+  - "private/**"
+  - "build/**"
+  - ".tools/**"
+  - "node_modules/**"

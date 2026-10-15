@@ -6,18 +6,18 @@ title: "simstim host add"
 
 Connect a host: check it, install the helper, prepare it
 
-### Synopsis
+## Synopsis
 
 Connect a host. The ssh target is a Host from your SSH config, or user@host.
 It defaults to the name. --ssh-config adds an extra SSH config file, for example a repo's own.
 
-```
+```text
 simstim host add <name> [ssh-target] [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help                     help for add
       --label string             labels, for example provider=gcp,region=eu
       --provider-script string   a script that starts and stops the host (see examples/providers)
@@ -26,6 +26,6 @@ simstim host add <name> [ssh-target] [flags]
   -y, --yes                      install the helper without asking
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

@@ -6,6 +6,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- A docs site: Hugo with the Hextra theme (`site/`), built from `docs/` with search and light and dark themes (`just docs-site`). CI builds it on every push and keeps it as an artifact; once the repository is public, GitHub Pages serves the latest release at the root, each release at `/vX.Y/` and `main` at `/dev/`, and each release carries its own docs.
+- Docs checks (`just docs-check`, and CI): the generated reference is current, Markdown lint, British spelling (typos), plain English (Vale, with a small style of our own), and every internal link on the built site; links to other sites are checked on `main` and weekly.
+- `scripts/setup.sh --only <tools>` installs only some tools, for CI; Hugo is built with `go install` at a pinned version.
 - Reference docs generated from the code (`just docs`, with `cmd/docgen`): every command and flag, `config.toml` and `hosts.toml` from the settings structs' comments, the launcher's keys from its command registry, and the agent table. CI fails when they are stale. Releases now include man pages and shell completions.
 - A docs-impact check: CI fails a pull request that changes commands, config, keys or agents without changing the docs and the CHANGELOG, unless it is labelled "no docs needed".
 - Antigravity CLI (`agy`) in the agent table: Google moved Gemini CLI's consumer users to it on 18 June 2026.
@@ -85,5 +88,6 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- `scripts/setup.sh` had the same ellipsis bug as `install.sh`; `just lint` now checks every script for it.
 - `install.sh` stopped with "unbound variable" in shells that read the `…` after `$arch` as part of the name.
 - On a light background, the end of the brand gradient showed pink: blended colours with a channel near zero were sent as their 16-bit value. The gradient is now sent as plain 8-bit RGB.

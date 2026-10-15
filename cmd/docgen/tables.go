@@ -74,7 +74,7 @@ func indexPage() []byte {
 	var b strings.Builder
 	b.WriteString(header("Reference", ""))
 	b.WriteString("Generated from the code, so it always matches the build.\n\n")
-	b.WriteString("- [Commands](cli/index.md): every command and flag.\n")
+	b.WriteString("- [Commands](cli/_index.md): every command and flag.\n")
 	b.WriteString("- [Configuration](config.md): `config.toml` and `hosts.toml`.\n")
 	b.WriteString("- [Keys](keymap.md): the launcher's commands and keys.\n")
 	b.WriteString("- [Agents](agents.md): the agent table.\n")

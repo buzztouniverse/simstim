@@ -6,16 +6,16 @@ title: "simstim attach"
 
 Attach to a session (detach with Ctrl+\); - is the last one
 
-```
+```text
 simstim attach <host>/<session> | - [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for attach
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

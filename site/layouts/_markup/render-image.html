@@ -1,0 +1,11 @@
+{{- /* Images in docs/ are relative paths; the site serves docs/images/ at /images/. */ -}}
+{{- $dest := .Destination -}}
+{{- $url := urls.Parse $dest -}}
+{{- if and $dest (not $url.IsAbs) (not (hasPrefix $dest "/")) -}}
+  {{- $repoPath := path.Clean (path.Join "docs" .PageInner.File.Dir $url.Path) -}}
+  {{- if hasPrefix $repoPath "docs/images/" -}}
+    {{- $dest = relURL (strings.TrimPrefix "docs/" $repoPath) -}}
+  {{- end -}}
+{{- end -}}
+<img src="{{ $dest | safeURL }}" alt="{{ .PlainText }}"{{ with .Title }} title="{{ . }}"{{ end }} loading="lazy">
+{{- /* */ -}}

@@ -69,7 +69,7 @@ fuzz time="30s":
     go test ./internal/keys -run '^$' -fuzz FuzzFilter -fuzztime {{time}}
 
 # Static checks.
-lint: check-name check-private
+lint: check-name check-private check-scripts
     go vet ./...
     golangci-lint run
 
@@ -80,6 +80,10 @@ lint-workflows:
 # Fail if the product name is spelled outside the allowed places.
 check-name:
     scripts/check-name.sh
+
+# Fail if a shell script lets a variable name run into a non-ASCII character.
+check-scripts:
+    scripts/check-scripts.sh
 
 # Fail if a tracked file holds a personal path, a private address or an email.
 check-private:
@@ -120,6 +124,14 @@ scorecard:
 # Write the reference docs from the code (docs/reference). CI fails if they are stale.
 docs:
     go run ./cmd/docgen
+
+# Build the docs site into build/site/public (Hugo with Hextra).
+docs-site version="dev":
+    scripts/docs-site.sh {{version}}
+
+# Check the docs: generated pages, Markdown lint, spelling, prose and links (--external for other sites).
+docs-check *args:
+    scripts/docs-check.sh {{args}}
 
 # Write man pages and shell completions into build/ (the release build does this too).
 man:

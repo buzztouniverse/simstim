@@ -6,16 +6,16 @@ title: "simstim host test"
 
 Check that a host answers, and how fast
 
-```
+```text
 simstim host test <name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for test
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

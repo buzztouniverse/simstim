@@ -6,16 +6,16 @@ title: "simstim config path"
 
 Print where the configuration lives
 
-```
+```text
 simstim config path [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for path
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim config](config.md)	 - Show the configuration
+* [simstim config](config.md)     - Show the configuration

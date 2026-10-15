@@ -21,7 +21,7 @@ simstim runs Claude Code, Codex, opencode, Antigravity CLI or any other terminal
 
 ## How it works
 
-```
+```text
  laptop                                   host
  ┌──────────────────────┐  your ssh   ┌───────────────────────────────────────────┐
  │ simstim (client)     │ ──────────▶ │ simstim-host bridge                       │

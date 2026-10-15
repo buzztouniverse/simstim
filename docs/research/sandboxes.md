@@ -16,7 +16,7 @@ The rules for the note:
 1. **A provider does not need SSH.** The helper's protocol needs one two-way, binary-safe byte stream to one process (section 1.1). `ssh -T` is one. So are `docker exec -i`, `incus exec -T`, Apple's `container exec -i`, E2B's envd process API and Modal's exec API. A provider's own authenticated exec endpoint adds no listening port: it is the door, as sshd is today. Some channels fail the test: Fly's Machines `exec`, `utmctl exec`, the E2B CLI's `exec` (it decodes output as text) and Daytona's toolbox input (JSON strings).
 2. **E2B fits, through envd, not SSH.** E2B has no SSH by default; its SSH recipe opens a new public port. Its in-VM daemon, envd, streams a process's stdout as bytes over Connect RPC, takes stdin in order, and keeps the process running when the request drops. simstim needs a small Go client for it. Pause keeps disk, memory and processes, costs nothing while paused, and lasts indefinitely. Against it: the timeout is a TTL, not an idle timer; a sandbox can run 1 hour (Hobby) or 24 hours (Pro) without a pause; network connections drop at pause; and CPU and memory are set per template, not per sandbox.
 3. **Morph Cloud is the closest SSH-native sandbox.** The system `ssh` reaches a real sshd through `ssh.cloud.morph.so`, with the instance ID as the user and the user's own key. Pause keeps running processes, and an SSH connection can wake a paused VM. Against it: closed source, no free compute, and thin documented limits.
-4. **Daytona and Modal fit less well.** Daytona has SSH, but the token is the user name, its gateway drops stderr, a stop kills every process in a container sandbox, and its server went closed source in June 2026. Modal has the best exec stream of all, with an official Go SDK, but no stop or resume: idle means terminate, and 24 hours is the cap.
+4. **Daytona and Modal fit less well.** Daytona has SSH, but the token is the user name, its gateway drops stderr, a stop kills every process in a container sandbox, and its server went closed source in June 2026. Modal has the best exec stream of all, with an official Go SDK, but no stop or resume: an idle sandbox is ended, and 24 hours is the cap.
 5. **Coder works today as a recipe.** `coder ssh --stdio` is an OpenSSH ProxyCommand, and it starts a stopped workspace by itself. Codespaces has a hard 12-hour lifetime. Fly Machines need `flyctl` as the transport, reset the root filesystem unless told not to, and have no free tier.
 6. **On VM clouds, idle stop belongs inside the guest.** On GCE and EC2 a guest `poweroff` stops the instance and its compute billing, with no credential on the host. Hetzner bills a stopped server in full and has no idle stop at all, so only snapshot, delete and recreate saves money there.
 7. **Locally, Lima is the best first provider.** It is free, needs no account, and runs on macOS and Linux. It is a real VM with systemd and sshd, so `host create lima` runs the same code as a cloud VM. Its defaults mount the home folder and forward every guest port, so simstim must use `--plain`. `docker exec -i` is the cheapest live proof of a non-SSH transport, and it runs in CI.
@@ -507,16 +507,19 @@ Other local JSON shapes, kept here for later: `multipass list --format json` giv
 ## 16. Open questions and UNVERIFIED items
 
 E2B:
+
 - Whether the public edge carries a long `StreamInput` client stream, and the real latency of one `SendInput` per chunk.
 - Whether linger and a `systemd --user` manager work in an E2B VM, and whether bubblewrap works in its kernel.
 - How agents cope when their open model request is cut by a pause.
 - Which default resources the base template really has (the pricing page and the billing doc disagree).
 
 Morph and Daytona:
+
 - Morph: how long paused instances are kept; the default user; whether SSH to a paused instance waits; the hypervisor; whether plan caps are per instance.
 - Daytona: whether the live gateway still drops stderr and checks the token only at the handshake; the user SSH lands as; SSH on VM sandboxes; whether Tier 1 and 2 outbound rules allow model APIs.
 
 Others:
+
 - Modal: whether a `setsid` process outlives its exec; the default user.
 - Fly: where its SSH server lives; whether a `setsid` process outlives `fly ssh`; whether `/.fly/api` allows `/stop`.
 - Coder and Codespaces: `systemd --user` in workspaces; whether output from a detached process counts as Codespaces activity.

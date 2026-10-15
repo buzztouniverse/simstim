@@ -6,16 +6,16 @@ title: "simstim rename"
 
 Rename a session
 
-```
+```text
 simstim rename <host>/<session> <new-name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for rename
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

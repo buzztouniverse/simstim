@@ -6,17 +6,17 @@ title: "simstim host restore"
 
 Start again the sessions a host restart stopped (the host also does this at boot)
 
-```
+```text
 simstim host restore <name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
       --all    also restart sessions whose holder crashed without a host restart
   -h, --help   help for restore
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

@@ -6,16 +6,16 @@ title: "simstim flip"
 
 Switch sessions quickly: the session list of every host, then attach
 
-```
+```text
 simstim flip [<host>/<session>] [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for flip
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here

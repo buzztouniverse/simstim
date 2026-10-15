@@ -6,14 +6,14 @@ title: "simstim config"
 
 Show the configuration
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for config
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
-* [simstim config keymap](config_keymap.md)	 - Print every home-screen command and its keys (rebind them under [keymap] in config.toml)
-* [simstim config path](config_path.md)	 - Print where the configuration lives
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here
+* [simstim config keymap](config_keymap.md)     - Print every home-screen command and its keys (rebind them under [keymap] in config.toml)
+* [simstim config path](config_path.md)     - Print where the configuration lives

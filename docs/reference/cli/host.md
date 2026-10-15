@@ -6,21 +6,21 @@ title: "simstim host"
 
 Add, list, test and remove hosts
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for host
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim](index.md)	 - Run any coding agent on any host, and use it as if it ran here
-* [simstim host add](host_add.md)	 - Connect a host: check it, install the helper, prepare it
-* [simstim host doctor](host_doctor.md)	 - Check a host's setup
-* [simstim host ls](host_ls.md)	 - List hosts
-* [simstim host restore](host_restore.md)	 - Start again the sessions a host restart stopped (the host also does this at boot)
-* [simstim host rm](host_rm.md)	 - Forget a host (its sessions keep running)
-* [simstim host start](host_start.md)	 - Start the host through its provider script
-* [simstim host status](host_status.md)	 - Ask the provider script whether the host is running
-* [simstim host stop](host_stop.md)	 - Stop the host through its provider script (its sessions stop too)
-* [simstim host test](host_test.md)	 - Check that a host answers, and how fast
+* [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here
+* [simstim host add](host_add.md)     - Connect a host: check it, install the helper, prepare it
+* [simstim host doctor](host_doctor.md)     - Check a host's setup
+* [simstim host ls](host_ls.md)     - List hosts
+* [simstim host restore](host_restore.md)     - Start again the sessions a host restart stopped (the host also does this at boot)
+* [simstim host rm](host_rm.md)     - Forget a host (its sessions keep running)
+* [simstim host start](host_start.md)     - Start the host through its provider script
+* [simstim host status](host_status.md)     - Ask the provider script whether the host is running
+* [simstim host stop](host_stop.md)     - Stop the host through its provider script (its sessions stop too)
+* [simstim host test](host_test.md)     - Check that a host answers, and how fast

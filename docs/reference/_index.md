@@ -6,7 +6,7 @@ title: "Reference"
 
 Generated from the code, so it always matches the build.
 
-- [Commands](cli/index.md): every command and flag.
+- [Commands](cli/_index.md): every command and flag.
 - [Configuration](config.md): `config.toml` and `hosts.toml`.
 - [Keys](keymap.md): the launcher's commands and keys.
 - [Agents](agents.md): the agent table.

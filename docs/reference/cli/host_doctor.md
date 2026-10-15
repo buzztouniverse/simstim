@@ -6,17 +6,17 @@ title: "simstim host doctor"
 
 Check a host's setup
 
-```
+```text
 simstim host doctor <name> [flags]
 ```
 
-### Options
+## Options
 
-```
+```text
   -h, --help   help for doctor
       --json   print JSON
 ```
 
-### SEE ALSO
+## SEE ALSO
 
-* [simstim host](host.md)	 - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, list, test and remove hosts

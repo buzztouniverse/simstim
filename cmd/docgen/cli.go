@@ -27,7 +27,7 @@ func root() *cobra.Command {
 func pageName(path string) string {
 	rest := strings.TrimSpace(strings.TrimPrefix(path, brand.Name))
 	if rest == "" {
-		return "index.md"
+		return "_index.md"
 	}
 	return strings.ReplaceAll(rest, " ", "_") + ".md"
 }
@@ -62,15 +62,30 @@ func cliPages(pages map[string][]byte) error {
 	return walk(root())
 }
 
-// tidy drops cobra's top heading (the front matter has the title) and its
-// trailing blank lines.
+// tidy makes cobra's Markdown pass the docs checks: it drops the top
+// heading (the front matter has the title), lifts "###" sections to "##",
+// marks code blocks as text, and turns tabs into spaces.
 func tidy(md string) string {
 	if strings.HasPrefix(md, "## ") {
 		if i := strings.Index(md, "\n"); i >= 0 {
 			md = md[i+1:]
 		}
 	}
-	return strings.TrimSpace(md) + "\n"
+	lines := strings.Split(md, "\n")
+	inFence := false
+	for i, l := range lines {
+		switch {
+		case strings.HasPrefix(l, "```"):
+			if !inFence && l == "```" {
+				lines[i] = "```text"
+			}
+			inFence = !inFence
+		case !inFence && strings.HasPrefix(l, "### "):
+			lines[i] = strings.TrimPrefix(l, "#")
+		}
+		lines[i] = strings.ReplaceAll(lines[i], "\t", "    ")
+	}
+	return strings.TrimSpace(strings.Join(lines, "\n")) + "\n"
 }
 
 // manPages writes section 1 man pages, one per command.

@@ -1,0 +1,98 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "37 3 * * 1" # weekly: external links rot without a push
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    # The generated reference is current; Markdown lint, British spelling,
+    # plain English; the site builds and every internal link resolves. The
+    # built site is kept as an artifact.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Docs tools (pinned in scripts/tools.lock)
+        run: scripts/setup.sh --only hugo,typos,vale,lychee
+      - name: Docs checks
+        run: scripts/docs-check.sh
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docs-site
+          path: build/site/public
+          retention-days: 14
+
+  external-links:
+    # Links to other sites, on main and weekly; a pull request is not held up
+    # by someone else's website.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - run: scripts/setup.sh --only lychee
+      - name: External links
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # raises GitHub's rate limit
+        run: lychee --no-progress --config .lychee.toml $(git ls-files '*.md')
+
+  pages:
+    # GitHub Pages, once the repository is public: the latest release at the
+    # root, each release at /vX.Y/, and main at /dev/.
+    if: ${{ !github.event.repository.private && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    needs: [check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - run: scripts/setup.sh --only hugo
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        id: pages
+      - name: Assemble the versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SITE: ${{ steps.pages.outputs.base_url }}
+        run: scripts/pages-assemble.sh "$SITE"
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: build/pages
+      - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        id: deploy

@@ -1,0 +1,6 @@
+# The research notes cite hundreds of sources in tables, where a short link
+# text ("link", "S12") and an emphasised label are the clearest form.
+config:
+  MD034: false   # bare URLs in source lists
+  MD036: false   # emphasis used as a label
+  MD059: false   # link text such as "link"
