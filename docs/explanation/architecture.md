@@ -234,7 +234,7 @@ The contract has its own page: [the fidelity contract](fidelity.md).
 | `~/.config/simstim/hosts.toml` | Saved hosts: name, SSH target, labels, optional provider block (v2) |
 | `~/.config/simstim/ssh/hosts.conf` | Generated SSH blocks for hosts added in simstim. Included by the wrapper. |
 | `~/.cache/simstim/cm/%C` | ControlMaster sockets. The path is kept under 86 bytes because of macOS. |
-| `~/.cache/simstim/helpers/<version>/<os>-<arch>/` | Static host helpers, ready to upload |
+| `~/.cache/simstim/helpers/<version>/` | Host helpers fetched from the release, for a client built with `go install` |
 | `~/.local/state/simstim/` | Logs, and each session's last byte offset |
 
 **Host:**
@@ -245,6 +245,8 @@ The contract has its own page: [the fidelity contract](fidelity.md).
 | `~/.local/state/simstim/sessions/<id>/` | `manifest.json`, `paste/` (0700), screen snapshot, logs |
 | `$XDG_RUNTIME_DIR/simstim/s/<id>.sock` | Holder sockets, 0600. Falls back to `/tmp/simstim-<uid>` (0700, owner checked) without linger. |
 | `~/.local/share/simstim/worktrees/<repo>/<slug>-<id>` (v2) | Worktrees per task |
+| `~/.config/simstim/alerts.toml` | Where alerts go: commands, ntfy topics, webhooks (0600; [alerts](../how-to/alerts.md)) |
+| `~/.local/state/simstim/alerts.log` | Each alert's delivery, as JSON lines; turned over at 1 MiB |
 
 ## 7. Security model
 

@@ -2,7 +2,7 @@
 
 A host can tell you when a session needs you, finishes a long turn or fails. It sends the alert itself, so it works with your laptop shut. It sends only to places you name: an [ntfy](https://ntfy.sh) topic, a webhook, or a command on the host. Until you name one, nothing leaves the host.
 
-[Decision 0019](../decisions/0019-alerts-and-hooks.md) explains the design.
+[Decision 0019](../contributing/decisions/0019-alerts-and-hooks.md) explains the design.
 
 ## Start in one minute
 

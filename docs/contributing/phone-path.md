@@ -1,6 +1,6 @@
 # The phone path (experimental)
 
-**Status:** scaffolded, not launched. It is hidden from the help and from the user docs until the owner launches it ([decision 0019](../decisions/0019-alerts-and-hooks.md), roadmap item N4). Do not mention it in the README, the CHANGELOG or `docs/how-to/`.
+**Status:** scaffolded, not launched. It is hidden from the help and from the user docs until the owner launches it ([decision 0019](decisions/0019-alerts-and-hooks.md), roadmap item N4). Do not mention it in the README, the CHANGELOG or `docs/how-to/`.
 
 ## What it is
 

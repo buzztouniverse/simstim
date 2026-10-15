@@ -16,6 +16,7 @@ Add, list, test and remove hosts
 
 * [simstim](_index.md)     - Run any coding agent on any host, and use it as if it ran here
 * [simstim host add](host_add.md)     - Connect a host: check it, install the helper, prepare it
+* [simstim host alerts](host_alerts.md)     - Show where a host sends alerts about its sessions, and the last deliveries
 * [simstim host doctor](host_doctor.md)     - Check a host's setup
 * [simstim host ls](host_ls.md)     - List hosts
 * [simstim host restore](host_restore.md)     - Start again the sessions a host restart stopped (the host also does this at boot)
