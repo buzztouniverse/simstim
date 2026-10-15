@@ -93,3 +93,11 @@ snapshot:
 # Rename the product (see docs/renaming.md).
 rename new:
     scripts/rename.sh {{new}}
+
+# Build every release binary twice from empty caches and fail if any differs.
+repro:
+    scripts/repro.sh
+
+# Score the pushed repository with OpenSSF Scorecard (needs the scorecard CLI and `gh auth login`).
+scorecard:
+    GITHUB_AUTH_TOKEN=$(gh auth token) scorecard --repo={{module}} --format=default

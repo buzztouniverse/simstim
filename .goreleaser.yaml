@@ -4,7 +4,7 @@ version: 2
 
 before:
   hooks:
-    - go mod tidy
+    - go mod tidy -diff
     # The client embeds the host helpers, so build them first.
     - sh -c 'for arch in amd64 arm64; do CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags "-s -w -X {{ .Env.MODULE }}/internal/version.Version={{ .Version }}" -o internal/client/helpers/host-linux-$arch ./cmd/host; done'
     # The shadow terminal (Zig 0.16), embedded next to the host helpers.
@@ -49,20 +49,48 @@ checksum:
 sboms:
   - artifacts: archive
 
+# The notes come from CHANGELOG.md (scripts/release-notes.sh, passed with
+# --release-notes), not from commit messages.
 changelog:
-  use: github
-  filters:
-    exclude: ["^docs:", "^ci:", "^chore:"]
+  disable: true
+
+# Keyless signature of the checksums: anyone can check every archive with
+#   cosign verify-blob --bundle checksums.txt.sigstore.json \
+#     --certificate-identity-regexp 'https://github.com/<owner>/<repo>/.github/workflows/release.yml@refs/tags/v.*' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com checksums.txt
+signs:
+  - cmd: cosign
+    artifacts: checksum
+    signature: "${artifact}.sigstore.json"
+    args: ["sign-blob", "--bundle=${signature}", "--yes", "${artifact}"]
+    output: true
 
 release:
   draft: true
   prerelease: auto
 
-# Enable once a tap repository exists, and an Apple Developer ID is set up for notarisation.
-# homebrew_casks:
-#   - name: "{{ .Env.APP_NAME }}"
-#     ids: [cli]
-#     repository: { owner: iAmLakshya, name: homebrew-tap }
+# The Homebrew cask is always built into dist/. It is pushed to the tap only
+# when the HOMEBREW_TAP_TOKEN secret is set (docs: going public).
+homebrew_casks:
+  - name: "{{ .Env.APP_NAME }}"
+    ids: [cli]
+    repository:
+      owner: iAmLakshya
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    skip_upload: '{{ if index .Env "HOMEBREW_TAP_TOKEN" }}false{{ else }}true{{ end }}'
+    homepage: "https://github.com/iAmLakshya/{{ .Env.APP_NAME }}"
+    description: Run any coding agent in sessions on any host you own
+    license: Apache-2.0
+    hooks:
+      post:
+        # The binaries are not notarised yet, so clear the quarantine flag.
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/{{ .Env.APP_NAME }}"]
+          end
+
+# Enable once an Apple Developer ID is set up for notarisation.
 # notarize:
 #   macos:
 #     - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'

@@ -39,6 +39,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- CI is hardened: every action is pinned to a full commit SHA, each job asks for the least token permissions, the checkout keeps no credentials, and zizmor lints the workflows. govulncheck runs on every push, and the toolchain is Go 1.26.9, which fixes two standard-library issues it found.
+- Releases are signed and traceable: cosign signs `checksums.txt` without a key (a Sigstore bundle), each archive gets an SBOM, a GitHub attestation and a SLSA level 3 provenance file, and the notes come from this CHANGELOG (`scripts/release-notes.sh`). A Homebrew cask is built with every release, ready for a tap.
+- Builds are reproducible: `just repro` (also in CI) builds every release binary twice from empty caches and checks they match byte for byte.
+- CodeQL and OpenSSF Scorecard run once the repository is public; `just scorecard` scores it before then.
+- SECURITY.md has a reporting link and a disclosure timeline.
 - The launcher fits a 60×20 terminal: below 70 cells a session list drops its folder column instead of squeezing it to two letters and spilling past the margin. Golden screens now cover 60×20 too.
 - Tests render the screens in every colour profile (truecolour, 256, 16, `NO_COLOR`, no terminal) and check the contrast of the fixed colours on dark and light backgrounds.
 - The repo holds nothing private: the working goal, the status page, the test-host log and the owner's checklist moved to the git-ignored `private/` folder, and examples use generic host names, users and documentation addresses.
