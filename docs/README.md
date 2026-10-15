@@ -12,6 +12,7 @@
 | [Decisions](contributing/decisions/README.md) | Decision records |
 | [Research](research/README.md) | The evidence behind the design |
 | [Renaming](contributing/renaming.md) | How to rename the product |
+| [Contributing](contributing/README.md) | How the project is built, tested, documented and released |
 | [Testing](contributing/testing.md) | Unit, golden, fuzz and end-to-end tests, and how to run them |
 | [Releasing](contributing/releasing.md) | Versions, what a release contains, and how to cut and check one |
 | [Going public](contributing/going-public.md) | What is done, and the owner's steps to make the repo public |

@@ -1,0 +1,29 @@
+name: Docs problem
+description: Something in the docs is wrong, missing or unclear.
+labels: [documentation, "area: docs", needs triage]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: A link to the page, or its path under docs/.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+      description: Quote the sentence if you can, and say what you expected.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - It is wrong (the tool behaves differently)
+        - It is missing
+        - It is unclear
+        - A broken link or image
+    validations:
+      required: true

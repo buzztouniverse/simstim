@@ -1,0 +1,43 @@
+name: Host provider request
+description: Ask for a provider that host create should support.
+labels: [provider, "area: providers", needs triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Any host you can reach with `ssh` already works with `host add`. A provider adds `host create` and `host destroy` for it. The research note on sandboxes and hosts says what a provider must offer.
+  - type: input
+    id: provider
+    attributes:
+      label: Provider
+      description: Its name and a link to its API docs.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this provider
+      description: What it gives you that the supported ones do not (price, a free tier, where it runs, isolation).
+    validations:
+      required: true
+  - type: dropdown
+    id: access
+    attributes:
+      label: How would we reach it?
+      options:
+        - SSH
+        - The provider's own exec or process API
+        - I do not know
+    validations:
+      required: true
+  - type: textarea
+    id: lifecycle
+    attributes:
+      label: Create, stop, start and delete
+      description: What its API offers, with links. Can a machine pause or stop and keep its disk?
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Help
+      options:
+        - label: I could help build or test it.

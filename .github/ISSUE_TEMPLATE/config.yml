@@ -1,5 +1,11 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
-  - name: Report a security issue
-    url: https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability
-    about: Please report security issues privately, not in a public issue.
+  - name: Ask a question or share an idea
+    url: https://github.com/iAmLakshya/simstim/discussions
+    about: Discussions are the place for questions and ideas.
+  - name: Report a security problem
+    url: https://github.com/iAmLakshya/simstim/security/advisories/new
+    about: Report security problems privately, never in a public issue.
+  - name: Read the docs
+    url: https://github.com/iAmLakshya/simstim/tree/main/docs
+    about: Tutorials, how-to guides and the reference.

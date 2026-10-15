@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- Community files for a public repository: SUPPORT, GOVERNANCE and MAINTAINERS; issue forms for provider requests and docs problems; Discussion forms for ideas and questions; `.gitattributes` that marks generated files. AGENTS.md is shorter and points to the contributor docs, which gain a home page, a guide to how the docs work, and a style guide.
 - A docs site: Hugo with the Hextra theme (`site/`), built from `docs/` with search and light and dark themes (`just docs-site`). CI builds it on every push and keeps it as an artifact; once the repository is public, GitHub Pages serves the latest release at the root, each release at `/vX.Y/` and `main` at `/dev/`, and each release carries its own docs.
 - Docs checks (`just docs-check`, and CI): the generated reference is current, Markdown lint, British spelling (typos), plain English (Vale, with a small style of our own), and every internal link on the built site; links to other sites are checked on `main` and weekly.
 - `scripts/setup.sh --only <tools>` installs only some tools, for CI; Hugo is built with `go install` at a pinned version.
