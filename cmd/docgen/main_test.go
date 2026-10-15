@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,4 +76,51 @@ func snapshot(t *testing.T, dir string) string {
 		return nil
 	})
 	return b.String()
+}
+
+// The site hosts every page in docs/ and the community files at the root,
+// and maps each one's path in the repository to its page, so links between
+// them stay on the site.
+func TestSitePages(t *testing.T) {
+	if _, err := os.Stat("go.mod"); err != nil {
+		if err := os.Chdir("../.."); err != nil {
+			t.Fatal(err)
+		}
+	}
+	out := t.TempDir()
+	if err := sitePages("docs", out); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(out, "data", "pages.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var pages map[string]string
+	if err := json.Unmarshal(b, &pages); err != nil {
+		t.Fatal(err)
+	}
+	for src, want := range map[string]string{
+		"README.md":                    "/",
+		"docs/README.md":               "/",
+		"docs/how-to/README.md":        "/how-to",
+		"docs/how-to":                  "/how-to",
+		"docs/how-to/install.md":       "/how-to/install",
+		"docs/reference/_index.md":     "/reference",
+		"CHANGELOG.md":                 "/project/changelog",
+		"CONTRIBUTING.md":              "/project/contributing",
+		"examples/providers/README.md": "/reference/provider-scripts",
+	} {
+		if got := pages[src]; got != want {
+			t.Errorf("pages[%q] = %q, want %q", src, got, want)
+		}
+	}
+	for _, f := range []string{"content/_index.md", "content/project/_index.md", "content/project/changelog.md"} {
+		if _, err := os.Stat(filepath.Join(out, f)); err != nil {
+			t.Errorf("%s: %v", f, err)
+		}
+	}
+	page, _ := os.ReadFile(filepath.Join(out, "content", "how-to", "install.md"))
+	if !strings.Contains(string(page), "srcPath: \"docs/how-to/install.md\"\n") {
+		t.Errorf("install.md has no srcPath:\n%.200s", page)
+	}
 }

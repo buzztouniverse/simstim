@@ -32,7 +32,9 @@ To change a reference page, change the code or its comment, then run `just docs`
 
 ## The site
 
-`just docs-site` builds the site into `build/site/public` with Hugo and the Hextra theme (`site/`). `cmd/docgen -site` first turns `docs/` into the site's content: each `README.md` becomes its section's page, and each page's first heading its title. Links between Markdown files work on GitHub and on the site; a link to any other file in the repository goes to GitHub.
+`just docs-site` builds the site into `build/site/public` with Hugo and the Hextra theme (`site/`). `cmd/docgen -site` first turns the Markdown into the site's content: each `README.md` becomes its section's page, and each page's first heading its title. The community files at the root of the repository (`CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md` and the rest) become the Project section, at `/project/`.
+
+`cmd/docgen` records each page's path in the repository, and writes `data/pages.json`, which maps every hosted file to its page. So a link between two Markdown files goes to that page on the site, never to GitHub, and works on GitHub too. A link to any other file, such as code or a script, goes to its source on GitHub. `just docs-check` fails if a built page links to GitHub for a page the site hosts (`scripts/check-site-links.py`).
 
 CI builds the site on every push and keeps it as an artifact named `docs-site`. Once the repository is public, GitHub Pages serves the latest release at the root, each release at `/vX.Y/`, and `main` at `/dev/`.
 
@@ -45,7 +47,8 @@ CI builds the site on every push and keeps it as an artifact named `docs-site`. 
 - British spelling (typos; `.typos.toml`);
 - plain English (Vale, with the project's small style in `.vale/styles/Plain`);
 - every command in the tutorials and how-to guides: each must exist with its flags, and with `DOCS_HOST` set, `just test-docs` runs them on a test host (a comment before a block can mark it `skip` or `help`);
-- every link on the built site (lychee, offline). `just docs-check --external` also checks links to other sites, which CI does on `main` and weekly.
+- every link on the built site (lychee, offline). `just docs-check --external` also checks links to other sites, which CI does on `main` and weekly;
+- no built page links to GitHub for a page the site hosts.
 
 ## Images
 

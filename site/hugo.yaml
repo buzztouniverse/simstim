@@ -18,6 +18,8 @@ module:
       target: content
     - source: ../build/site/static
       target: static
+    - source: ../build/site/data
+      target: data
     - source: layouts
       target: layouts
 

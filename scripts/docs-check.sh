@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Checks the docs: generated pages are current, Markdown lint, British
-# spelling, plain English, and links. --external also checks links to other
-# sites (slow; CI runs it on main and weekly).
+# spelling, plain English, links, and that no page sends a reader to GitHub
+# for a page the site hosts. --external also checks links to other sites
+# (slow; CI runs it on main and weekly).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -44,6 +45,9 @@ go build -o "$ref/$name" . && python3 scripts/test-docs-commands.py "$ref/$name"
 step "Site build and internal links"
 scripts/docs-site.sh dev /
 lychee --offline --no-progress --root-dir "$PWD/build/site/public" 'build/site/public/**/*.html' || fail=1
+
+step "Links between hosted pages stay on the site"
+python3 scripts/check-site-links.py build/site/public build/site/data/pages.json "https://$(sed -n 's/^module //p' go.mod)" || fail=1
 
 if $external; then
     step "External links"

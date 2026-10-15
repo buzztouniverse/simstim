@@ -2,10 +2,14 @@
 {{- $dest := .Destination -}}
 {{- $url := urls.Parse $dest -}}
 {{- if and $dest (not $url.IsAbs) (not (hasPrefix $dest "/")) -}}
-  {{- $repoPath := path.Clean (path.Join "docs" .PageInner.File.Dir $url.Path) -}}
+  {{- $src := .PageInner.Params.srcpath | default "" -}}
+  {{- if and (not $src) .PageInner.File -}}
+    {{- $src = path.Join "docs" .PageInner.File.Path -}}
+  {{- end -}}
+  {{- $repoPath := path.Clean (path.Join (path.Dir $src) $url.Path) -}}
   {{- if hasPrefix $repoPath "docs/images/" -}}
     {{- $dest = relURL (strings.TrimPrefix "docs/" $repoPath) -}}
   {{- end -}}
 {{- end -}}
-<img src="{{ $dest | safeURL }}" alt="{{ .PlainText }}"{{ with .Title }} title="{{ . }}"{{ end }} loading="lazy">
+<img src="{{ $dest | safeURL }}" alt="{{ .PlainText }}"{{ with .Title }} title="{{ . }}"{{ end }} loading="lazy" decoding="async">
 {{- /* */ -}}
