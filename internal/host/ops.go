@@ -204,9 +204,11 @@ func New(a NewArgs) (*SessionInfo, error) {
 		_ = deleteSession(id, &DeleteResult{})
 		return nil, UserError("secrets_failed", "the session could not get its secrets, so it was removed", "Try again.")
 	}
-	if mm, err := LoadManifest(id); err == nil {
-		mm.Run.Unit = m.Run.Unit
-		_ = mm.Save()
+	if mm := waitStarted(id, 5*time.Second); mm != nil {
+		if mm.Run.Unit == "" && m.Run.Unit != "" {
+			mm.Run.Unit = m.Run.Unit
+			_ = mm.Save()
+		}
 		m = mm
 	}
 	info := infoFrom(m, true)

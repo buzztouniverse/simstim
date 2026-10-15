@@ -3,6 +3,7 @@ package host
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/iAmLakshya/simstim/internal/brand"
 )
@@ -32,4 +33,23 @@ func startArgv(argv []string, hook string, vars, notes []string) []string {
 	}
 	b.WriteString(`exec "$@"`)
 	return append([]string{"/bin/sh", "-c", b.String(), label}, argv...)
+}
+
+// waitStarted waits until the holder has recorded its agent's start (or
+// failure) in the manifest, and returns that manifest. The holder writes it
+// after its socket answers, and later still when it first waits for secrets,
+// so reading it at once would see, and could save over, the record of a
+// session that has not started.
+func waitStarted(id string, timeout time.Duration) *Manifest {
+	deadline := time.Now().Add(timeout)
+	for {
+		m, err := LoadManifest(id)
+		if err == nil && (m.Run.AgentPID != 0 || m.Status.State != StateStarting) {
+			return m
+		}
+		if time.Now().After(deadline) {
+			return m
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 }
