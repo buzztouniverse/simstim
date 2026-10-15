@@ -29,10 +29,10 @@ type sendWriter struct {
 	done   chan struct{}
 }
 
-func newSendWriter(p *proc) *sendWriter {
+func newSendWriter(ctx context.Context, p *proc) *sendWriter {
 	w := &sendWriter{p: p, done: make(chan struct{})}
 	w.cond = sync.NewCond(&w.mu)
-	go w.loop()
+	go w.loop(ctx)
 	return w
 }
 
@@ -71,15 +71,16 @@ func (w *sendWriter) next() []byte {
 	return out
 }
 
-func (w *sendWriter) loop() {
+// loop sends the input as it comes. ctx lives as long as the process.
+func (w *sendWriter) loop(ctx context.Context) {
 	defer close(w.done)
 	for {
 		b := w.next()
 		if b == nil {
 			break
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		err := w.p.e.unary(ctx, "SendInput", sendInputRequest{Process: selector{Pid: w.p.pid}, Input: processInput{Stdin: b}})
+		sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		err := w.p.e.unary(sctx, "SendInput", sendInputRequest{Process: selector{Pid: w.p.pid}, Input: processInput{Stdin: b}})
 		cancel()
 		if err != nil {
 			w.fail(err)
@@ -90,9 +91,9 @@ func (w *sendWriter) loop() {
 	failed := w.err != nil
 	w.mu.Unlock()
 	if !failed {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
-		_ = w.p.e.unary(ctx, "CloseStdin", map[string]selector{"process": {Pid: w.p.pid}})
+		_ = w.p.e.unary(sctx, "CloseStdin", map[string]selector{"process": {Pid: w.p.pid}})
 	}
 }
 
@@ -124,16 +125,18 @@ func (w *sendWriter) Close() error {
 // streamWriter carries stdin in one StreamInput request: one envelope for
 // each write, in order, over a single long request.
 type streamWriter struct {
-	p    *proc
+	p *proc
+	// ctx lives as long as the process; it ends when the process is closed.
+	ctx  context.Context
 	pw   *io.PipeWriter
 	mu   sync.Mutex
 	err  error
 	done chan struct{}
 }
 
-func newStreamWriter(p *proc) *streamWriter {
+func newStreamWriter(ctx context.Context, p *proc) *streamWriter {
 	pr, pw := io.Pipe()
-	w := &streamWriter{p: p, pw: pw, done: make(chan struct{})}
+	w := &streamWriter{p: p, ctx: ctx, pw: pw, done: make(chan struct{})}
 	go w.run(pr)
 	first := streamInputRequest{Start: &struct {
 		Process selector `json:"process"`
@@ -146,7 +149,7 @@ func newStreamWriter(p *proc) *streamWriter {
 
 func (w *streamWriter) run(pr *io.PipeReader) {
 	defer close(w.done)
-	req, err := w.p.e.request(context.Background(), "StreamInput", pr, true)
+	req, err := w.p.e.request(w.ctx, "StreamInput", pr, true)
 	if err != nil {
 		w.setErr(err)
 		_ = pr.CloseWithError(err)
@@ -190,14 +193,16 @@ func (w *streamWriter) setErr(err error) {
 func (w *streamWriter) send(m streamInputRequest) error {
 	b, err := json.Marshal(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("envd StreamInput: encode the input: %w", err)
 	}
 	var buf bytes.Buffer
 	if err := writeEnvelope(&buf, 0, b); err != nil {
 		return err
 	}
-	_, err = w.pw.Write(buf.Bytes())
-	return err
+	if _, err := w.pw.Write(buf.Bytes()); err != nil {
+		return fmt.Errorf("envd StreamInput: %w", err)
+	}
+	return nil
 }
 
 func (w *streamWriter) Write(b []byte) (int, error) {
@@ -226,7 +231,7 @@ func (w *streamWriter) Close() error {
 	case <-w.done:
 	case <-time.After(10 * time.Second):
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(w.ctx, 30*time.Second)
 	defer cancel()
 	if err := w.p.e.unary(ctx, "CloseStdin", map[string]selector{"process": {Pid: w.p.pid}}); err != nil {
 		return err

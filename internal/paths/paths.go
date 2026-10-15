@@ -62,7 +62,7 @@ func HolderLog(id string) string { return filepath.Join(SessionDir(id), "holder.
 // or /tmp/<name>-<uid>.
 func RuntimeDir() string {
 	if v := os.Getenv("XDG_RUNTIME_DIR"); v != "" {
-		if st, err := os.Stat(v); err == nil && st.IsDir() {
+		if st, err := os.Stat(v); err == nil && st.IsDir() { //nolint:gosec // G703: the user's own runtime folder, set by their login
 			return filepath.Join(v, brand.Name)
 		}
 	}
@@ -78,7 +78,11 @@ func BinDir() string { return filepath.Join(DataDir(), "bin") }
 // EnsurePrivateDir makes dir (and parents) with mode 0700.
 func EnsurePrivateDir(dir string) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return err
+		return fmt.Errorf("make %s: %w", dir, err)
 	}
-	return os.Chmod(dir, 0o700)
+	//nolint:gosec // G302: a folder needs the execute bit to be opened; 0700 is the owner's alone
+	if err := os.Chmod(dir, 0o700); err != nil {
+		return fmt.Errorf("make %s private: %w", dir, err)
+	}
+	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 )
 
@@ -26,9 +27,12 @@ const (
 
 // writeEnvelope writes one message.
 func writeEnvelope(w io.Writer, flags byte, msg []byte) error {
+	if len(msg) > math.MaxUint32 {
+		return fmt.Errorf("a Connect message of %d bytes is too long", len(msg))
+	}
 	var hdr [5]byte
 	hdr[0] = flags
-	binary.BigEndian.PutUint32(hdr[1:], uint32(len(msg)))
+	binary.BigEndian.PutUint32(hdr[1:], uint32(len(msg))) //nolint:gosec // G115: the length is checked against MaxUint32 above
 	if _, err := w.Write(append(hdr[:], msg...)); err != nil {
 		return fmt.Errorf("write a Connect envelope: %w", err)
 	}
@@ -39,7 +43,7 @@ func writeEnvelope(w io.Writer, flags byte, msg []byte) error {
 func readEnvelope(r io.Reader) (byte, []byte, error) {
 	var hdr [5]byte
 	if _, err := io.ReadFull(r, hdr[:]); err != nil {
-		return 0, nil, err
+		return 0, nil, fmt.Errorf("read a Connect envelope: %w", err)
 	}
 	n := binary.BigEndian.Uint32(hdr[1:])
 	if n > maxEnvelope {

@@ -72,7 +72,10 @@ func parseList(out []byte, name string) (*instance, error) {
 			return &in, nil
 		}
 	}
-	return nil, sc.Err()
+	if err := sc.Err(); err != nil {
+		return nil, fmt.Errorf("read limactl's list: %w", err)
+	}
+	return nil, nil
 }
 
 // CreateArgs are the limactl arguments that make the VM. --plain turns off
@@ -104,7 +107,7 @@ func (Provider) Create(ctx context.Context, req provider.Request) (client.Host, 
 	if in, err := find(ctx, inst); err != nil {
 		return client.Host{}, err
 	} else if in != nil {
-		return client.Host{}, &client.UserError{Msg: fmt.Sprintf("Lima already has an instance called %s", inst), Hint: "limactl delete " + inst + "   (if you no longer need it), or choose another name"}
+		return client.Host{}, &client.UserError{Msg: "Lima already has an instance called " + inst, Hint: "limactl delete " + inst + "   (if you no longer need it), or choose another name"}
 	}
 	args := CreateArgs(inst, req)
 	fmt.Fprintf(out, "  Creating the VM: limactl %s\n", strings.Join(args, " "))

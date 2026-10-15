@@ -39,7 +39,7 @@ func TestRingMatchesStream(t *testing.T) {
 	rng := rand.New(rand.NewSource(1))
 	r := New(97)
 	var all []byte
-	for i := 0; i < 2000; i++ {
+	for i := range 2000 {
 		chunk := make([]byte, rng.Intn(150))
 		rng.Read(chunk)
 		r.Write(chunk)

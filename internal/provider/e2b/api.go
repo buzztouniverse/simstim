@@ -88,18 +88,18 @@ type api struct {
 }
 
 // do sends one request. want lists the statuses that mean success.
-func (a *api) do(ctx context.Context, method, path string, in, out any, want ...int) (int, error) {
+func (a *api) do(ctx context.Context, method, path string, in, out any, want ...int) error {
 	var body io.Reader
 	if in != nil {
 		b, err := json.Marshal(in)
 		if err != nil {
-			return 0, err
+			return fmt.Errorf("E2B API %s %s: encode the request: %w", method, path, err)
 		}
 		body = bytes.NewReader(b)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, strings.TrimRight(a.base, "/")+path, body)
 	if err != nil {
-		return 0, fmt.Errorf("E2B API %s %s: %w", method, path, err)
+		return fmt.Errorf("E2B API %s %s: %w", method, path, err)
 	}
 	req.Header.Set("X-API-Key", a.key)
 	req.Header.Set("User-Agent", brand.Name)
@@ -117,40 +117,40 @@ func (a *api) do(ctx context.Context, method, path string, in, out any, want ...
 		if errors.As(err, &ue) {
 			err = ue.Err
 		}
-		return 0, fmt.Errorf("E2B API %s %s: %w", method, path, err)
+		return fmt.Errorf("E2B API %s %s: %w", method, path, err)
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
 	if err != nil {
-		return resp.StatusCode, fmt.Errorf("E2B API %s %s: %w", method, path, err)
+		return fmt.Errorf("E2B API %s %s: %w", method, path, err)
 	}
 	for _, w := range want {
 		if resp.StatusCode == w {
 			if out != nil && len(data) > 0 {
 				if err := json.Unmarshal(data, out); err != nil {
-					return resp.StatusCode, fmt.Errorf("E2B API %s %s: read the answer: %w", method, path, err)
+					return fmt.Errorf("E2B API %s %s: read the answer: %w", method, path, err)
 				}
 			}
-			return resp.StatusCode, nil
+			return nil
 		}
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return resp.StatusCode, errNotFound
+		return errNotFound
 	}
 	e := &apiError{Status: resp.StatusCode}
 	_ = json.Unmarshal(data, e)
-	return resp.StatusCode, e
+	return e
 }
 
 func (a *api) create(ctx context.Context, req newSandbox) (sandbox, error) {
 	var sb sandbox
-	_, err := a.do(ctx, http.MethodPost, "/v2/sandboxes", req, &sb, http.StatusCreated, http.StatusOK)
+	err := a.do(ctx, http.MethodPost, "/v2/sandboxes", req, &sb, http.StatusCreated, http.StatusOK)
 	return sb, err
 }
 
 func (a *api) get(ctx context.Context, id string) (sandbox, error) {
 	var sb sandbox
-	_, err := a.do(ctx, http.MethodGet, "/sandboxes/"+url.PathEscape(id), nil, &sb, http.StatusOK)
+	err := a.do(ctx, http.MethodGet, "/sandboxes/"+url.PathEscape(id), nil, &sb, http.StatusOK)
 	return sb, err
 }
 
@@ -158,23 +158,23 @@ func (a *api) get(ctx context.Context, id string) (sandbox, error) {
 // sure it runs for at least timeout seconds.
 func (a *api) connect(ctx context.Context, id string, timeout int) (sandbox, error) {
 	var sb sandbox
-	_, err := a.do(ctx, http.MethodPost, "/v2/sandboxes/"+url.PathEscape(id)+"/connect", map[string]int{"timeout": timeout}, &sb, http.StatusOK, http.StatusCreated)
+	err := a.do(ctx, http.MethodPost, "/v2/sandboxes/"+url.PathEscape(id)+"/connect", map[string]int{"timeout": timeout}, &sb, http.StatusOK, http.StatusCreated)
 	return sb, err
 }
 
 func (a *api) pause(ctx context.Context, id string) error {
 	// 409: it is paused already.
-	_, err := a.do(ctx, http.MethodPost, "/sandboxes/"+url.PathEscape(id)+"/pause", map[string]bool{"memory": true}, nil, http.StatusNoContent, http.StatusConflict)
+	err := a.do(ctx, http.MethodPost, "/sandboxes/"+url.PathEscape(id)+"/pause", map[string]bool{"memory": true}, nil, http.StatusNoContent, http.StatusConflict)
 	return err
 }
 
 func (a *api) setTimeout(ctx context.Context, id string, seconds int) error {
-	_, err := a.do(ctx, http.MethodPost, "/sandboxes/"+url.PathEscape(id)+"/timeout", map[string]int{"timeout": seconds}, nil, http.StatusNoContent, http.StatusOK)
+	err := a.do(ctx, http.MethodPost, "/sandboxes/"+url.PathEscape(id)+"/timeout", map[string]int{"timeout": seconds}, nil, http.StatusNoContent, http.StatusOK)
 	return err
 }
 
 func (a *api) kill(ctx context.Context, id string) error {
-	_, err := a.do(ctx, http.MethodDelete, "/sandboxes/"+url.PathEscape(id), nil, nil, http.StatusNoContent, http.StatusOK)
+	err := a.do(ctx, http.MethodDelete, "/sandboxes/"+url.PathEscape(id), nil, nil, http.StatusNoContent, http.StatusOK)
 	if errors.Is(err, errNotFound) {
 		return nil
 	}
@@ -183,7 +183,7 @@ func (a *api) kill(ctx context.Context, id string) error {
 
 func (a *api) templates(ctx context.Context) ([]template, error) {
 	var out []template
-	_, err := a.do(ctx, http.MethodGet, "/templates", nil, &out, http.StatusOK)
+	err := a.do(ctx, http.MethodGet, "/templates", nil, &out, http.StatusOK)
 	return out, err
 }
 

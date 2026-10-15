@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -124,7 +125,7 @@ func (e *Envd) request(ctx context.Context, method string, body io.Reader, strea
 	req.Header.Set("Connect-Protocol-Version", "1")
 	req.Header.Set("X-Access-Token", e.Token)
 	req.Header.Set("E2b-Sandbox-Id", e.SandboxID)
-	req.Header.Set("E2b-Sandbox-Port", fmt.Sprint(EnvdPort))
+	req.Header.Set("E2b-Sandbox-Port", strconv.Itoa(EnvdPort))
 	req.Header.Set("User-Agent", brand.Name)
 	if e.User != "" {
 		req.SetBasicAuth(e.User, "")
@@ -143,7 +144,7 @@ func (e *Envd) client() *http.Client {
 func (e *Envd) unary(ctx context.Context, method string, in any) error {
 	b, err := json.Marshal(in)
 	if err != nil {
-		return err
+		return fmt.Errorf("envd %s: encode the request: %w", method, err)
 	}
 	req, err := e.request(ctx, method, bytes.NewReader(b), false)
 	if err != nil {
@@ -176,7 +177,7 @@ func (e *Envd) Start(ctx context.Context, remote string) (client.Proc, error) {
 	tag := brand.Name + "-" + randomHex(6)
 	msg, err := json.Marshal(startRequest{Process: processConfig{Cmd: "/bin/sh", Args: []string{"-c", remote}}, Tag: tag, Stdin: true})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("envd Start: encode the request: %w", err)
 	}
 	var body bytes.Buffer
 	if err := writeEnvelope(&body, 0, msg); err != nil {
@@ -207,9 +208,9 @@ func (e *Envd) Start(ctx context.Context, remote string) (client.Proc, error) {
 	}
 	p.stdoutR, p.stdoutW = io.Pipe()
 	if e.Stream {
-		p.in = newStreamWriter(p)
+		p.in = newStreamWriter(sctx, p)
 	} else {
-		p.in = newSendWriter(p)
+		p.in = newSendWriter(sctx, p)
 	}
 	go p.pump()
 	// A dropped request does not end the process in the sandbox, so the end
@@ -234,7 +235,10 @@ func (e *Envd) Run(ctx context.Context, remote string, stdin io.Reader) ([]byte,
 	if werr := p.Wait(); werr != nil {
 		return out, fmt.Errorf("%w: %s", werr, provider.Tail(p.Stderr(), 3))
 	}
-	return out, rerr
+	if rerr != nil {
+		return out, fmt.Errorf("read the command's output: %w", rerr)
+	}
+	return out, nil
 }
 
 // proc is one command running in the sandbox.

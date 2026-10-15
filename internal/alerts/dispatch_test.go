@@ -71,8 +71,8 @@ func (c *fakeClock) Advance(d time.Duration) {
 	}
 }
 
-// waitTimers waits until n timers are waiting.
-func (c *fakeClock) waitTimers(t *testing.T, n int) {
+// waitTimer waits until one timer is waiting.
+func (c *fakeClock) waitTimer(t *testing.T) {
 	t.Helper()
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
@@ -84,12 +84,12 @@ func (c *fakeClock) waitTimers(t *testing.T, n int) {
 			}
 		}
 		c.mu.Unlock()
-		if k == n {
+		if k == 1 {
 			return
 		}
 		time.Sleep(time.Millisecond)
 	}
-	t.Fatalf("no %d waiting timers", n)
+	t.Fatal("no waiting timer")
 }
 
 // rig is a dispatcher with a fake clock, writing to a test server.
@@ -182,7 +182,7 @@ const hookCfg = "events = [\"needs_input\", \"failed\", \"turn_done\", \"oom\", 
 func TestDelayThenSend(t *testing.T) {
 	r := newRig(t, hookCfg, nil)
 	r.d.Notify(r.event(NeedsInput))
-	r.clock.waitTimers(t, 1)
+	r.clock.waitTimer(t)
 	r.clock.Advance(9 * time.Second)
 	r.none()
 	r.clock.Advance(time.Second)
@@ -202,7 +202,7 @@ func TestDelayThenSend(t *testing.T) {
 func TestDelayDroppedWhenStateChanges(t *testing.T) {
 	r := newRig(t, hookCfg, nil)
 	r.d.Notify(r.event(NeedsInput))
-	r.clock.waitTimers(t, 1)
+	r.clock.waitTimer(t)
 	r.d.StateChanged()
 	r.clock.Advance(10 * time.Second)
 	r.skipped("moved on")
@@ -214,7 +214,7 @@ func TestDelayDroppedWhenTyping(t *testing.T) {
 	r.d.Typed() // typing before the question does not count
 	r.clock.Advance(time.Second)
 	r.d.Notify(r.event(NeedsInput))
-	r.clock.waitTimers(t, 1)
+	r.clock.waitTimer(t)
 	r.clock.Advance(3 * time.Second)
 	r.d.Typed()
 	r.clock.Advance(7 * time.Second)
@@ -225,7 +225,7 @@ func TestDelayDroppedWhenTyping(t *testing.T) {
 	r.write("quiet_when_typing = false\ndetail = true\n" + strings.SplitN(r.read(), "\n", 2)[1])
 	r.clock.Advance(time.Minute)
 	r.d.Notify(r.event(NeedsInput))
-	r.clock.waitTimers(t, 1)
+	r.clock.waitTimer(t)
 	r.d.Typed()
 	r.clock.Advance(10 * time.Second)
 	if ev := r.expect(NeedsInput); ev.Detail != "Do you want to proceed?" {
@@ -331,7 +331,7 @@ func TestReloadAndOff(t *testing.T) {
 func TestCloseMutes(t *testing.T) {
 	r := newRig(t, hookCfg, nil)
 	r.d.Notify(r.event(NeedsInput))
-	r.clock.waitTimers(t, 1)
+	r.clock.waitTimer(t)
 	r.d.Close(time.Second)
 	r.clock.Advance(time.Minute)
 	r.d.Notify(r.event(Failed))

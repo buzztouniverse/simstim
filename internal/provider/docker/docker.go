@@ -53,7 +53,7 @@ func (Provider) Create(ctx context.Context, req provider.Request) (client.Host, 
 		return client.Host{}, err
 	}
 	if st != "" {
-		return client.Host{}, &client.UserError{Msg: fmt.Sprintf("Docker already has a container called %s", c), Hint: "docker rm -f " + c + "   (if you no longer need it), or choose another name"}
+		return client.Host{}, &client.UserError{Msg: "Docker already has a container called " + c, Hint: "docker rm -f " + c + "   (if you no longer need it), or choose another name"}
 	}
 	image := req.Image
 	if image == "" {

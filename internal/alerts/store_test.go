@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 func TestLogTurnsOver(t *testing.T) {
 	dir := t.TempDir()
 	l := &DeliveryLog{Path: filepath.Join(dir, "alerts.log"), Lock: filepath.Join(dir, "lock"), Max: 1000}
-	for i := 0; i < 30; i++ {
+	for i := range 30 {
 		if err := l.Append(api.AlertLogEntry{Time: time.Unix(int64(i), 0).UTC(), Event: Failed, Session: fmt.Sprintf("s%02d", i), OK: true}); err != nil {
 			t.Fatal(err)
 		}
@@ -60,7 +60,7 @@ func TestFileLimiter(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "rate")
 	l := &FileLimiter{Path: path, Max: 3, Window: time.Minute}
 	now := time.Date(2026, 10, 15, 10, 0, 0, 0, time.UTC)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if !l.Allow(now) {
 			t.Fatalf("event %d refused", i+1)
 		}
@@ -82,7 +82,7 @@ func TestFileLimiterConcurrent(t *testing.T) {
 	now := time.Now()
 	var allowed atomic.Int32
 	var wg sync.WaitGroup
-	for i := 0; i < 40; i++ {
+	for range 40 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

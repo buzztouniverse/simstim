@@ -58,7 +58,7 @@ func setup(t *testing.T) string {
 	return dir
 }
 
-func calls(t *testing.T, dir string) string {
+func calls(dir string) string {
 	b, _ := os.ReadFile(filepath.Join(dir, "log"))
 	return string(b)
 }
@@ -75,7 +75,7 @@ func TestCreateAndLifecycle(t *testing.T) {
 	if h.Name != "box" || h.SSH != "" || h.Machine == nil || h.Machine.Provider != "docker" || h.Machine.ID != c || h.Machine.User != docker.DefaultUser || h.Machine.Image != docker.DefaultImage {
 		t.Fatalf("host = %+v, machine = %+v", h, h.Machine)
 	}
-	log := calls(t, dir)
+	log := calls(dir)
 	want := "run -d --init --name " + c + " --label " + brand.Name + ".host=box " + docker.DefaultImage + " sleep infinity"
 	if !strings.Contains(log, want) {
 		t.Fatalf("docker calls:\n%s\nwant %q", log, want)

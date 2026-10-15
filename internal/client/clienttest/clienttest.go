@@ -109,6 +109,8 @@ func (t *Transport) serve(in io.Reader, out io.Writer) {
 			var req proto.Request
 			_ = json.Unmarshal(f.Payload, &req)
 			_ = w.WriteJSON(proto.TResponse, t.answer(req))
+		default:
+			// The fake bridge answers pings and requests only.
 		}
 	}
 }

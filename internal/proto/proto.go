@@ -65,7 +65,9 @@ var ErrFrameTooBig = errors.New("proto: frame too big")
 func Read(r *bufio.Reader) (Frame, error) {
 	var hdr [4]byte
 	if _, err := io.ReadFull(r, hdr[:]); err != nil {
-		return Frame{}, err
+		// io.EOF here is the clean end of the stream, which callers test for
+		// with errors.Is; the wrap keeps it.
+		return Frame{}, fmt.Errorf("proto: read a frame: %w", err)
 	}
 	n := binary.LittleEndian.Uint32(hdr[:])
 	if n == 0 {
@@ -76,10 +78,10 @@ func Read(r *bufio.Reader) (Frame, error) {
 	}
 	buf := make([]byte, n)
 	if _, err := io.ReadFull(r, buf); err != nil {
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			err = io.ErrUnexpectedEOF
 		}
-		return Frame{}, err
+		return Frame{}, fmt.Errorf("proto: read a frame's body: %w", err)
 	}
 	return Frame{Type: Type(buf[0]), Payload: buf[1:]}, nil
 }
@@ -99,20 +101,22 @@ func (w *Writer) Write(t Type, payload []byte) error {
 		return ErrFrameTooBig
 	}
 	buf := make([]byte, 5+len(payload))
-	binary.LittleEndian.PutUint32(buf, uint32(len(payload)+1))
+	binary.LittleEndian.PutUint32(buf, uint32(len(payload)+1)) //nolint:gosec // G115: the length is at most MaxFrame, checked above
 	buf[4] = byte(t)
 	copy(buf[5:], payload)
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	_, err := w.w.Write(buf)
-	return err
+	if _, err := w.w.Write(buf); err != nil {
+		return fmt.Errorf("proto: write a frame: %w", err)
+	}
+	return nil
 }
 
 // WriteJSON marshals v and writes it as one frame.
 func (w *Writer) WriteJSON(t Type, v any) error {
 	b, err := json.Marshal(v)
 	if err != nil {
-		return err
+		return fmt.Errorf("proto: encode a frame: %w", err)
 	}
 	return w.Write(t, b)
 }
@@ -122,7 +126,7 @@ func (w *Writer) WriteJSON(t Type, v any) error {
 // EncodeOutput builds an output payload.
 func EncodeOutput(offset int64, data []byte) []byte {
 	buf := make([]byte, 8+len(data))
-	binary.LittleEndian.PutUint64(buf, uint64(offset))
+	binary.LittleEndian.PutUint64(buf, uint64(offset)) //nolint:gosec // G115: offsets count bytes from 0, so they are never negative
 	copy(buf[8:], data)
 	return buf
 }
@@ -132,7 +136,7 @@ func DecodeOutput(p []byte) (int64, []byte, error) {
 	if len(p) < 8 {
 		return 0, nil, errors.New("proto: short output frame")
 	}
-	return int64(binary.LittleEndian.Uint64(p)), p[8:], nil
+	return int64(binary.LittleEndian.Uint64(p)), p[8:], nil //nolint:gosec // G115: a peer's offsets stay far below 2^63
 }
 
 // Upload chunks carry the upload ID first.

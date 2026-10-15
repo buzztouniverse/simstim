@@ -25,7 +25,11 @@ func TestReleaseSignerMatchesTheRepo(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		key := ReleaseSigner[strings.Index(ReleaseSigner, "ssh-ed25519"):]
+		_, rest, ok := strings.Cut(ReleaseSigner, "ssh-ed25519")
+		if !ok {
+			t.Fatal("ReleaseSigner holds no ed25519 key")
+		}
+		key := "ssh-ed25519" + rest
 		if !strings.Contains(string(b), key) {
 			t.Errorf("%s does not hold the release key in the code", f)
 		}

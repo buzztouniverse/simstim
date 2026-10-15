@@ -114,7 +114,7 @@ func download(ctx context.Context, version, base string) (map[string][]byte, err
 	want := checksumOf(sums, BundleName(version))
 	got := sha256.Sum256(bundle)
 	if want == "" || want != hex.EncodeToString(got[:]) {
-		return nil, fmt.Errorf("the helper bundle's checksum does not match the signed checksums.txt")
+		return nil, errors.New("the helper bundle's checksum does not match the signed checksums.txt")
 	}
 	return untar(bundle)
 }
@@ -203,7 +203,7 @@ func untar(bundle []byte) (map[string][]byte, error) {
 		files[name] = b
 	}
 	if len(files) == 0 {
-		return nil, fmt.Errorf("the helper bundle holds no helpers")
+		return nil, errors.New("the helper bundle holds no helpers")
 	}
 	return files, nil
 }

@@ -51,7 +51,7 @@ func (l *FileLimiter) Allow(now time.Time) bool {
 	err := withLock(ctx, l.Path, func(f *os.File) error {
 		data, err := io.ReadAll(f)
 		if err != nil {
-			return err
+			return fmt.Errorf("read %s: %w", l.Path, err)
 		}
 		var keep []string
 		for _, line := range strings.Fields(string(data)) {
@@ -66,10 +66,12 @@ func (l *FileLimiter) Allow(now time.Time) bool {
 			keep = append(keep, strconv.FormatInt(now.UnixNano(), 10))
 		}
 		if err := f.Truncate(0); err != nil {
-			return err
+			return fmt.Errorf("rewrite %s: %w", l.Path, err)
 		}
-		_, err = f.WriteAt([]byte(strings.Join(keep, "\n")+"\n"), 0)
-		return err
+		if _, err := f.WriteAt([]byte(strings.Join(keep, "\n")+"\n"), 0); err != nil {
+			return fmt.Errorf("rewrite %s: %w", l.Path, err)
+		}
+		return nil
 	})
 	return ok || err != nil
 }
