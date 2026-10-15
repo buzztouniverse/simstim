@@ -11,7 +11,7 @@ external=false
 fail=0
 step() { printf '\n== %s\n' "$*"; }
 need() { command -v "$1" >/dev/null 2>&1 || { echo "docs-check: $1 not found. Try: scripts/setup.sh" >&2; exit 1; }; }
-need typos; need vale; need lychee; need hugo
+need typos; need vale; need lychee; need node; need pnpm
 
 md=()
 while IFS= read -r f; do [ -f "$f" ] && md+=("$f"); done < <(git ls-files -co --exclude-standard '*.md' | grep -v -E '^(private|build|\.tools)/')
@@ -26,11 +26,7 @@ if ! diff -r -q "$ref" docs/reference; then
 fi
 
 step "Markdown lint"
-if command -v npx >/dev/null 2>&1; then
-    npx --yes markdownlint-cli2@0.23.3 || fail=1
-else
-    echo "skipped: needs Node (npx); CI runs it"
-fi
+npx --yes markdownlint-cli2@0.23.3 || fail=1
 
 step "Spelling (British English)"
 typos --force-exclude "${md[@]}" || fail=1
@@ -47,7 +43,7 @@ scripts/docs-site.sh dev /
 lychee --offline --no-progress --root-dir "$PWD/build/site/public" 'build/site/public/**/*.html' || fail=1
 
 step "Links between hosted pages stay on the site"
-python3 scripts/check-site-links.py build/site/public build/site/data/pages.json "https://$(sed -n 's/^module //p' go.mod)" || fail=1
+python3 scripts/check-site-links.py build/site/public site/src/generated/pages.json "https://$(sed -n 's/^module //p' go.mod)" || fail=1
 
 if $external; then
     step "External links"

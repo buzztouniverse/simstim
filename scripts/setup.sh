@@ -10,7 +10,7 @@
 # The justfile puts .tools/bin first on its PATH. Go itself comes from go.mod:
 # any Go 1.21 or newer downloads the pinned toolchain on first use.
 #
-#   scripts/setup.sh --only hugo,typos   only these tools, and no build (CI)
+#   scripts/setup.sh --only node,typos   only these tools, and no build (CI)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -68,6 +68,12 @@ while read -r name version plat sum url; do
     bin=$(find "$dir" -type f -name "$name" -perm -u+x | head -1)
     [ -n "$bin" ] || die "no $name binary in $dir"
     ln -sf "$(cd "$(dirname "$bin")" && pwd)/$name" "$tools/bin/$name"
+    if [ "$name" = node ]; then
+        # npx runs the Markdown lint (scripts/docs-check.sh).
+        for extra in npm npx; do
+            [ -e "$(dirname "$bin")/$extra" ] && ln -sf "$(cd "$(dirname "$bin")" && pwd)/$extra" "$tools/bin/$extra"
+        done
+    fi
 done <scripts/tools.lock
 
 export PATH="$PWD/$tools/bin:$PATH"
@@ -78,7 +84,7 @@ if [ -n "$only" ]; then
 fi
 say ""
 say "Tools in $tools/bin:"
-for t in just golangci-lint goreleaser gitleaks zig hugo typos vale lychee; do
+for t in just golangci-lint goreleaser gitleaks zig node pnpm typos vale lychee; do
     printf '  %-14s %s\n' "$t" "$("$t" --version 2>/dev/null | head -1 || "$t" version 2>/dev/null | head -1)" >&2
 done
 say "  go             $(go version | cut -d' ' -f3) (the toolchain go.mod asks for downloads on first use)"

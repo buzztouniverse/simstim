@@ -19,8 +19,9 @@ concurrency:
 jobs:
   check:
     # The generated reference is current; Markdown lint, British spelling,
-    # plain English; the site builds and every internal link resolves. The
-    # built site is kept as an artifact.
+    # plain English; the site builds (Astro with Starlight, on the pinned
+    # Node and pnpm, from the committed lockfile) and every internal link
+    # resolves. The built site is kept as an artifact.
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,7 +34,7 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Docs tools (pinned in scripts/tools.lock)
-        run: scripts/setup.sh --only hugo,typos,vale,lychee
+        run: scripts/setup.sh --only node,pnpm,typos,vale,lychee
       - name: Docs checks
         run: scripts/docs-check.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -85,7 +86,7 @@ jobs:
         with:
           go-version-file: go.mod
           cache: false
-      - run: scripts/setup.sh --only hugo
+      - run: scripts/setup.sh --only node,pnpm
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
         id: pages
       - name: Assemble the versions

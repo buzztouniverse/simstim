@@ -1,0 +1,163 @@
+---
+// The top bar on every page, the landing page too: the mark, the tabs
+// (Docs, Reference, Changelog, Project), search on "/" and Ctrl/Cmd+K, the
+// docs version, the theme and the source. On a phone, the tabs move into
+// the menu: Starlight's own on a docs page, and ours on the landing page,
+// which has no sidebar.
+import Search from 'virtual:starlight/components/Search';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import Logo from '../Logo.astro';
+import Version from '../Version.astro';
+import Tabs from '../Tabs.astro';
+
+const hasSidebar = Astro.locals.starlightRoute.hasSidebar;
+---
+
+<div class="site-header">
+	<Logo />
+	<nav class="tabs-wide" aria-label="Main">
+		<Tabs />
+	</nav>
+	<div class="search">
+		<Search />
+	</div>
+	<div class="end">
+		<Version />
+		<ThemeSelect />
+		<div class="social"><SocialIcons /></div>
+	</div>
+	{
+		!hasSidebar && (
+			<details class="phone-menu">
+				<summary aria-label="Menu">
+					<span aria-hidden="true">menu</span>
+				</summary>
+				<div class="sheet">
+					<nav aria-label="Main">
+						<Tabs />
+					</nav>
+					<div class="prefs">
+						<ThemeSelect />
+						<SocialIcons />
+					</div>
+				</div>
+			</details>
+		)
+	}
+</div>
+
+<script>
+	// "/" opens search, as in the launcher, unless you are typing, or the
+	// live launcher on the landing page has the keys.
+	window.addEventListener('keydown', (e) => {
+		if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+		const t = e.target as HTMLElement | null;
+		if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+		const open = document.querySelector<HTMLButtonElement>('button[data-open-modal]');
+		if (!open || open.disabled) return;
+		e.preventDefault();
+		open.click();
+	});
+</script>
+
+<style>
+	.site-header {
+		display: flex;
+		align-items: center;
+		gap: 1.5rem;
+		height: 100%;
+	}
+	.tabs-wide {
+		display: none;
+	}
+	.search {
+		margin-inline-start: auto;
+	}
+	.end {
+		display: none;
+		align-items: center;
+		gap: 1rem;
+	}
+	.social {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.social :global(a) {
+		color: var(--sl-color-gray-2);
+	}
+	.social :global(a:hover) {
+		color: var(--sl-color-white);
+	}
+	@media (min-width: 50rem) {
+		.tabs-wide {
+			display: block;
+		}
+		.end {
+			display: flex;
+		}
+		.search {
+			margin-inline-start: auto;
+		}
+		.search :global(button[data-open-modal]) {
+			min-width: 12rem;
+		}
+	}
+	.phone-menu {
+		position: relative;
+	}
+	.phone-menu summary {
+		display: grid;
+		place-items: center;
+		height: 2rem;
+		padding: 0 0.7rem;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: 8px;
+		list-style: none;
+		cursor: pointer;
+		font: 500 0.8125rem var(--sl-font-mono);
+		color: var(--sl-color-gray-2);
+	}
+	.phone-menu summary::-webkit-details-marker {
+		display: none;
+	}
+	.phone-menu[open] summary {
+		border-color: var(--sl-color-text-accent);
+		color: var(--sl-color-white);
+	}
+	.sheet {
+		position: absolute;
+		inset-inline-end: 0;
+		top: calc(100% + 0.6rem);
+		z-index: 30;
+		width: min(18rem, calc(100vw - 2rem));
+		padding: 0.75rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 12px;
+		background: var(--sl-color-black);
+		box-shadow: var(--sl-shadow-lg);
+	}
+	.sheet :global(.tabs) {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.15rem;
+	}
+	.sheet :global(.tabs a) {
+		padding: 0.55rem 0.75rem;
+		font-size: 1rem;
+	}
+	.prefs {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--sl-color-hairline);
+	}
+	@media (min-width: 50rem) {
+		.phone-menu {
+			display: none;
+		}
+	}
+</style>

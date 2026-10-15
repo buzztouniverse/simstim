@@ -50,6 +50,10 @@ else
     cp -R build/site/public/. "$out/"
 fi
 
-printf '{"latest": "%s", "versions": [%s], "dev": "dev"}\n' "$latest" \
-    "$(printf '"%s",' "${versions[@]:-}" | sed 's/,$//')" >"$out/versions.json"
+# The version menu in the site's top bar reads this list.
+list=""
+for v in "${versions[@]:-}"; do
+    [ -n "$v" ] && list+="\"$v\","
+done
+printf '{"latest": "%s", "versions": [%s], "dev": "dev"}\n' "$latest" "${list%,}" >"$out/versions.json"
 echo "pages-assemble: built $out (latest: ${latest:-none}; versions: ${versions[*]:-none})"

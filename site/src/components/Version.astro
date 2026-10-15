@@ -1,0 +1,116 @@
+---
+// Which version of the docs this is, and a menu of the others. The menu
+// reads versions.json at the site's root, which scripts/pages-assemble.sh
+// writes; without it, or without script, this is just the version's name.
+const version = __SITE__.version;
+const root = __SITE__.root;
+const base = import.meta.env.BASE_URL;
+const listed = __SITE__.versions;
+---
+
+<site-version class="version" data-root={listed ? root : undefined} data-base={base} data-current={version}>
+	<button type="button" aria-expanded="false" aria-haspopup="true" disabled>
+		<span class="sr-only">Docs version: </span><span>{version}</span>
+	</button>
+	<ul class="menu" hidden></ul>
+</site-version>
+
+<script>
+	class SiteVersion extends HTMLElement {
+		async connectedCallback() {
+			const { root, base, current } = this.dataset;
+			if (!root) return;
+			let data;
+			try {
+				const res = await fetch(`${root}versions.json`, { cache: 'no-cache' });
+				if (!res.ok) return;
+				data = await res.json();
+			} catch {
+				return;
+			}
+			const here = location.pathname.startsWith(base) ? location.pathname.slice(base.length) : '';
+			const items = [];
+			if (data.latest) items.push({ label: `${data.latest} (latest)`, path: root, name: data.latest });
+			for (const v of data.versions || []) if (v && (!data.latest || !data.latest.startsWith(v))) items.push({ label: v, path: `${root}${v}/`, name: v });
+			items.push({ label: 'dev (main)', path: `${root}dev/`, name: 'dev' });
+			if (items.length < 2) return;
+			const list = this.querySelector('ul');
+			for (const it of items) {
+				const li = document.createElement('li');
+				const a = document.createElement('a');
+				a.href = it.path + here;
+				a.textContent = it.label;
+				if (it.name === current || current.startsWith(it.name)) a.setAttribute('aria-current', 'true');
+				li.append(a);
+				list.append(li);
+			}
+			const btn = this.querySelector('button');
+			btn.disabled = false;
+			const set = (open) => {
+				btn.setAttribute('aria-expanded', String(open));
+				list.hidden = !open;
+			};
+			btn.addEventListener('click', () => set(list.hidden));
+			this.addEventListener('keydown', (e) => e.key === 'Escape' && (set(false), btn.focus()));
+			document.addEventListener('click', (e) => !this.contains(e.target) && set(false));
+		}
+	}
+	customElements.define('site-version', SiteVersion);
+</script>
+
+<style>
+	.version {
+		position: relative;
+	}
+	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		height: 1.75rem;
+		padding: 0 0.6rem;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--sl-color-gray-2);
+		font: 500 0.75rem var(--sl-font-mono);
+		cursor: pointer;
+	}
+	button:disabled {
+		cursor: default;
+		color: var(--sl-color-gray-3);
+	}
+	button:not(:disabled)::after {
+		content: '▾';
+		font-size: 0.7em;
+	}
+	.menu :global(li) {
+		margin: 0;
+	}
+	.menu {
+		position: absolute;
+		top: calc(100% + 0.4rem);
+		inset-inline-end: 0;
+		z-index: 20;
+		min-width: 11rem;
+		margin: 0;
+		padding: 0.35rem;
+		list-style: none;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 10px;
+		background: var(--sl-color-black);
+		box-shadow: var(--sl-shadow-md);
+	}
+	.menu :global(a) {
+		display: block;
+		padding: 0.35rem 0.6rem;
+		border-radius: 6px;
+		color: var(--sl-color-gray-2);
+		font: 0.8125rem var(--sl-font-mono);
+		text-decoration: none;
+	}
+	.menu :global(a:hover),
+	.menu :global(a[aria-current]) {
+		background: var(--site-tint);
+		color: var(--sl-color-white);
+	}
+</style>

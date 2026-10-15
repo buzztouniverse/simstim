@@ -1,0 +1,32 @@
+---
+// The sidebar shows the current tab only (src/route-data.js). On a phone it
+// is the menu, so the tabs go at its top.
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+import Tabs from '../Tabs.astro';
+
+const { sidebar } = Astro.locals.starlightRoute;
+---
+
+<nav class="phone-tabs md:sl-hidden" aria-label="Main">
+	<Tabs />
+</nav>
+<SidebarPersister>
+	<SidebarSublist sublist={sidebar} />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+	<MobileMenuFooter />
+</div>
+
+<style>
+	.phone-tabs {
+		margin-bottom: 1rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid var(--sl-color-hairline);
+	}
+	.phone-tabs :global(.tabs) {
+		flex-wrap: wrap;
+	}
+</style>

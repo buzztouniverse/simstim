@@ -1,0 +1,66 @@
+---
+// The tabs: each part of the docs has its own sidebar (decision 0022).
+// "Changelog" is a page of Project, so it is current there and Project is
+// not; anywhere else, the page's tab is current.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const tab = Astro.locals.tab?.label;
+const here = Astro.url.pathname;
+const changelog = `${base}/project/changelog/`;
+const items = [
+	{ label: 'Docs', href: `${base}/docs/`, current: tab === 'Docs' },
+	{ label: 'Reference', href: `${base}/reference/`, current: tab === 'Reference' },
+	{ label: 'Changelog', href: changelog, current: here === changelog },
+	{ label: 'Project', href: `${base}/project/`, current: tab === 'Project' && here !== changelog },
+];
+---
+
+<ul class="tabs">
+	{
+		items.map((it) => (
+			<li>
+				<a href={it.href} aria-current={it.current ? 'page' : undefined}>
+					{it.label}
+				</a>
+			</li>
+		))
+	}
+</ul>
+
+<style>
+	.tabs {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	a {
+		position: relative;
+		display: block;
+		padding: 0.35rem 0.7rem;
+		border-radius: 8px;
+		color: var(--sl-color-gray-2);
+		font-size: 0.9375rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: color 0.15s, background-color 0.15s;
+	}
+	a:hover {
+		color: var(--sl-color-white);
+		background: color-mix(in srgb, var(--sl-color-gray-5) 40%, transparent);
+	}
+	a[aria-current='page'] {
+		color: var(--sl-color-white);
+		background: var(--site-tint);
+	}
+	a[aria-current='page']::after {
+		content: '';
+		position: absolute;
+		inset-inline: 0.7rem;
+		bottom: -0.15rem;
+		height: 2px;
+		border-radius: 2px;
+		background: var(--sl-color-text-accent);
+	}
+</style>

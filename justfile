@@ -154,7 +154,7 @@ scorecard:
 docs:
     go run ./cmd/docgen
 
-# Build the docs site into build/site/public (Hugo with Hextra).
+# Build the docs site into build/site/public (Astro with Starlight; needs Node and pnpm from scripts/setup.sh).
 docs-site version="dev":
     scripts/docs-site.sh {{version}}
 

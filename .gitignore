@@ -1,5 +1,12 @@
 # Build output
 /bin/
+# The docs site's dependencies, cache, and the pages and data that
+# cmd/docgen -site writes from docs/ (scripts/docs-site.sh)
+/site/node_modules/
+/site/.astro/
+/site/src/content/docs/
+/site/src/generated/
+/site/public/images/
 # Pinned developer tools (scripts/setup.sh)
 /.tools/
 /dist/

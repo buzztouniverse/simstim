@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Fails when the product name is spelled in code outside internal/brand.
 # The module path and import paths may contain it; docs may mention it. The
-# site's templates, scripts and styles take it from the site's title or data.
+# site's pages, scripts and styles take it from the site's generated data.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -24,7 +24,7 @@ while IFS= read -r file; do
         echo "$hits" | sed 's/^/  /'
         fail=1
     fi
-done < <(git ls-files --cached --others --exclude-standard -- '*.go' 'justfile' '.goreleaser.yaml' '.github/workflows/*.yml' 'scripts/*.sh' 'install.sh' 'test/e2e/*.py' 'vt/*.zig' 'vt/src/*.zig' 'vt/build.zig.zon' 'internal/*/testdata/*/*.py' 'site/hugo.yaml' 'site/layouts/*' 'site/assets/js/*' 'site/assets/css/*' 'scripts/*.py' | grep -v '^scripts/check-name.sh$' | grep -v '^scripts/rename.sh$')
+done < <(git ls-files --cached --others --exclude-standard -- '*.go' 'justfile' '.goreleaser.yaml' '.github/workflows/*.yml' 'scripts/*.sh' 'install.sh' 'test/e2e/*.py' 'vt/*.zig' 'vt/src/*.zig' 'vt/build.zig.zon' 'internal/*/testdata/*/*.py' 'site/astro.config.mjs' 'site/package.json' 'site/src/*' 'scripts/*.py' | grep -v '^scripts/check-name.sh$' | grep -v '^scripts/rename.sh$')
 
 if [ "$fail" -ne 0 ]; then
     echo

@@ -1,0 +1,8 @@
+---
+// Starlight's content panel, except on the landing page, which lays out
+// its own sections from edge to edge.
+import Default from '@astrojs/starlight/components/ContentPanel.astro';
+const landing = Astro.locals.starlightRoute.entry.data.landing;
+---
+
+{landing ? <slot /> : <Default><slot /></Default>}

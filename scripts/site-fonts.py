@@ -3,13 +3,15 @@
     site-fonts.py mono <JetBrainsMono[wght].ttf> <out.woff2>
     site-fonts.py sans <Inter latin woff2> <out.woff2>
     site-fonts.py braille <out.woff2>
+    site-fonts.py display <SchibstedGrotesk latin wght woff2> <out.woff2>
 
 mono: JetBrains Mono, cut to Latin, punctuation and the symbols the launcher
 draws (rules, blocks, arrows, the state glyphs), weights 400 to 800, no code
 ligatures. sans: Inter at its text optical size, weights 400 to 700. braille:
 the 256 braille patterns as round dots, drawn here, on the same cell as the
 monospace face, so braille art lines up in columns and its rows meet with no
-gap at a line height of 1.25.
+gap at a line height of 1.25. display: Schibsted Grotesk for headings, cut
+to Latin and punctuation, at one weight (620).
 """
 
 import io
@@ -40,6 +42,27 @@ def mono(src, out):
     f.save(buf)
     buf.seek(0)
     f = instancer.instantiateVariableFont(TTFont(buf), {"wght": (400, 800)})
+    f.flavor = "woff2"
+    f.save(out)
+
+
+DISPLAY_CHARS = "U+0020-007E,U+00A0-00FF,U+2010-2027,U+2032-2033,U+2190-2193,U+2212"
+
+
+def display(src, out):
+    opts = subset.Options()
+    opts.layout_features = ["kern", "liga", "calt", "mark", "mkmk"]
+    opts.name_IDs = ["*"]
+    opts.notdef_outline = True
+    f = TTFont(src)
+    s = subset.Subsetter(opts)
+    s.populate(unicodes=subset.parse_unicodes(DISPLAY_CHARS))
+    s.subset(f)
+    buf = io.BytesIO()
+    f.flavor = None
+    f.save(buf)
+    buf.seek(0)
+    f = instancer.instantiateVariableFont(TTFont(buf), {"wght": 620})
     f.flavor = "woff2"
     f.save(out)
 
@@ -97,4 +120,4 @@ def braille(out):
 
 if __name__ == "__main__":
     cmd, args = sys.argv[1], sys.argv[2:]
-    {"mono": mono, "sans": sans, "braille": braille}[cmd](*args)
+    {"mono": mono, "sans": sans, "braille": braille, "display": display}[cmd](*args)

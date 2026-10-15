@@ -1,0 +1,23 @@
+---
+// The page's text. Project notes (decision records and research) still show
+// up in search, but below the user docs (Pagefind weights).
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+const data = Astro.locals.starlightRoute.entry.data;
+const notes = /^docs\/(research|contributing\/decisions)\//.test(data.srcPath ?? '');
+---
+
+{
+	data.landing ? (
+		<slot />
+	) : notes ? (
+		<div data-pagefind-weight="0.4">
+			<Default>
+				<slot />
+			</Default>
+		</div>
+	) : (
+		<Default>
+			<slot />
+		</Default>
+	)
+}

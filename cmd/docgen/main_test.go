@@ -79,19 +79,19 @@ func snapshot(t *testing.T, dir string) string {
 }
 
 // The site hosts every page in docs/ and the community files at the root,
-// and maps each one's path in the repository to its page, so links between
-// them stay on the site.
+// maps each one's path in the repository to its page, and rewrites the
+// links between them, so they stay on the site under any base.
 func TestSitePages(t *testing.T) {
 	if _, err := os.Stat("go.mod"); err != nil {
 		if err := os.Chdir("../.."); err != nil {
 			t.Fatal(err)
 		}
 	}
-	out := t.TempDir()
-	if err := sitePages("docs", out); err != nil {
+	out := filepath.Join(t.TempDir(), "src")
+	if err := sitePages("docs", out, "https://github.com/o/r"); err != nil {
 		t.Fatal(err)
 	}
-	b, err := os.ReadFile(filepath.Join(out, "data", "pages.json"))
+	b, err := os.ReadFile(filepath.Join(out, "generated", "pages.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,28 +100,61 @@ func TestSitePages(t *testing.T) {
 		t.Fatal(err)
 	}
 	for src, want := range map[string]string{
-		"README.md":                    "/",
-		"docs/README.md":               "/docs",
-		"docs/how-to/README.md":        "/how-to",
-		"docs/how-to":                  "/how-to",
-		"docs/how-to/install.md":       "/how-to/install",
-		"docs/reference/_index.md":     "/reference",
-		"CHANGELOG.md":                 "/project/changelog",
-		"CONTRIBUTING.md":              "/project/contributing",
-		"examples/providers/README.md": "/reference/provider-scripts",
+		"README.md":                      "/",
+		"docs/README.md":                 "/docs/",
+		"docs/how-to/README.md":          "/how-to/",
+		"docs/how-to":                    "/how-to/",
+		"docs/how-to/install.md":         "/how-to/install/",
+		"docs/reference/_index.md":       "/reference/",
+		"docs/reference/cli/host_add.md": "/reference/cli/host_add/",
+		"CHANGELOG.md":                   "/project/changelog/",
+		"CONTRIBUTING.md":                "/project/contributing/",
+		"examples/providers/README.md":   "/reference/provider-scripts/",
 	} {
 		if got := pages[src]; got != want {
 			t.Errorf("pages[%q] = %q, want %q", src, got, want)
 		}
 	}
-	for _, f := range []string{"content/_index.md", "content/docs.md", "content/project/_index.md", "content/project/changelog.md", "data/brand.json", "data/agents.json"} {
+	for _, f := range []string{"content/docs/docs.md", "content/docs/how-to/index.md", "content/docs/project/index.md", "content/docs/project/changelog.md", "generated/brand.json", "generated/agents.json", "generated/sidebar.json", "../public/images/sessions.svg"} {
 		if _, err := os.Stat(filepath.Join(out, f)); err != nil {
 			t.Errorf("%s: %v", f, err)
 		}
 	}
-	page, _ := os.ReadFile(filepath.Join(out, "content", "how-to", "install.md"))
-	if !strings.Contains(string(page), "srcPath: \"docs/how-to/install.md\"\n") {
-		t.Errorf("install.md has no srcPath:\n%.200s", page)
+	page, _ := os.ReadFile(filepath.Join(out, "content", "docs", "how-to", "install.md"))
+	for _, want := range []string{"srcPath: \"docs/how-to/install.md\"\n", "editUrl: \"https://github.com/o/r/edit/main/docs/how-to/install.md\"\n", "](../../contributing/releasing/#checking-a-release)"} {
+		if !strings.Contains(string(page), want) {
+			t.Errorf("install.md has no %q:\n%.400s", want, page)
+		}
+	}
+}
+
+func TestResolve(t *testing.T) {
+	if _, err := os.Stat("go.mod"); err != nil {
+		if err := os.Chdir("../.."); err != nil {
+			t.Fatal(err)
+		}
+	}
+	pages := map[string]string{"docs/how-to/install.md": "/how-to/install/", "docs/README.md": "/docs/", "README.md": "/", "CHANGELOG.md": "/project/changelog/"}
+	for _, c := range []struct{ dest, src, url, want string }{
+		{"install.md#from-source", "docs/how-to/add-a-host.md", "/how-to/add-a-host/", "../install/#from-source"},
+		{"../how-to/install.md", "docs/tutorials/getting-started.md", "/tutorials/getting-started/", "../../how-to/install/"},
+		{"../CHANGELOG.md", "docs/README.md", "/docs/", "../project/changelog/"},
+		{"../README.md", "docs/README.md", "/docs/", "../"},
+		{"../images/attach.svg", "docs/how-to/install.md", "/how-to/install/", "../../images/attach.svg"},
+		{"../../internal/agents", "docs/reference/agents.md", "/reference/agents/", "https://github.com/o/r/tree/main/internal/agents"},
+		{"../../scripts/setup.sh", "docs/contributing/testing.md", "/contributing/testing/", "https://github.com/o/r/blob/main/scripts/setup.sh"},
+		{"#top", "docs/README.md", "/docs/", "#top"},
+		{"https://example.com", "docs/README.md", "/docs/", "https://example.com"},
+	} {
+		if got := resolve(c.dest, c.src, c.url, pages, "https://github.com/o/r"); got != c.want {
+			t.Errorf("resolve(%q from %s) = %q, want %q", c.dest, c.src, got, c.want)
+		}
+	}
+	md := "See [install](install.md) and `[not](install.md)`.\n| [`install`](install.md) | x |\n\n```sh\n[no](install.md)\n```\n\n[ref]: install.md\n"
+	got := rewriteLinks(md, "docs/how-to/x.md", "/how-to/x/", pages, "https://github.com/o/r")
+	want := "See [install](../install/) and `[not](install.md)`.\n| [`install`](../install/) | x |\n\n```sh\n[no](install.md)\n```\n\n[ref]: ../install/\n"
+	if got != want {
+		t.Errorf("rewriteLinks:\n%s\nwant:\n%s", got, want)
 	}
 }
 

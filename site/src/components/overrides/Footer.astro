@@ -1,0 +1,29 @@
+---
+// The end of a page: where it comes from, previous and next inside its tab,
+// and the site's footer.
+import EditLink from 'virtual:starlight/components/EditLink';
+import Pagination from 'virtual:starlight/components/Pagination';
+import SiteFooter from '../SiteFooter.astro';
+const landing = Astro.locals.starlightRoute.entry.data.landing;
+---
+
+{
+	landing ? (
+		<SiteFooter full />
+	) : (
+		<footer class="page-foot">
+			<EditLink />
+			<Pagination />
+			<SiteFooter />
+		</footer>
+	)
+}
+
+<style>
+	.page-foot {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		margin-top: 3rem;
+	}
+</style>

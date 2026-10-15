@@ -66,7 +66,7 @@ func agentsPage() []byte {
 		}
 		inline := "—"
 		if a.Inline.Has() {
-			var parts []string
+			parts := make([]string, 0, len(a.Inline.Env)+len(a.Inline.Args))
 			for _, k := range sortedKeys(a.Inline.Env) {
 				parts = append(parts, k+"="+a.Inline.Env[k])
 			}

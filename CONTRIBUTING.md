@@ -10,7 +10,7 @@ You need Go (any version from 1.21; it downloads the toolchain `go.mod` pins), g
 scripts/setup.sh
 ```
 
-It puts pinned versions of just, golangci-lint, GoReleaser, gitleaks and Zig 0.16 into `.tools/` (git-ignored), checks each download's SHA-256 against [scripts/tools.lock](scripts/tools.lock), then builds and tests once. The justfile puts `.tools/bin` first on its PATH. Or open the repo in its [devcontainer](.devcontainer/devcontainer.json), which runs the same script.
+It puts pinned versions of just, golangci-lint, GoReleaser, gitleaks, Zig 0.16, and the docs tools (Node and pnpm for the site, typos, Vale, lychee) into `.tools/` (git-ignored), checks each download's SHA-256 against [scripts/tools.lock](scripts/tools.lock), then builds and tests once. The justfile puts `.tools/bin` first on its PATH. Or open the repo in its [devcontainer](.devcontainer/devcontainer.json), which runs the same script.
 
 ```sh
 just build   # host helpers, the shadow terminal, then the client, into ./bin

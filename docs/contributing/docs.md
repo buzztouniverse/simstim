@@ -32,32 +32,54 @@ To change a reference page, change the code or its comment, then run `just docs`
 
 ## The site
 
-`just docs-site` builds the site into `build/site/public` with Hugo and the Hextra theme (`site/`). [Decision 0021](decisions/0021-site-design.md) has its design, and [the research note](../research/website.md) the evidence behind it.
+`just docs-site` builds the site into `build/site/public` with Astro and its docs framework, Starlight (`site/`). It needs Node and pnpm, at the versions `scripts/setup.sh` installs. [Decision 0022](decisions/0022-site-rebuild.md) has its design, [the research note](../research/website.md) the evidence behind it, and [the audit](../research/website-audit.md) the problems it fixed.
 
-- **The landing page** is at the root. Its template is `site/layouts/landing.html`, its style `site/assets/css/landing.css`, and its scripts `site/assets/js/`: the live copy of the launcher, the small braille animations, and the three.js signal field (`field.js`), which loads last and only with motion on.
-- **The docs** keep their place: `docs/README.md` is the overview at `/docs/`, and every other page keeps its address, such as `/how-to/install/`. The community files at the root of the repository (`CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md` and the rest) are the Project section, at `/project/`.
-- **The look** is the launcher's (`site/assets/css/custom.css`): its colours, its cyan accent and marker, rules instead of boxes, and braille.
+### How the pages get there
 
-`cmd/docgen -site` first turns the Markdown into the site's content: each `README.md` becomes its section's page, and each page's first heading its title. It records each page's path in the repository, and writes `data/pages.json`, which maps every hosted file to its page. So a link between two Markdown files goes to that page on the site, never to GitHub. A link to any other file, such as code or a script, goes to its source on GitHub, and each page ends with a link to its own source. `just docs-check` fails if a built page links to GitHub for a page the site hosts (`scripts/check-site-links.py`).
+`go run ./cmd/docgen -site site/src` (the build runs it) turns the Markdown into the site's pages, in `site/src/content/docs/`, which git ignores:
 
-The name is never spelled in `site/`: templates take it from the site's title, and the rest of the brand (the tagline, the helper's name) from `data/brand.json`, which `cmd/docgen` writes from `internal/brand`. The agents on the landing page come from the agent table the same way. `just check-name` covers the site's templates, scripts and styles.
+- each `README.md` becomes its folder's page, each page's first heading its title, and its first paragraph its description;
+- every link between two hosted files becomes a link to that page on the site, relative, so it works under any base (`/dev/`, `/v1.2/`). A link to any other file, such as code or a script, goes to its source on GitHub;
+- the community files at the root of the repository (`CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md` and the rest) become pages of the Project tab.
+
+It also writes `site/src/generated/`: `pages.json`, which maps each hosted file to its page; `sidebar.json`, the tabs; and `brand.json` and `agents.json` for the landing page. `just docs-check` fails if a built page links to GitHub for a page the site hosts (`scripts/check-site-links.py`).
+
+### Tabs and the sidebar
+
+The site has three tabs, each with its own sidebar: **Docs** (Overview, Get started, Guides, Concepts, Help), **Reference** (generated) and **Project** (the changelog, roadmap, contributor guide, decision records and research notes). `cmd/docgen/sitenav.go` sets their shape; **the order and the labels come from each folder's README**, in the order of its links and under its `##` headings. So to move a guide, move its row in `docs/how-to/README.md`; to add one, add a row. The build fails if the sidebar names a page that does not exist.
+
+### Where things are
+
+| Path | What |
+| --- | --- |
+| `site/astro.config.mjs` | Starlight's settings: the tabs, the overrides, search, the fonts |
+| `site/src/route-data.js` | Shows the current tab's sidebar only, keeps previous and next inside it, and works out the breadcrumbs |
+| `site/src/components/overrides/` | Starlight's parts we replace: the top bar, the sidebar, the title with its breadcrumbs, the footer, the source links |
+| `site/src/pages/index.astro` | The landing page |
+| `site/src/scripts/` | The live launcher, the figures' stories, the welcome mark, the motion setting |
+| `site/src/styles/` | The look (`theme.css`), the fonts, and the landing page |
+| `site/package.json`, `site/pnpm-lock.yaml` | The npm packages, at exact versions, with their hashes |
+
+The name is never spelled in `site/`: pages take it from the site's title and from `src/generated/brand.json`, which `cmd/docgen` writes from `internal/brand`. `just check-name` covers the site's pages, scripts and styles.
 
 ### Third-party files
 
-The site loads only its own files: no CDN, no web fonts from elsewhere, no analytics. `scripts/site-vendor.sh` fetches the third-party files at pinned versions, checks each one's SHA-256, and writes them into `site/`. Run it only to change a version, then commit the result.
+The site loads only its own files: no CDN, no web fonts from elsewhere, no analytics, and Astro's telemetry is off in every build. The npm packages are pinned in `site/pnpm-lock.yaml`; pnpm waits a week before it uses a new release, and runs no package's install script except esbuild's. The fonts are committed files: `scripts/site-vendor.sh` fetches them at pinned versions, checks each one's SHA-256, and cuts them down. Run it only to change a version, then commit the result.
 
 | File | What | Licence |
 | --- | --- | --- |
-| `site/assets/vendor/three/` | three.js 0.186.1, its two build files unchanged. Hugo bundles and minifies the parts `field.js` uses. | MIT |
-| `site/static/fonts/mono.woff2` | JetBrains Mono 2.304, cut to the characters the site uses | SIL OFL 1.1 |
-| `site/static/fonts/sans.woff2` | Inter 4, Latin, at its text optical size | SIL OFL 1.1 |
-| `site/static/fonts/braille.woff2` | The 256 braille patterns, drawn by `scripts/site-fonts.py` on the monospace cell | Apache-2.0 |
+| `site/public/fonts/sans.woff2` | Inter 4, Latin, at its text optical size, for text | SIL OFL 1.1 |
+| `site/public/fonts/display.woff2` | Schibsted Grotesk, Latin, at one weight, for headings | SIL OFL 1.1 |
+| `site/public/fonts/mono.woff2` | JetBrains Mono 2.304, cut to the characters the site uses, for code and the launcher | SIL OFL 1.1 |
+| `site/public/fonts/braille.woff2` | The 256 braille patterns, drawn by `scripts/site-fonts.py` on the monospace cell | Apache-2.0 |
 
 ### Motion
 
-Every animation follows one setting: "auto" follows the reader's reduced-motion setting, and the footer's switch and the button under the launcher change it for this browser. With motion off, everything shows a still frame. Each animation also stops when it is off screen or the tab is hidden. Keep it that way for anything new: draw the still frame first, in the HTML, and add motion on top.
+Every animation follows one setting: "auto" follows the reader's reduced-motion setting, and the footer's switch and the button under the launcher change it for this browser. With motion off, nothing moves and every figure shows its whole story at once. Each animation stops when it is off screen or the tab is hidden. A figure that tells a story has its steps beside it as buttons, so it also works by hand. Keep it that way for anything new: draw the still frame first, in the HTML, and add motion on top.
 
-CI builds the site on every push and keeps it as an artifact named `docs-site`. Once the repository is public, GitHub Pages serves the latest release at the root, each release at `/vX.Y/`, and `main` at `/dev/`.
+### Versions
+
+CI builds the site on every push and keeps it as an artifact named `docs-site`. Once the repository is public, GitHub Pages serves the latest release at the root, each release at `/vX.Y/`, and `main` at `/dev/` (`scripts/pages-assemble.sh`). Each is built on its own, with its own base and its own search index. The version menu in the top bar reads `versions.json` at the root, so an old version lists the newer ones too.
 
 ## Checks
 

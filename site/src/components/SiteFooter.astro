@@ -1,0 +1,175 @@
+---
+// The bottom of every page: where to go next, what this site does not do,
+// the docs version and the motion switch. The landing page shows the full
+// set of links; a docs page, one line.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const repo = __SITE__.repo;
+const version = __SITE__.version;
+const name = Astro.locals.starlightRoute?.siteTitle ?? '';
+const { full = false } = Astro.props;
+const cols = [
+	{
+		title: 'Docs',
+		links: [
+			['Install', '/how-to/install/'],
+			['Getting started', '/tutorials/getting-started/'],
+			['Guides', '/how-to/'],
+			['How it works', '/explanation/how-it-works/'],
+			['Common questions', '/faq/'],
+		],
+	},
+	{
+		title: 'Reference',
+		links: [
+			['Commands', '/reference/cli/'],
+			['Configuration', '/reference/config/'],
+			['Keys', '/reference/keymap/'],
+			['Agents', '/reference/agents/'],
+		],
+	},
+	{
+		title: 'Project',
+		links: [
+			['Changelog', '/project/changelog/'],
+			['Roadmap', '/roadmap/'],
+			['Getting help', '/project/support/'],
+			['Security', '/project/security/'],
+			['How to contribute', '/project/contributing/'],
+		],
+	},
+];
+---
+
+<div class:list={['site-foot', { full }]}>
+	{
+		full && (
+			<div class="cols">
+				<p class="about">
+					No tracking, no cookies, and no requests to anyone else: this site loads only its own files. Open source,
+					under the Apache License 2.0.
+				</p>
+				{cols.map((c) => (
+					<div>
+						<h2>{c.title}</h2>
+						<ul>
+							{c.links.map(([label, path]) => (
+								<li>
+									<a href={base + path}>{label}</a>
+								</li>
+							))}
+							{c.title === 'Project' && repo && (
+								<li>
+									<a href={repo}>Source on GitHub</a>
+								</li>
+							)}
+						</ul>
+					</div>
+				))}
+			</div>
+		)
+	}
+	<div class="line">
+		<span>
+			{name} docs for <b>{version}</b> · Apache-2.0{!full && ' · no tracking, no cookies'}
+		</span>
+		<div class="motion" data-motion-switch role="group" aria-label="Motion" hidden>
+			<span>motion</span>
+			<button type="button" data-motion="auto" aria-pressed="true">auto</button>
+			<button type="button" data-motion="on" aria-pressed="false">on</button>
+			<button type="button" data-motion="off" aria-pressed="false">off</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	import '../scripts/site.js';
+</script>
+
+<style>
+	.site-foot.full {
+		max-width: 72rem;
+		margin-inline: auto;
+		padding: 3rem clamp(1rem, 4vw, 2.5rem) 2rem;
+	}
+	.site-foot {
+		margin-top: 3rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--sl-color-hairline);
+		font-size: 0.875rem;
+		color: var(--sl-color-gray-3);
+	}
+	.cols {
+		display: grid;
+		grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+		gap: 2rem;
+		padding-bottom: 3rem;
+	}
+	.about {
+		margin: 0;
+		max-width: 30ch;
+		line-height: 1.55;
+	}
+	h2 {
+		margin: 0 0 0.75rem;
+		font: 600 0.75rem var(--sl-font-mono);
+		color: var(--sl-color-gray-2);
+	}
+	ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 0.4rem;
+	}
+	a {
+		color: var(--sl-color-gray-3);
+		text-decoration: none;
+	}
+	a:hover {
+		color: var(--sl-color-text-accent);
+		text-decoration: underline;
+	}
+	.line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem 1.5rem;
+		font: 0.75rem var(--sl-font-mono);
+	}
+	.line b {
+		color: var(--sl-color-gray-2);
+		font-weight: 600;
+	}
+	.motion {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.motion span {
+		margin-inline-end: 0.35rem;
+	}
+	.motion button {
+		padding: 0.15rem 0.55rem;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--sl-color-gray-2);
+		font: inherit;
+		cursor: pointer;
+	}
+	.motion button[aria-pressed='true'] {
+		border-color: var(--sl-color-text-accent);
+		background: var(--site-tint);
+		color: var(--sl-color-white);
+	}
+	@media (max-width: 50rem) {
+		.cols {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.about {
+			grid-column: 1 / -1;
+			max-width: none;
+		}
+	}
+</style>

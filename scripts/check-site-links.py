@@ -3,7 +3,7 @@
 site hosts itself. Navigation stays on the site: only "view source" links,
 which carry a data-source attribute, may point at a hosted page's file.
 
-    scripts/check-site-links.py build/site/public build/site/data/pages.json https://github.com/<owner>/<repo>
+    scripts/check-site-links.py build/site/public site/src/generated/pages.json https://github.com/<owner>/<repo>
 
 pages.json comes from cmd/docgen -site: it maps each file the site hosts, by
 its path in the repository, to its page.
@@ -50,12 +50,13 @@ def main(site, pages_json, repo):
                 if target in hosted:
                     bad.append((os.path.relpath(path, site), href, hosted[target]))
     for page, href, own in sorted(bad):
-        print(f"{page}: links to {href}; the site hosts it at {own}/")
+        print(f"{page}: links to {href}; the site hosts it at {own}")
     if bad:
         print()
         print(f"Error: {len(bad)} link(s) leave the site for a page it hosts.")
-        print("Try: link to the Markdown file with a relative path (docs/... or ../...), so the")
-        print("site's link hook resolves it; a link that means to show the source needs data-source.")
+        print("Try: link to the Markdown file with a relative path (docs/... or ../...), so")
+        print("cmd/docgen -site turns it into a link to the page; a link that means to show the")
+        print("source needs data-source.")
         return 1
     print("check-site-links: ok (links between hosted pages stay on the site)")
     return 0

@@ -1,0 +1,55 @@
+---
+// Where the page sits (the tab and its groups, from src/route-data.js),
+// then its title. The landing page draws its own heading.
+const route = Astro.locals.starlightRoute;
+const crumbs = Astro.locals.crumbs ?? [];
+---
+
+{
+	!route.entry.data.landing && (
+		<>
+			{crumbs.length > 0 && (
+				<nav class="crumbs" aria-label="Breadcrumbs">
+					<ol>
+						{crumbs.map((c) => (
+							<li>{c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}</li>
+						))}
+					</ol>
+				</nav>
+			)}
+			<h1 id="_top">{route.entry.data.title}</h1>
+		</>
+	)
+}
+
+<style>
+	.crumbs ol {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 0;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font: 500 0.8125rem var(--sl-font-mono);
+		color: var(--sl-color-gray-3);
+	}
+	.crumbs li + li::before {
+		content: '›';
+		margin: 0 0.5rem;
+		color: var(--sl-color-gray-4);
+	}
+	.crumbs a {
+		color: var(--sl-color-gray-3);
+		text-decoration: none;
+	}
+	.crumbs a:hover {
+		color: var(--sl-color-text-accent);
+		text-decoration: underline;
+	}
+	h1 {
+		margin-top: 0.75rem;
+		font-size: var(--sl-text-h1);
+		line-height: var(--sl-line-height-headings);
+		color: var(--sl-color-white);
+	}
+</style>

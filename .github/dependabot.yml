@@ -11,12 +11,15 @@ updates:
     groups:
       charm:
         patterns: ["charm.land/*", "github.com/charmbracelet/*"]
-  - package-ecosystem: gomod
-    directory: /site # the docs theme
+  - package-ecosystem: npm
+    directory: /site # the docs site: Astro and Starlight, with pnpm's lockfile
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
+    groups:
+      astro:
+        patterns: ["astro", "@astrojs/*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

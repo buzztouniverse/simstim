@@ -1,0 +1,29 @@
+/*
+  The site's own fonts, served from the site: no request goes anywhere
+  else. scripts/site-vendor.sh makes them; LICENSE-*.txt beside them.
+*/
+@font-face {
+	font-family: 'Site Sans';
+	src: url('/fonts/sans.woff2') format('woff2');
+	font-weight: 400 700;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Site Mono';
+	src: url('/fonts/mono.woff2') format('woff2');
+	font-weight: 400 800;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Site Display';
+	src: url('/fonts/display.woff2') format('woff2');
+	font-weight: 400 800;
+	font-display: swap;
+}
+/* Braille drawn on the monospace face's cell, so braille art lines up. */
+@font-face {
+	font-family: 'Signal Braille';
+	src: url('/fonts/braille.woff2') format('woff2');
+	unicode-range: U+2800-28FF;
+	font-display: block;
+}

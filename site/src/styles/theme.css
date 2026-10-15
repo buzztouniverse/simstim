@@ -1,0 +1,307 @@
+/*
+  The site's look, on Starlight (decision 0022), in the launcher's world
+  (decision 0012): one cyan accent, faint secondary text, rules rather than
+  boxes, a cyan marker and a soft tint on the current row. Every text colour
+  passes 4.5:1 on its ground, in both themes.
+*/
+
+:root {
+	--sl-font: 'Site Sans', 'Signal Braille';
+	--sl-font-mono: 'Site Mono', 'Signal Braille';
+	--site-display: 'Site Display', 'Site Sans', ui-sans-serif, system-ui, sans-serif;
+	--site-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+	/* Dark: the launcher's reference theme. */
+	--sl-color-white: #eceae4;
+	--sl-color-gray-1: #dcdad3;
+	--sl-color-gray-2: #c8c6bf;
+	--sl-color-gray-3: #8b919b;
+	--sl-color-gray-4: #5d6471;
+	--sl-color-gray-5: #2b3341;
+	--sl-color-gray-6: #161b24;
+	--sl-color-black: #0b0e14;
+	--sl-color-accent-low: #12302b;
+	--sl-color-accent: #3fb898;
+	--sl-color-accent-high: #90e1c6;
+	--sl-color-text-accent: #90e1c6;
+	--sl-color-bg-nav: #0b0e14;
+	--sl-color-bg-sidebar: #0b0e14;
+	--sl-color-bg-inline-code: #151a23;
+	--sl-color-hairline-light: #2b3341;
+	--sl-color-hairline: #1d232e;
+	--sl-color-hairline-shade: #0b0e14;
+	--sl-color-backdrop-overlay: rgba(5, 7, 10, 0.72);
+	--sl-color-orange-high: #fcd29b;
+	--sl-color-orange: #f9af4f;
+	--sl-color-green-high: #b9eca8;
+	--sl-color-green: #7fd962;
+	--sl-color-red-high: #f6b7bb;
+	--sl-color-red: #ea6c73;
+
+	--site-raised: #10141c;
+	--site-code: #0f131b;
+	--site-tint: #1c292b;
+	--site-brand-a: #0e7c7b;
+	--site-brand-b: #00e5ff;
+	--site-focus: #00e5ff;
+	--site-ok: #7fd962;
+	--site-warn: #f9af4f;
+	--site-danger: #ea6c73;
+
+	--sl-text-h1: 2.25rem;
+	--sl-text-h2: 1.625rem;
+	--sl-text-h3: 1.25rem;
+	--sl-text-h4: 1.0625rem;
+	--sl-line-height: 1.7;
+	--sl-line-height-headings: 1.15;
+	--sl-content-width: 46rem;
+	--sl-sidebar-width: 17.5rem;
+}
+
+:root[data-theme='light'] {
+	--sl-color-white: #0b0e14;
+	--sl-color-gray-1: #171b22;
+	--sl-color-gray-2: #22262e;
+	--sl-color-gray-3: #555b66;
+	--sl-color-gray-4: #8a8f98;
+	--sl-color-gray-5: #c9c5ba;
+	--sl-color-gray-6: #e9e7e0;
+	--sl-color-gray-7: #efede7;
+	--sl-color-black: #f6f5f1;
+	--sl-color-accent-low: #d6ece6;
+	--sl-color-accent: #0a6b6b;
+	--sl-color-accent-high: #045a5a;
+	--sl-color-text-accent: #0a6b6b;
+	--sl-color-bg-nav: #f6f5f1;
+	--sl-color-bg-sidebar: #f6f5f1;
+	--sl-color-bg-inline-code: #ebe9e2;
+	--sl-color-hairline-light: #dfdcd3;
+	--sl-color-hairline: #dfdcd3;
+	--sl-color-hairline-shade: #c9c5ba;
+	--sl-color-backdrop-overlay: rgba(34, 38, 46, 0.45);
+	--sl-color-orange-high: #7a4600;
+	--sl-color-orange: #965800;
+	--sl-color-green-high: #1f5c23;
+	--sl-color-green: #2e7a33;
+	--sl-color-red-high: #8f1d17;
+	--sl-color-red: #b3261e;
+
+	--site-raised: #ffffff;
+	--site-code: #efede7;
+	--site-tint: rgba(14, 124, 123, 0.1);
+	--site-brand-a: #045a5a;
+	--site-brand-b: #0098b8;
+	--site-focus: #0087a3;
+	--site-ok: #2e7a33;
+	--site-warn: #965800;
+	--site-danger: #b3261e;
+}
+
+@media (min-width: 50em) {
+	:root {
+		--sl-text-h1: 2.75rem;
+		--sl-text-h2: 1.75rem;
+		--sl-text-h3: 1.3125rem;
+		--sl-nav-height: 3.75rem;
+	}
+}
+
+/* ---------- Browser surfaces ---------- */
+
+::selection {
+	background: color-mix(in srgb, var(--site-brand-b) 28%, transparent);
+	color: var(--sl-color-white);
+}
+:focus-visible {
+	outline: 2px solid var(--site-focus);
+	outline-offset: 2px;
+}
+html {
+	scrollbar-color: var(--sl-color-gray-5) transparent;
+	accent-color: var(--sl-color-accent);
+}
+body {
+	font-feature-settings: 'cv11', 'ss01';
+	text-rendering: optimizeLegibility;
+}
+
+/* ---------- The header ---------- */
+
+header.header {
+	border-bottom: 1px solid var(--sl-color-hairline);
+	background: color-mix(in srgb, var(--sl-color-bg-nav) 92%, transparent);
+	backdrop-filter: saturate(1.2) blur(10px);
+}
+
+/* ---------- The sidebar: the launcher's selection, a marker and a tint ---------- */
+
+.sidebar-pane {
+	border-inline-end: 1px solid var(--sl-color-hairline);
+}
+nav.sidebar summary .large {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--sl-color-white);
+}
+nav.sidebar .top-level > li > details > summary .large {
+	font-family: var(--sl-font-mono);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--sl-color-gray-3);
+}
+nav.sidebar ul.top-level a {
+	border-radius: 6px;
+	font-size: 0.875rem;
+	color: var(--sl-color-gray-2);
+	padding-block: 0.3em;
+}
+nav.sidebar ul.top-level a:hover {
+	color: var(--sl-color-white);
+}
+nav.sidebar ul.top-level a[aria-current='page'],
+nav.sidebar ul.top-level a[aria-current='page']:hover,
+nav.sidebar ul.top-level a[aria-current='page']:focus {
+	position: relative;
+	background: var(--site-tint);
+	color: var(--sl-color-white);
+	font-weight: 600;
+}
+/* The launcher's marker, as a hairline, on the sidebar's lists only. */
+nav.sidebar ul.top-level a[aria-current='page']::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: 0;
+	top: 0.3em;
+	bottom: 0.3em;
+	width: 1px;
+	background: var(--sl-color-text-accent);
+}
+nav.sidebar summary {
+	color: var(--sl-color-white);
+}
+nav.sidebar ul ul {
+	border-inline-start-color: var(--sl-color-hairline);
+}
+
+/* ---------- Page titles and the reading column ---------- */
+
+.sl-markdown-content :is(h2, h3, h4) ,
+.content-panel h1 {
+	font-family: var(--site-display);
+	letter-spacing: -0.015em;
+	text-wrap: balance;
+}
+.content-panel h1 {
+	font-weight: 620;
+	letter-spacing: -0.025em;
+}
+.sl-markdown-content :is(h2, h3) {
+	font-weight: 620;
+	color: var(--sl-color-white);
+}
+.sl-markdown-content .sl-heading-wrapper.level-h2 {
+	margin-top: 2.75rem;
+	padding-top: 1.75rem;
+	border-top: 1px solid var(--sl-color-hairline);
+}
+.sl-markdown-content h3 {
+	margin-top: 2rem;
+}
+.sl-markdown-content :is(h2, h3) + * {
+	margin-top: 0.75rem;
+}
+.sl-markdown-content p,
+.sl-markdown-content li {
+	text-wrap: pretty;
+}
+.sl-markdown-content a:not(:where(.not-content *)) {
+	text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+	text-underline-offset: 0.2em;
+}
+.sl-markdown-content a:not(:where(.not-content *)):hover {
+	text-decoration-color: currentColor;
+}
+.sl-markdown-content :not(pre) > code {
+	padding: 0.1em 0.35em;
+	border: 1px solid var(--sl-color-hairline);
+	border-radius: 5px;
+	color: var(--sl-color-white);
+	font-size: 0.875em;
+}
+
+/* Tables: rules, not boxes; mono heads, as the launcher's columns. */
+.sl-markdown-content table {
+	display: block;
+	overflow-x: auto;
+	border-collapse: collapse;
+	font-size: 0.9375rem;
+	line-height: 1.55;
+}
+.sl-markdown-content :is(th, td) {
+	border: 0;
+	border-bottom: 1px solid var(--sl-color-hairline);
+	padding: 0.6rem 1.25rem 0.6rem 0;
+	vertical-align: top;
+}
+.sl-markdown-content th {
+	border-bottom-color: var(--sl-color-gray-5);
+	font-family: var(--sl-font-mono);
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--sl-color-gray-3);
+	text-align: start;
+	background: none;
+}
+.sl-markdown-content tr:nth-child(2n) {
+	background: none;
+}
+.sl-markdown-content :is(th, td):first-child {
+	padding-inline-start: 0;
+}
+
+/* The "on this page" list. */
+starlight-toc h2,
+mobile-starlight-toc .toggle {
+	font-family: var(--sl-font-mono);
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--sl-color-gray-3);
+}
+starlight-toc a[aria-current='true'] {
+	color: var(--sl-color-text-accent);
+}
+
+/* Asides keep Starlight's form, in our colours. */
+.starlight-aside {
+	border-radius: 8px;
+}
+
+/* Pagination: two quiet links with a rule above. */
+.pagination-links a {
+	border-color: var(--sl-color-hairline-light);
+	box-shadow: none;
+	border-radius: 10px;
+}
+.pagination-links a:hover {
+	border-color: var(--sl-color-text-accent);
+}
+.pagination-links .link-title {
+	font-family: var(--site-display);
+	font-size: 1.125rem;
+	font-weight: 620;
+}
+
+/* The search dialog, in the site's ground rather than a neutral grey. */
+site-search dialog {
+	background: var(--sl-color-black);
+	border: 1px solid var(--sl-color-gray-5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+	}
+}

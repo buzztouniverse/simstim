@@ -1,0 +1,12 @@
+# pnpm's settings for the docs site (decision 0022). Every version is exact
+# in package.json and pinned with its hash in pnpm-lock.yaml.
+packages:
+  - .
+# Wait a week before using a new release, as Dependabot does, so a bad
+# release is usually pulled before it reaches us. In minutes.
+minimumReleaseAge: 10080
+# No dependency may run an install script, except these, which fetch or
+# build their platform's binary.
+allowBuilds:
+  esbuild: true
+strictDepBuilds: true

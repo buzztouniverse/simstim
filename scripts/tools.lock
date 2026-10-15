@@ -37,4 +37,13 @@ scorecard 5.5.0 darwin-arm64 bac6371a4f810d6bdd0b65d63c3311906bdfe3ba0d76a5ea743
 scorecard 5.5.0 darwin-amd64 979487ca20e726f6a4d2bd63a0a4c544184f589724b3d12d2ba8d0ea80889063 https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_darwin_amd64.tar.gz
 scorecard 5.5.0 linux-amd64 83b90a05c1540ef1390db1cd5711e5fd04be9c1d8537fb84d39d02092d6a8dff https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_linux_amd64.tar.gz
 scorecard 5.5.0 linux-arm64 3ce59d20c1d53e540c4a14e0da1e0d96b3b294e8ddc96a3c5a7b8a637b32991e https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_linux_arm64.tar.gz
-hugo 0.167.0 go - github.com/gohugoio/hugo@v0.167.0
+# Node and pnpm build the docs site (site/, decision 0022). Node 24 is the
+# long-term support line; site/package.json names the same pnpm.
+node 24.21.0 darwin-arm64 6239d4cf92d864487ec8cd3615038f7b67e7f58b77b21cd2f09ea9fbd68065fe https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.xz
+node 24.21.0 darwin-amd64 0ae5a24c24bb7d015cd816c5036b3f90f2945aa872fcf54e58da054753b3a299 https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-x64.tar.xz
+node 24.21.0 linux-amd64 fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6 https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.xz
+node 24.21.0 linux-arm64 6ad1325edbdb5649c379b75a237147a666c95d4f9ae8d340fef2d1575d289ad2 https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-arm64.tar.xz
+pnpm 12.6.0 darwin-arm64 1030f38e14fa2e6c87fe6ab0313a3bf3b794a961504f4439bad2ca2110d3583e https://github.com/pnpm/pnpm/releases/download/v12.6.0/pnpm-darwin-arm64.tar.gz
+pnpm 12.6.0 darwin-amd64 baee033929fd76bdf0193ea35aad6efa7ac2931b96f2780328d244c70174306a https://github.com/pnpm/pnpm/releases/download/v12.6.0/pnpm-darwin-x64.tar.gz
+pnpm 12.6.0 linux-amd64 3f4c66f668d0e84219679982d095b30da68325e1fac9284e7f5dc1584bd3d13e https://github.com/pnpm/pnpm/releases/download/v12.6.0/pnpm-linux-x64.tar.gz
+pnpm 12.6.0 linux-arm64 973af2b3eb9509416cf889a7336705062c936407d5fda07298814e7532f5dea1 https://github.com/pnpm/pnpm/releases/download/v12.6.0/pnpm-linux-arm64.tar.gz

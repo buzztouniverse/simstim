@@ -1,0 +1,349 @@
+---
+// The landing page (decision 0022). It shares the docs' header, search and
+// footer through StarlightPage, and draws its own sections. The name comes
+// from the site's title and the rest of the brand from
+// src/generated/brand.json, which cmd/docgen writes from internal/brand, so
+// a rename needs no change here. Everything reads without script: each
+// figure is drawn in full at build time, and src/scripts/landing.js adds
+// the live launcher and the motion.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import brand from '../generated/brand.json';
+import agents from '../generated/agents.json';
+import { markText, traceCells } from '../scripts/braille.js';
+import '../styles/landing.css';
+
+const name = brand.displayName;
+const repo = __SITE__.repo || 'https://github.com/owner/repo';
+const raw = repo.replace('https://github.com/', 'https://raw.githubusercontent.com/');
+const install = `curl -fsSL ${raw}/main/install.sh | sh`;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const to = (path) => base + path;
+
+// Fig. 2: forty minutes. The lid shuts at 09:12 and opens at 09:30, and
+// the missed output replays in a burst. Two renditions of the same story:
+// one cell a minute on a wide screen, one cell per two minutes on a phone,
+// so the dots stay big enough to read.
+const traces = [40, 20].map((n) => {
+	const close = Math.round(n * 0.3);
+	const open = Math.round(n * 0.75);
+	const burst = Math.max(2, Math.round(n * 0.1));
+	const host = traceCells(n);
+	const lap = host.map((c, i) => (i < close || i >= open + burst ? ['on', c] : i < open ? ['gap', '⠤'] : ['burst', '⣿']));
+	return { n, close, open, burst, host, lap };
+});
+
+const shiftEnter = ['1b', '5b', '31', '33', '3b', '32', '75'];
+const agentNames = agents.filter((a) => a.kind !== 'shell').map((a) => a.title);
+---
+
+<StarlightPage
+	frontmatter={{
+		title: name,
+		template: 'splash',
+		pagefind: false,
+		landing: true,
+		editUrl: false,
+		head: [{ tag: 'title', content: `${name}: your agents, on your hosts, in your terminal` }],
+	}}
+	hasSidebar={false}
+>
+	<div class="landing" data-landing data-name={name}>
+		<section class="hero" aria-labelledby="hero-title">
+			<div class="wrap">
+				<h1 id="hero-title">Your agents, on your hosts, in&nbsp;your&nbsp;terminal.</h1>
+				<p class="lead">
+					{name} runs Claude Code, Codex or any terminal agent on a machine you own. Leave when you like, and come
+					back to its real screen.
+				</p>
+				<div class="act">
+					<a class="btn primary" href={to('/tutorials/getting-started/')}>Get started</a>
+					<a class="text-link" href={to('/docs/')}>Read the docs</a>
+				</div>
+				<div class="install" data-copy-box>
+					<code data-copy-text>{install}</code>
+					<button type="button" class="copy" data-copy data-js-only hidden aria-label="Copy the install command">
+						Copy
+					</button>
+				</div>
+				<p class="pre">
+					Pre-release: the installer works from the first release. Until then, <a
+						href={to('/how-to/install/#from-source')}>build it from source</a
+					>. <a href={`${repo}/blob/main/install.sh`} data-source>View the script</a>.
+				</p>
+			</div>
+
+			<figure class="wrap fig fig-launcher" aria-labelledby="fig1-cap">
+				<div class="term-scroll">
+					<div class="term">
+						<div class="term-screen" data-term-screen>
+							<img
+								src={to('/images/sessions.svg')}
+								alt="The launcher: the sessions on one host, each with its state, agent, folder and a braille trace of its output. The selected session waits for an answer."
+								width="972"
+								height="576"
+								decoding="async"
+							/>
+						</div>
+						<ol class="pins" aria-hidden="true">
+							<li style="--row: 1; --col: 1">1</li>
+							<li style="--row: 4; --col: 0">2</li>
+							<li style="--row: 4; --col: 1">3</li>
+							<li class="from-bottom" style="--rowb: 1; --col: 0">4</li>
+						</ol>
+					</div>
+				</div>
+				<ol class="notes">
+					<li><b>Where you are:</b> the host, how far away it is, and how many sessions need you.</li>
+					<li><b>Needs you:</b> this agent asked a question. It waits for your answer.</li>
+					<li><b>A trace</b> of each session's output over the last half minute.</li>
+					<li><b>Enter attaches.</b> <kbd>Ctrl+\</kbd> detaches, and the agent keeps going.</li>
+				</ol>
+				<figcaption id="fig1-cap">
+					<span class="fig-n">Fig. 1</span> The launcher, running in this page with made-up sessions. Click it,
+					then try <kbd>↑</kbd> <kbd>↓</kbd> <kbd>enter</kbd> <kbd>/</kbd> <kbd>esc</kbd>.
+					<button type="button" class="pill" data-motion-toggle data-js-only hidden>Pause motion</button>
+				</figcaption>
+			</figure>
+		</section>
+
+		<section class="sect" aria-labelledby="sleep-title">
+			<div class="wrap">
+				<div class="say">
+					<h2 id="sleep-title">The session outlives your&nbsp;laptop.</h2>
+					<p>
+						The agent runs on your host, not on your laptop. Sleep, a new network, a flat battery: the session
+						carries on. When you come back, {name} reconnects and replays exactly what you missed.
+					</p>
+				</div>
+				<figure
+					class="fig story fig-sleep"
+					data-sleep-fig
+					data-step="4"
+					aria-labelledby="fig2-cap"
+				>
+					<div class="trace-box" aria-hidden="true">
+						{traces.map((t) => (
+							<div
+								class={`trace trace-${t.n}`}
+								style={`--n: ${t.n}`}
+								data-trace
+								data-close={t.close}
+								data-open={t.open}
+								data-burst={t.burst}
+							>
+								<div class="marks">
+									<span class="mark" style={`--i: ${t.close}`}>
+										<b>lid shut</b>
+										<span>the agent keeps working</span>
+									</span>
+									<span class="mark" style={`--i: ${t.open}`}>
+										<b>lid open</b>
+										<span>18 KiB replayed</span>
+									</span>
+								</div>
+								<span class="lab lab-host">host</span>
+								<span class="row host" data-host>{t.host.map((c) => <span>{c}</span>)}</span>
+								<span class="lab lab-lap">your laptop</span>
+								<span class="row lap" data-laptop>{t.lap.map(([k, c]) => <span class={k}>{c}</span>)}</span>
+								<div class="times">
+									<span style="--i: 0">09:00</span>
+									<span style={`--i: ${t.close}`}>09:12</span>
+									<span style={`--i: ${t.open}`}>09:30</span>
+									<span style={`--i: ${t.n}`} class="end">09:40</span>
+								</div>
+								<span class="head" data-head></span>
+							</div>
+						))}
+					</div>
+					<ol class="steps-list">
+						<li>
+							<button type="button" data-step-to="1" aria-pressed="false">
+								<b>Attached.</b> The agent's bytes go straight to your terminal.
+							</button>
+						</li>
+						<li>
+							<button type="button" data-step-to="2" aria-pressed="false">
+								<b>The lid shuts.</b> The link drops. On the host, the agent keeps working, and its session keeps
+								the output, numbered by byte.
+							</button>
+						</li>
+						<li>
+							<button type="button" data-step-to="3" aria-pressed="false">
+								<b>The lid opens.</b> The client reconnects by itself and asks for everything after the last byte it
+								saw: 18 KiB arrive at once.
+							</button>
+						</li>
+						<li>
+							<button type="button" data-step-to="4" aria-pressed="true">
+								<b>Caught up.</b> Your scrollback goes on with nothing lost and nothing twice.
+							</button>
+						</li>
+					</ol>
+					<figcaption id="fig2-cap">
+						<span class="fig-n">Fig. 2</span> Forty minutes of output on the host and on your laptop.
+						<button type="button" class="pill" data-replay data-js-only hidden>Play again</button>
+					</figcaption>
+				</figure>
+			</div>
+		</section>
+
+		<section class="sect" aria-labelledby="bytes-title">
+			<div class="wrap split">
+				<div class="say">
+					<h2 id="bytes-title">The real screen, not a&nbsp;copy.</h2>
+					<p>
+						A multiplexer keeps its own copy of the screen and draws that. {name} passes the agent's own bytes to
+						your terminal, so keys, colours, links, the clipboard and your scrollback work as they do on your
+						laptop.
+					</p>
+					<p class="more"><a href={to('/explanation/fidelity/')}>What "byte for byte" covers</a></p>
+				</div>
+				<figure class="fig story fig-bytes" data-bytes-fig data-step="3" aria-labelledby="fig3-cap">
+					<div class="bytes">
+						<p class="who">
+							<button type="button" data-step-to="1" aria-pressed="false">
+								You press <kbd>shift</kbd> <kbd>enter</kbd>. Your terminal sends:
+							</button>
+						</p>
+						<div class="brow" data-bytes>
+							{shiftEnter.map((b) => <span data-b>{b}</span>)}
+						</div>
+						<p class="who">
+							<button type="button" data-step-to="2" aria-pressed="false">The agent gets, through {name}:</button>
+						</p>
+						<div class="brow ok" data-bytes>
+							{shiftEnter.map((b) => <span data-b>{b}</span>)}
+							<em data-verdict>the same seven bytes</em>
+						</div>
+						<p class="who">
+							<button type="button" data-step-to="3" aria-pressed="true">The agent gets, through tmux 3.8:</button>
+						</p>
+						<div class="brow bad" data-bytes>
+							<span data-b>0d</span>
+							<em data-verdict>a plain enter</em>
+						</div>
+					</div>
+					<figcaption id="fig3-cap">
+						<span class="fig-n">Fig. 3</span> Shift+Enter in the kitty keyboard protocol. tmux 3.8 does not speak it, so
+						the agent cannot tell Shift+Enter from Enter.
+						<button type="button" class="pill" data-replay data-js-only hidden>Play again</button>
+					</figcaption>
+				</figure>
+			</div>
+		</section>
+
+		<section class="sect" aria-labelledby="hosts-title">
+			<div class="wrap">
+				<div class="say">
+					<h2 id="hosts-title">Your machines. Your&nbsp;SSH.</h2>
+					<p>
+						Any Linux host you can reach with <code>ssh</code>: a VPS, a cloud VM, a box under the desk. {name} uses
+						your OpenSSH and your <code>~/.ssh/config</code>. No account, no relay, nothing new listening.
+					</p>
+				</div>
+				<figure class="fig fig-parts" aria-labelledby="fig4-cap">
+					<div class="parts">
+						<div class="wire-row" aria-hidden="true">
+							<div class="seg ssh" data-wire>
+								<span class="place">your laptop</span>
+								<span class="link-label">your ssh</span>
+								<span class="node">⣿</span><span class="line">{'⠒'.repeat(60)}</span><span class="pulse">⣶</span>
+							</div>
+							<div class="seg local">
+								<span class="place">your host</span>
+								<span class="node">⣿</span><span class="line">{'⠤'.repeat(60)}</span>
+							</div>
+							<div class="seg last">
+								<span class="place">one per session</span>
+								<span class="node">⣿</span>
+							</div>
+						</div>
+						<div class="part">
+							<h3 class="what">The client</h3>
+							<p class="does">On your laptop: the launcher and the commands. While you are attached, it passes bytes and nothing else.</p>
+						</div>
+						<div class="part">
+							<h3 class="what">The helper</h3>
+							<p class="does">On your host: a small program the client installs for you. It runs only while you are connected.</p>
+						</div>
+						<div class="part">
+							<h3 class="what">The holder</h3>
+							<p class="does">One for each session: it keeps the agent and its last 8 MiB of output, and starts it again after a reboot.</p>
+						</div>
+					</div>
+					<figcaption id="fig4-cap">
+						<span class="fig-n">Fig. 4</span> Three parts, and nothing in between.{' '}
+						<a href={to('/explanation/how-it-works/')}>How it works</a>
+					</figcaption>
+				</figure>
+			</div>
+		</section>
+
+		<section class="sect" aria-labelledby="start-title">
+			<div class="wrap">
+				<div class="say">
+					<h2 id="start-title">Three commands to a running&nbsp;agent.</h2>
+					<p>You need a Mac or a Linux machine, and a Linux host that <code>ssh</code> reaches, or a VM on your laptop.</p>
+				</div>
+				<ol class="start">
+					<li>
+						<h3>Install</h3>
+						<div class="cmd" data-copy-box>
+							<code data-copy-text>{install}</code>
+							<button type="button" class="copy" data-copy data-js-only hidden aria-label="Copy the install command">Copy</button>
+						</div>
+						<p>Checks the release's signature, then puts the client in <code>~/.local/bin</code>.</p>
+					</li>
+					<li>
+						<h3>Set up</h3>
+						<div class="cmd" data-copy-box>
+							<code data-copy-text>{brand.name} setup</code>
+							<button type="button" class="copy" data-copy data-js-only hidden aria-label="Copy the setup command">Copy</button>
+						</div>
+						<p>Picks a host, or helps you make one, then installs your agents and logs them in.</p>
+					</li>
+					<li>
+						<h3>Start an agent</h3>
+						<div class="cmd" data-copy-box>
+							<code data-copy-text>{brand.name} new my-server --agent claude</code>
+							<button type="button" class="copy" data-copy data-js-only hidden aria-label="Copy the command">Copy</button>
+						</div>
+						<p>The agent takes your terminal. <kbd>Ctrl+\</kbd> leaves it running; <code>{brand.name}</code> brings you back.</p>
+					</li>
+				</ol>
+				<p class="more"><a href={to('/tutorials/getting-started/')}>The five-minute tutorial</a></p>
+			</div>
+		</section>
+
+		<section class="sect agents" aria-labelledby="agents-title">
+			<div class="wrap">
+				<h2 id="agents-title">Use the agent you already have.</h2>
+				<ul class="agent-list">
+					{agentNames.map((a) => <li>{a}</li>)}
+					<li class="any">or any terminal program</li>
+				</ul>
+				<p class="trust">Open source, under Apache-2.0. No account, no relay, no telemetry.</p>
+				<p class="more inline">
+					<a href={to('/reference/agents/')}>The agent table</a>
+					<a href={to('/explanation/comparison/')}>How it compares</a>
+				</p>
+			</div>
+		</section>
+
+		<section class="close" aria-labelledby="close-title">
+			<div class="wrap">
+				<pre class="mark" data-mark aria-hidden="true">{markText()}</pre>
+				<h2 id="close-title" class="name" data-decode>{name}</h2>
+				<p class="tag">{brand.tagline}</p>
+				<div class="act center">
+					<a class="btn primary" href={to('/tutorials/getting-started/')}>Get started</a>
+					<a class="text-link" href={to('/docs/')}>Read the docs</a>
+				</div>
+			</div>
+		</section>
+	</div>
+</StarlightPage>
+
+<script>
+	import '../scripts/landing.js';
+</script>

@@ -20,7 +20,7 @@ A client and a host helper that run AI coding agents in sessions on hosts the us
 | `internal/proto`, `ring`, `term`, `keys` | Wire protocol, output ring, terminal modes, input filter |
 | `test/e2e`, `test/ttyshot` | End-to-end tests, and a tool that renders a TUI |
 | `docs/` | User docs (tutorials, how-to, reference, explanation), contributor docs, research, roadmap |
-| `site/` | The docs site (Hugo with Hextra) |
+| `site/` | The docs site (Astro with Starlight; built from `docs/` by `cmd/docgen -site`) |
 
 ## Rules
 

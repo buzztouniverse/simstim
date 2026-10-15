@@ -1,0 +1,55 @@
+---
+// Where the page comes from. These links go to GitHub on purpose, so they
+// carry data-source, which scripts/check-site-links.py lets through.
+const data = Astro.locals.starlightRoute.entry.data;
+const repo = __SITE__.repo;
+const src = data.srcPath;
+const edit = data.editUrl ? String(data.editUrl) : '';
+---
+
+{
+	repo && src && !data.landing && (
+		<p class="source">
+			<a data-source href={`${repo}/blob/main/${src}`}>
+				View the source of this page
+			</a>
+			{data.generated ? (
+				<span>
+					Generated from the code by <code>just docs</code>
+				</span>
+			) : (
+				edit && (
+					<a data-source href={edit}>
+						Suggest a change
+					</a>
+				)
+			)}
+		</p>
+	)
+}
+
+<style>
+	.source {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin: 0;
+		font: 0.8125rem var(--sl-font-mono);
+		color: var(--sl-color-gray-3);
+	}
+	a {
+		color: var(--sl-color-gray-3);
+		text-decoration: none;
+	}
+	a::before {
+		content: '→ ';
+		color: var(--sl-color-text-accent);
+	}
+	a:hover {
+		color: var(--sl-color-text-accent);
+		text-decoration: underline;
+	}
+	code {
+		font-size: 0.9em;
+	}
+</style>
