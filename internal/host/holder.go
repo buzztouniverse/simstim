@@ -85,6 +85,8 @@ type Holder struct {
 	hookBusy    bool
 	lastTurnEnd time.Time
 	notifyMsg   string
+	// readDone is closed when readLoop has read all the agent's output.
+	readDone chan struct{}
 	// The shadow terminal, for snapshots and query answers; nil if unavailable.
 	vt     *VT
 	ptyOut chan []byte // ordered writes to the PTY from the shadow terminal
@@ -112,11 +114,12 @@ func RunHolder(id string) error {
 	}
 	defer lf.Close()
 	h := &Holder{
-		id:      id,
-		m:       m,
-		log:     log.New(lf, "", log.LstdFlags|log.Lmicroseconds),
-		ring:    ring.New(RingSize),
-		clients: map[*hclient]struct{}{},
+		id:       id,
+		m:        m,
+		log:      log.New(lf, "", log.LstdFlags|log.Lmicroseconds),
+		ring:     ring.New(RingSize),
+		clients:  map[*hclient]struct{}{},
+		readDone: make(chan struct{}),
 	}
 	h.log.Printf("holder %s starting (%s %s)", id, brand.HostBinary, version.Version)
 	restored := wasRestored(m)
@@ -240,6 +243,7 @@ func (h *Holder) start() error {
 }
 
 func (h *Holder) readLoop() {
+	defer close(h.readDone)
 	buf := make([]byte, 64<<10)
 	for {
 		n, err := h.ptmx.Read(buf)
@@ -298,6 +302,13 @@ func (h *Holder) output(data []byte) {
 
 func (h *Holder) waitLoop() {
 	err := h.cmd.Wait()
+	// The agent's last output may still be in the PTY. Let the reader take
+	// it first, so that clients see it before they hear of the end. A
+	// process the agent left behind can keep the PTY open: wait a moment only.
+	select {
+	case <-h.readDone:
+	case <-time.After(time.Second):
+	}
 	ended := proto.Ended{}
 	if err != nil {
 		var ee *exec.ExitError

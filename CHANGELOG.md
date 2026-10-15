@@ -123,6 +123,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- An attached client could miss an agent's last output, often the reason it ended: the holder announced the end before it had read that output from the terminal. It now reads it first.
 - A deleted session could come back in `ls`, as ended: its holder, slow to exit, saved its manifest once more after `kill` had removed the session's folder. Nothing saves after a holder's last save now.
 - A session's holder saved its manifest without its lock when the agent exited, while other goroutines could change it: a data race, which the new unit tests found.
 - Old helper versions piled up on hosts, about 5 MB for each version installed; a test host had 33 of them. After each install the new helper now removes the versions that nothing uses: it keeps the current one, any that a session's holder or shadow terminal runs from, any that a unit file names, and any installed in the last hour.
