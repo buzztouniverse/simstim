@@ -1,0 +1,40 @@
+{{- /*
+  How it works: the architecture as a text diagram, in a wide and a narrow
+  form, with each part marked so the list under it can light it up. The
+  words under it say everything the picture does.
+*/ -}}
+<figure class="diagram" data-diagram>
+  <pre class="diagram-art diagram-wide" aria-hidden="true"><span class="lbl"> laptop                                  host</span>
+<span class="r">┌───────────────────────────┐</span>            <span class="r">┌────────────────────────────────┐</span>
+<span class="r">│</span> <span data-part="client">client</span>                    <span class="r">│</span><span data-part="ssh">  your ssh  </span><span class="r">│</span> <span data-part="bridge">helper</span><span class="r"> ─ </span><span data-part="bridge">bridge</span>                <span class="r">│</span>
+<span class="r">│</span> <span class="r">├ </span><span data-part="client">launcher, CLI</span>           <span class="r">│</span><span data-part="ssh"> </span><span data-part="ssh-out">─────────▶</span><span data-part="ssh"> </span><span class="r">│</span> <span class="r">├ </span><span data-part="holder">holder</span><span class="r"> ─ PTY ─ </span><span data-part="agent">claude</span>        <span class="r">│</span>
+<span class="r">│</span> <span class="r">├ </span><span data-part="client">attach: raw bytes</span>       <span class="r">│</span><span data-part="ssh"> </span><span data-part="ssh-in">◀─────────</span><span data-part="ssh"> </span><span class="r">│</span> <span class="r">├ </span><span data-part="holder">holder</span><span class="r"> ─ PTY ─ </span><span data-part="agent">codex</span>         <span class="r">│</span>
+<span class="r">│</span> <span class="r">└ </span><span data-part="client">reconnect, image paste</span>  <span class="r">│</span>            <span class="r">│</span> <span class="r">└ </span><span data-part="holder">holder</span><span class="r"> ─ PTY ─ </span><span data-part="agent">zsh</span>           <span class="r">│</span>
+<span class="r">│</span>                           <span class="r">│</span>            <span class="r">│</span> <span data-part="systemd">a systemd user service each</span>    <span class="r">│</span>
+<span class="r">└───────────────────────────┘</span>            <span class="r">└────────────────────────────────┘</span></pre>
+  <pre class="diagram-art diagram-narrow" aria-hidden="true"><span class="lbl"> laptop</span>
+<span class="r">┌──────────────────────────────┐</span>
+<span class="r">│</span> <span data-part="client">client</span>                       <span class="r">│</span>
+<span class="r">│</span> <span class="r">├ </span><span data-part="client">launcher, CLI</span>              <span class="r">│</span>
+<span class="r">│</span> <span class="r">├ </span><span data-part="client">attach: raw bytes</span>          <span class="r">│</span>
+<span class="r">│</span> <span class="r">└ </span><span data-part="client">reconnect, image paste</span>     <span class="r">│</span>
+<span class="r">└───────┬──────────────┬───────┘</span>
+        <span data-part="ssh-out">│</span><span data-part="ssh">  your ssh    </span><span data-part="ssh-in">▲</span>
+        <span data-part="ssh-out">▼</span>              <span data-part="ssh-in">│</span>
+<span class="r">┌───────┴──────────────┴───────┐</span>
+<span class="r">│</span> <span data-part="bridge">helper</span><span class="r"> ─ </span><span data-part="bridge">bridge</span>              <span class="r">│</span>
+<span class="r">│</span> <span class="r">├ </span><span data-part="holder">holder</span><span class="r"> ─ PTY ─ </span><span data-part="agent">claude</span>      <span class="r">│</span>
+<span class="r">│</span> <span class="r">├ </span><span data-part="holder">holder</span><span class="r"> ─ PTY ─ </span><span data-part="agent">codex</span>       <span class="r">│</span>
+<span class="r">│</span> <span class="r">└ </span><span data-part="holder">holder</span><span class="r"> ─ PTY ─ </span><span data-part="agent">zsh</span>         <span class="r">│</span>
+<span class="r">│</span> <span data-part="systemd">a systemd user service each</span>  <span class="r">│</span>
+<span class="r">└──────────────────────────────┘</span>
+<span class="lbl"> host</span></pre>
+  <figcaption class="hx:sr-only">The client on your laptop talks over your own ssh to a helper on the host, whose bridge connects to one holder per session; each holder owns an agent's terminal, and runs as a systemd user service.</figcaption>
+</figure>
+<ol class="parts" aria-label="The parts">
+  <li><button type="button" data-part="client" aria-pressed="false"><span class="part-n">1</span><span><strong>The client</strong>, <code>{{ .name }}</code>. The launcher and the commands. While you are attached it draws nothing: it passes raw bytes, and reads only the detach key and image paste.</span></button></li>
+  <li><button type="button" data-part="ssh" aria-pressed="false"><span class="part-n">2</span><span><strong>Your ssh</strong>, with your <code>~/.ssh/config</code>, so ProxyJump, Tailscale, IAP and SSM all work. A private ControlMaster keeps the connection warm.</span></button></li>
+  <li><button type="button" data-part="bridge" aria-pressed="false"><span class="part-n">3</span><span><strong>The helper</strong>, <code>{{ .host }}</code>, in your home folder. Its bridge lives only while a client is connected. Nothing listens on the network.</span></button></li>
+  <li><button type="button" data-part="holder" aria-pressed="false"><span class="part-n">4</span><span><strong>One holder per session</strong> owns the agent's terminal and keeps its last 8 MiB of output, so a reconnect replays exactly what you missed.</span></button></li>
+  <li><button type="button" data-part="systemd" aria-pressed="false"><span class="part-n">5</span><span><strong>A systemd user service</strong> per session, with a memory cap. After a reboot, each agent starts again with its own resume command.</span></button></li>
+</ol>

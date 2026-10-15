@@ -1,0 +1,17 @@
+{{- /*
+  The end of each docs page: where its source lives. These links go to
+  GitHub on purpose, so they carry data-source, which
+  scripts/check-site-links.py lets through.
+*/ -}}
+{{- with .Params.srcpath -}}
+  {{- with site.Params.repo -}}
+<p class="page-source not-prose">
+  <a class="not-prose" data-source href="{{ . }}/blob/main/{{ $.Params.srcpath }}" rel="noopener">View the source of this page</a>
+  {{- if not (hasPrefix $.Params.srcpath "docs/reference/") }}
+  <a class="not-prose" data-source href="{{ . }}/edit/main/{{ $.Params.srcpath }}" rel="noopener">Suggest a change</a>
+  {{- else }}
+  <span>Generated from the code by <code>just docs</code></span>
+  {{- end }}
+</p>
+  {{- end -}}
+{{- end -}}

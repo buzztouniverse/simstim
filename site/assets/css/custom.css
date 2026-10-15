@@ -1,0 +1,764 @@
+/*
+  The site's look, on top of Hextra (decision 0021). It follows the launcher
+  (docs/contributing/ux-spec.md, section 4): one cyan accent, faint secondary
+  text, rules instead of boxes, a cyan marker and a soft tint on the selected
+  row, braille for motion, monospace for anything you would type.
+*/
+
+/* ---------- Tokens ---------- */
+
+:root {
+  --bg: #f6f5f1;
+  --bg-raised: #ffffff;
+  --bg-code: #efede7;
+  --bg-term: #fbfaf7;
+  --text: #22262e;
+  --text-strong: #0b0e14;
+  --faint: #5b616c;
+  --rule: #dfdcd3;
+  --rule-strong: #c9c5ba;
+  --accent: #0a6b6b;
+  --accent-strong: #045a5a;
+  --tint: rgba(14, 124, 123, 0.1);
+  --brand-a: #045a5a;
+  --brand-b: #0098b8;
+  --ok: #2e7a33;
+  --warn: #965800;
+  --danger: #b3261e;
+  --focus: #0087a3;
+  --shadow: 0 1px 0 rgba(11, 14, 20, 0.04), 0 12px 32px -12px rgba(11, 14, 20, 0.18);
+
+  --font-mono: "Site Mono", "Signal Braille", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-sans: "Site Sans", "Signal Braille", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --hx-color-white: var(--bg);
+  --hx-color-dark: var(--bg);
+  --hx-font-sans: var(--font-sans);
+  --hx-font-mono: var(--font-mono);
+  --hx-default-font-family: var(--font-sans);
+  --hx-default-mono-font-family: var(--font-mono);
+  --primary-hue: 180deg;
+  --primary-saturation: 83%;
+  --primary-lightness: 24%;
+  color-scheme: light;
+}
+
+/* Dark: the launcher's reference theme. It applies with the toggle, and,
+   before any script runs, when the system asks for dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --bg: #0b0e14;
+    --bg-raised: #10141c;
+    --bg-code: #0f131b;
+    --bg-term: #0b0e14;
+    --text: #c8c6bf;
+    --text-strong: #eceae4;
+    --faint: #8b919b;
+    --rule: #1d232e;
+    --rule-strong: #2b3341;
+    --accent: #90e1c6;
+    --accent-strong: #b8f2de;
+    --tint: #1c292b;
+    --brand-a: #0e7c7b;
+    --brand-b: #00e5ff;
+    --ok: #7fd962;
+    --warn: #f9af4f;
+    --danger: #ea6c73;
+    --focus: #00e5ff;
+    --shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px -24px rgba(0, 0, 0, 0.8);
+    --primary-hue: 160deg;
+    --primary-saturation: 57%;
+    --primary-lightness: 72%;
+    color-scheme: dark;
+  }
+}
+:root.dark {
+  --bg: #0b0e14;
+  --bg-raised: #10141c;
+  --bg-code: #0f131b;
+  --bg-term: #0b0e14;
+  --text: #c8c6bf;
+  --text-strong: #eceae4;
+  --faint: #8b919b;
+  --rule: #1d232e;
+  --rule-strong: #2b3341;
+  --accent: #90e1c6;
+  --accent-strong: #b8f2de;
+  --tint: #1c292b;
+  --brand-a: #0e7c7b;
+  --brand-b: #00e5ff;
+  --ok: #7fd962;
+  --warn: #f9af4f;
+  --danger: #ea6c73;
+  --focus: #00e5ff;
+  --shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px -24px rgba(0, 0, 0, 0.8);
+  --primary-hue: 160deg;
+  --primary-saturation: 57%;
+  --primary-lightness: 72%;
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+
+html {
+  /* A heading or a focused link is never hidden under the sticky top bar. */
+  scroll-padding-top: calc(var(--hextra-navbar-height, 4rem) + 1rem);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+}
+::selection {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--text-strong);
+}
+code, kbd, pre, samp {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus) !important;
+  outline-offset: 2px;
+  border-radius: 3px;
+  box-shadow: none !important;
+}
+.hx\:sr-only,
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* The skip link, visible when focused. */
+body > a[href="#content"]:focus-visible {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ---------- The top bar ---------- */
+
+.site-nav {
+  --nav-h: var(--hextra-navbar-height, 4rem);
+}
+.site-nav-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.site-nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: var(--hextra-navbar-height, 4rem);
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 0 max(env(safe-area-inset-right), 1.25rem) 0 max(env(safe-area-inset-left), 1.25rem);
+}
+.site-logo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55ch;
+  margin-right: 1.25rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  text-decoration: none;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+.site-logo-mark {
+  display: inline-block;
+  width: 3ch;
+  letter-spacing: 0;
+  background: linear-gradient(90deg, var(--brand-a), var(--brand-b));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.site-logo-name {
+  background: linear-gradient(90deg, var(--brand-a), var(--brand-b));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@media (forced-colors: active) {
+  .site-logo-mark,
+  .site-logo-name {
+    color: CanvasText;
+    background: none;
+  }
+}
+.site-nav-links {
+  display: flex;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+.site-nav-links a {
+  display: block;
+  padding: 0.375rem 0.625rem;
+  border-radius: 6px;
+  color: var(--faint);
+  text-decoration: none;
+  transition: color 0.15s, background-color 0.15s;
+}
+.site-nav-links a:hover {
+  color: var(--text-strong);
+  background: var(--tint);
+}
+.site-nav-links a[aria-current="page"] {
+  color: var(--text-strong);
+  box-shadow: inset 0 -2px 0 var(--accent);
+  border-radius: 6px 6px 0 0;
+}
+.site-nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+.site-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  color: var(--faint);
+  background: transparent;
+  cursor: pointer;
+}
+.site-icon-button:hover {
+  color: var(--text-strong);
+  background: var(--tint);
+}
+.site-nav .hextra-hamburger-menu {
+  display: none;
+}
+@media (max-width: 767px) {
+  .site-nav-links {
+    display: none;
+  }
+  .site-nav .hextra-hamburger-menu {
+    display: inline-flex;
+  }
+  .site-source {
+    display: none;
+  }
+}
+
+/* Search: the trigger reads like the launcher's prompt line. */
+.hextra-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  min-width: 11rem;
+  padding: 0 0.5rem 0 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--bg-raised);
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.hextra-search-trigger:hover {
+  border-color: var(--rule-strong);
+  color: var(--text);
+}
+.hextra-search-trigger-icon {
+  width: 1rem;
+  height: 1rem;
+}
+.hextra-search-trigger-label {
+  flex: 1;
+  text-align: left;
+}
+.hextra-search-trigger-kbd {
+  padding: 0.0625rem 0.375rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--faint);
+  background: var(--bg);
+}
+@media (max-width: 767px) {
+  .hextra-search-trigger {
+    min-width: 0;
+  }
+  .hextra-search-trigger-label {
+    /* Hidden from sight, not from screen readers: it is the button's name. */
+    display: inline !important;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .hextra-search-trigger-kbd {
+    display: none;
+  }
+}
+.hextra-search-dialog,
+#hextra-search-dialog {
+  font-family: var(--font-sans);
+}
+#hextra-search-dialog::backdrop {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  backdrop-filter: blur(4px);
+}
+.hextra-search-input {
+  font-family: var(--font-mono) !important;
+}
+
+/* The theme menu. */
+.hextra-theme-toggle-options {
+  background: var(--bg-raised) !important;
+  border-color: var(--rule) !important;
+  font-family: var(--font-mono);
+}
+
+/* ---------- The sidebar ---------- */
+
+.hextra-sidebar-container {
+  background: var(--bg);
+}
+@media (min-width: 768px) {
+  .hextra-sidebar-container {
+    border-right: 1px solid var(--rule);
+  }
+}
+.hextra-sidebar-container > div:first-child {
+  padding-top: 1.5rem;
+}
+.hextra-sidebar-item > a,
+.hextra-sidebar-collapsible-button {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem !important;
+  line-height: 1.35;
+  color: var(--faint) !important;
+  border-radius: 0 6px 6px 0 !important;
+}
+.hextra-sidebar-item > a:hover {
+  color: var(--text-strong) !important;
+  background: var(--tint) !important;
+}
+/* The selected page: the launcher's cyan marker and soft tint. */
+.hextra-sidebar-item[data-active="true"] > a {
+  color: var(--text-strong) !important;
+  background: var(--tint) !important;
+  font-weight: 600;
+}
+.hextra-sidebar-item[data-active="true"] > a::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  bottom: 0.3em;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+/* Top-level sections read like headings. */
+.hextra-sidebar-container > div > ul > li > .hextra-sidebar-item > a {
+  color: var(--text) !important;
+  font-weight: 600;
+}
+.hextra-sidebar-children {
+  border-color: var(--rule) !important;
+}
+/* The top bar has the theme switch; the sidebar does not need a second. */
+.hextra-sidebar-container [data-toggle-animation] {
+  display: none !important;
+}
+/* Section toggles big enough to hit (WCAG 2.5.8: 24 px). */
+.hextra-sidebar-collapsible-button {
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- The page ---------- */
+
+.content {
+  color: var(--text);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+.content :where(h1, h2, h3, h4, h5) {
+  font-family: var(--font-mono);
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+.content h1 {
+  font-size: clamp(1.75rem, 3.2vw, 2.375rem);
+  line-height: 1.15;
+  margin-top: 0.5rem !important;
+}
+.content h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+.content h3 {
+  font-size: 1.1875rem;
+  margin-top: 2rem;
+}
+.content h4 {
+  font-size: 1rem;
+}
+.content p,
+.content li {
+  color: var(--text);
+}
+.content strong {
+  color: var(--text-strong);
+}
+.content a:not(.subheading-anchor):not(.not-prose) {
+  color: var(--accent) !important;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.15s;
+}
+.content a:not(.subheading-anchor):hover {
+  text-decoration-color: currentColor;
+}
+.content :not(pre) > code {
+  padding: 0.12em 0.36em;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  background: var(--bg-code);
+  color: var(--text-strong);
+  font-size: 0.86em;
+  font-weight: 500;
+}
+.content a code {
+  color: inherit;
+}
+.content hr {
+  border-color: var(--rule);
+}
+.content blockquote {
+  border-left: 3px solid var(--accent) !important;
+  background: var(--tint);
+  padding: 0.75rem 1rem !important;
+  border-radius: 0 8px 8px 0;
+  color: var(--text) !important;
+  font-style: normal !important;
+}
+.content blockquote p:first-child { margin-top: 0; }
+.content blockquote p:last-child { margin-bottom: 0; }
+
+/* Tables: mono heads, rules between rows, no boxes. */
+.content table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin-top: 1.5rem;
+}
+.content table tr {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rule) !important;
+}
+.content table th,
+.content table td {
+  border: 0 !important;
+  padding: 0.55rem 1.25rem 0.55rem 0 !important;
+  text-align: left;
+  vertical-align: top;
+}
+.content table th {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+  border-bottom: 1px solid var(--rule-strong) !important;
+}
+.content table td:first-child {
+  color: var(--text-strong);
+}
+
+/* Code blocks: a terminal pane with a copy key. */
+.hextra-code-block pre,
+.content pre {
+  background: var(--bg-code) !important;
+  border: 1px solid var(--rule) !important;
+  border-radius: 10px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.65 !important;
+  font-weight: 450 !important;
+  padding: 1rem 3.25rem 1rem 1.125rem !important;
+}
+.content pre code {
+  font-weight: inherit;
+}
+.hextra-code-copy-btn-container {
+  opacity: 1 !important;
+}
+.hextra-code-copy-btn {
+  border: 1px solid var(--rule) !important;
+  border-radius: 6px !important;
+  background: var(--bg-raised) !important;
+  color: var(--faint) !important;
+  opacity: 0.85;
+}
+.hextra-code-copy-btn:hover,
+.hextra-code-copy-btn:focus-visible {
+  color: var(--accent) !important;
+  opacity: 1;
+}
+.hextra-code-block:hover .hextra-code-copy-btn {
+  opacity: 1;
+}
+
+/* The highlighter's colours, from the launcher's palette. They outrank
+   Hextra's GitHub colours, which miss 4.5:1 on our code background. */
+html:root .highlight .chroma { color: var(--text-strong); background: transparent !important; }
+html:root .highlight .chroma .c, html:root .highlight .chroma .c1, html:root .highlight .chroma .cm, html:root .highlight .chroma .cs, html:root .highlight .chroma .ch { color: var(--faint); font-style: normal; }
+html:root .highlight .chroma .k, html:root .highlight .chroma .kd, html:root .highlight .chroma .kn, html:root .highlight .chroma .kr, html:root .highlight .chroma .kt, html:root .highlight .chroma .nb, html:root .highlight .chroma .nt { color: var(--accent); }
+html:root .highlight .chroma .s, html:root .highlight .chroma .s1, html:root .highlight .chroma .s2, html:root .highlight .chroma .sb, html:root .highlight .chroma .sh, html:root .highlight .chroma .se, html:root .highlight .chroma .sx { color: var(--ok); }
+html:root .highlight .chroma .m, html:root .highlight .chroma .mi, html:root .highlight .chroma .mf, html:root .highlight .chroma .mh, html:root .highlight .chroma .il, html:root .highlight .chroma .no { color: var(--warn); }
+html:root .highlight .chroma .o, html:root .highlight .chroma .ow, html:root .highlight .chroma .p { color: var(--faint); }
+html:root .highlight .chroma .nv, html:root .highlight .chroma .vg, html:root .highlight .chroma .vi, html:root .highlight .chroma .na, html:root .highlight .chroma .nf, html:root .highlight .chroma .nx { color: var(--text-strong); }
+html:root .highlight .chroma .gd { color: var(--danger); }
+html:root .highlight .chroma .gi { color: var(--ok); }
+html:root .highlight .chroma .err { color: var(--danger); background: none; }
+
+/* Images of the launcher: a window on the page. */
+.content img {
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+}
+
+/* The breadcrumb, as the launcher's header crumb: docs › how-to › install. */
+main#content > div:first-child:not(.content) {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--faint) !important;
+}
+main#content > div:first-child:not(.content) a:hover {
+  color: var(--accent);
+}
+
+/* Previous and next. */
+main#content a[title].hx\:flex {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem !important;
+  color: var(--faint) !important;
+}
+main#content a[title].hx\:flex:hover {
+  color: var(--accent) !important;
+}
+main#content .hx\:border-t {
+  border-color: var(--rule) !important;
+}
+
+/* The table of contents. */
+.hextra-toc {
+  font-family: var(--font-mono);
+}
+.hextra-toc p {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+  font-weight: 600 !important;
+}
+.hextra-toc a {
+  font-size: 0.8125rem;
+  color: var(--faint) !important;
+  font-weight: 400 !important;
+}
+.hextra-toc a:hover {
+  color: var(--text-strong) !important;
+}
+.hextra-toc a[data-active="true"],
+.hextra-toc a.hx\:text-primary-600 {
+  color: var(--accent) !important;
+}
+
+/* "View source", at the end of each page. */
+.page-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin-top: 3rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--faint);
+}
+.page-source a {
+  color: var(--faint);
+  text-decoration: none;
+}
+.page-source a:hover {
+  color: var(--accent);
+}
+.page-source a::before {
+  content: "→ ";
+  color: var(--accent);
+}
+
+/* ---------- The footer ---------- */
+
+.site-footer {
+  margin-top: 4rem;
+  border-top: 1px solid var(--rule);
+  background: var(--bg) !important;
+  color: var(--faint);
+  font-size: 0.9375rem;
+}
+.site-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1.2fr) 2fr;
+  gap: 2.5rem;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 3rem max(env(safe-area-inset-right), 1.5rem) 2rem max(env(safe-area-inset-left), 1.5rem);
+}
+.site-footer-brand p {
+  margin: 0.75rem 0 0;
+  max-width: 28rem;
+}
+.site-footer-small {
+  font-size: 0.8125rem;
+}
+.site-footer-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.site-footer-cols h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-strong);
+}
+.site-footer-cols ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-footer-cols li {
+  margin: 0.375rem 0;
+}
+.site-footer a {
+  color: var(--faint);
+  text-decoration: none;
+}
+.site-footer a:hover {
+  color: var(--accent);
+}
+.site-footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 1rem max(env(safe-area-inset-right), 1.5rem) max(1.25rem, env(safe-area-inset-bottom)) max(env(safe-area-inset-left), 1.5rem);
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+.site-footer-bar strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.site-motion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.site-motion[hidden] {
+  display: none;
+}
+.site-motion-options {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.site-motion-options button {
+  padding: 0.125rem 0.625rem;
+  font: inherit;
+  color: var(--faint);
+  background: transparent;
+  cursor: pointer;
+}
+.site-motion-options button + button {
+  border-left: 1px solid var(--rule);
+}
+.site-motion-options button[aria-pressed="true"] {
+  color: var(--bg);
+  background: var(--accent);
+}
+@media (max-width: 767px) {
+  .site-footer-inner {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 479px) {
+  .site-footer-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="on"]) * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+html[data-motion="off"] * {
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+/* Text diagrams: box lines meet at the face's own line height. */
+.content pre code[data-lang="text"] {
+  line-height: 1.32;
+}

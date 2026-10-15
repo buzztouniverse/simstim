@@ -1,0 +1,48 @@
+{{- /*
+  The top bar on every page: the logo (the launcher's three-cell braille wave
+  and the name in the brand gradient), the main menu, search, the theme and
+  the source. It replaces Hextra's navbar, and keeps the class names its
+  scripts look for (the search trigger, the theme toggle, the menu button).
+*/ -}}
+{{- $page := . -}}
+<div class="hextra-nav-container site-nav hx:sticky hx:top-0 hx:z-20 hx:w-full hx:print:hidden">
+  <div class="hextra-nav-container-blur site-nav-bg" aria-hidden="true"></div>
+  <nav class="site-nav-inner" aria-label="Main">
+    <a class="site-logo" href="{{ site.Home.RelPermalink }}">
+      <span class="site-logo-mark" aria-hidden="true" data-logo>⢄⡠⠊</span>
+      <span class="site-logo-name">{{ site.Title }}</span>
+      <span class="hx:sr-only">, home</span>
+    </a>
+    {{- /* "Docs" is the current item on any docs page that no other item claims. */ -}}
+    {{- $claimed := false -}}
+    {{- range site.Menus.main -}}
+      {{- with and (not .Params.type) (not .Params.mobileOnly) (ne .PageRef "/docs") (site.GetPage .PageRef) -}}
+        {{- if or (eq $page.RelPermalink .RelPermalink) ($page.IsDescendant .) -}}{{ $claimed = true }}{{- end -}}
+      {{- end -}}
+    {{- end -}}
+    <ul class="site-nav-links">
+      {{- range $m := site.Menus.main -}}
+        {{- if and (not $m.Params.type) (not $m.Params.mobileOnly) -}}
+          {{- with site.GetPage $m.PageRef -}}
+            {{- $here := or (eq $page.RelPermalink .RelPermalink) (and (ne $m.PageRef "/docs") ($page.IsDescendant .)) -}}
+            {{- if and (eq $m.PageRef "/docs") (not $page.IsHome) (not $claimed) -}}{{ $here = true }}{{- end -}}
+            <li><a href="{{ .RelPermalink }}"{{ if $here }} aria-current="page"{{ end }}>{{ $m.Name }}</a></li>
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    </ul>
+    <div class="site-nav-tools">
+      {{- partial "search.html" (dict "icon" "") -}}
+      {{- partial "theme-toggle.html" (dict "iconHeight" 20 "hideLabel" true "location" "top" "class" "site-icon-button") -}}
+      {{- with site.Params.repo -}}
+        <a class="site-icon-button site-source" href="{{ . }}" rel="noopener" title="Source on GitHub">
+          {{- partial "utils/icon.html" (dict "name" "github" "attributes" "height=20 aria-hidden=true") -}}
+          <span class="hx:sr-only">Source on GitHub</span>
+        </a>
+      {{- end -}}
+      <button type="button" aria-label="{{ (T "menu") | default "Menu" }}" aria-expanded="false" class="hextra-hamburger-menu site-icon-button">
+        {{- partial "utils/icon.html" (dict "name" "hamburger-menu" "attributes" "height=22") -}}
+      </button>
+    </div>
+  </nav>
+</div>

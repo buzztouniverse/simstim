@@ -1,8 +1,10 @@
-# The docs site: Hugo with the Hextra theme (record 0015). Build it with
-# `just docs-site`, which first writes the content from docs/ into
-# build/site (go run ./cmd/docgen -site build/site). The title and the
-# repository link come from the environment (HUGO_TITLE, HUGO_PARAMS_REPO),
-# so this file never spells the product's name.
+# The site: a landing page at the root and the docs, on Hugo with the Hextra
+# theme (records 0015 and 0021). Build it with `just docs-site`, which first
+# writes the content and data from docs/ into build/site
+# (go run ./cmd/docgen -site build/site). The title and the repository link
+# come from the environment (HUGO_TITLE, HUGO_PARAMS_REPO), and the rest of
+# the brand from build/site/data/brand.json, so no file here spells the
+# product's name.
 baseURL: /
 locale: en-gb
 title: Docs
@@ -22,6 +24,14 @@ module:
       target: data
     - source: layouts
       target: layouts
+    - source: assets
+      target: assets
+    - source: static
+      target: static
+
+# llms.txt lists every page for coding agents, as many developer sites now do.
+outputs:
+  home: [html, rss, llms]
 
 markup:
   goldmark:
@@ -31,6 +41,7 @@ markup:
     noClasses: false
 
 params:
+  description: Run Claude Code, Codex or any terminal agent in a session on a host you own, and see its real screen in your own terminal, byte for byte.
   repo: ""
   version: dev
   navbar:
@@ -55,19 +66,55 @@ params:
     enable: false
   externalLinkDecoration: true
 
+# The top bar shows the items without mobileOnly; the menu on a phone, which
+# Hextra builds from this list, shows them all, so it reaches every section.
 menu:
   main:
     - name: Docs
-      pageRef: /
+      pageRef: /docs
       weight: 1
+    - name: Get started
+      pageRef: /tutorials/getting-started
+      weight: 2
+    - name: Tutorials
+      pageRef: /tutorials
+      weight: 3
+      params: { mobileOnly: true }
+    - name: How-to guides
+      pageRef: /how-to
+      weight: 4
+      params: { mobileOnly: true }
     - name: Reference
       pageRef: /reference
-      weight: 2
+      weight: 5
+    - name: Explanation
+      pageRef: /explanation
+      weight: 6
+      params: { mobileOnly: true }
+    - name: Roadmap
+      pageRef: /roadmap
+      weight: 7
+      params: { mobileOnly: true }
+    - name: Project
+      pageRef: /project
+      weight: 8
+      params: { mobileOnly: true }
+    - name: Contributing
+      pageRef: /contributing
+      weight: 9
+      params: { mobileOnly: true }
+    - name: Research
+      pageRef: /research
+      weight: 10
+      params: { mobileOnly: true }
+    - name: Changelog
+      pageRef: /project/changelog
+      weight: 11
     - name: Search
-      weight: 3
+      weight: 12
       params:
         type: search
     - name: Theme
-      weight: 4
+      weight: 13
       params:
         type: theme-toggle

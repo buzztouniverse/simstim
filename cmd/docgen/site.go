@@ -9,12 +9,15 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/iAmLakshya/simstim/internal/agents"
+	"github.com/iAmLakshya/simstim/internal/brand"
 )
 
 // sectionWeight orders the docs site's sidebar: what users need first.
 var sectionWeight = map[string]int{
-	"tutorials": 1, "how-to": 2, "reference": 3, "explanation": 4,
-	"roadmap.md": 5, "project": 6, "contributing": 7, "research": 8,
+	"README.md": 1, "tutorials": 2, "how-to": 3, "reference": 4, "explanation": 5,
+	"roadmap.md": 6, "project": 7, "contributing": 8, "research": 9,
 }
 
 // hosted lists the Markdown files outside docs/ that the site hosts too, so
@@ -52,19 +55,20 @@ const projectIndex = `The project's own files, from the root of the repository.
 // sitePages turns docs/ into the docs site's content folder. The files in
 // docs/ stay plain Markdown that reads well on GitHub; here each README.md
 // becomes its section's _index.md, and a page's first "# " heading becomes
-// its title in front matter. Images go to the site's static folder, and
-// private notes are left out.
+// its title in front matter. docs/README.md becomes the docs' overview at
+// /docs/, as the landing page has the root. Images go to the site's static
+// folder, and private notes are left out.
 //
 // It also writes the site's data: pages.json maps each hosted file's path in
 // the repository to its page, so a link between two Markdown files resolves
 // to the page on the site (site/layouts/_markup/render-link.html), and
 // scripts/check-site-links.py fails if a built page links to GitHub for a
-// page the site hosts.
+// page the site hosts. brand.json and agents.json feed the landing page.
 func sitePages(docs, out string) error {
 	if err := os.RemoveAll(out); err != nil {
 		return fmt.Errorf("clear %s: %w", out, err)
 	}
-	pages := map[string]string{"README.md": "/"} // the project's README: the site's home
+	pages := map[string]string{"README.md": "/"}
 	err := filepath.WalkDir(docs, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -83,10 +87,17 @@ func sitePages(docs, out string) error {
 			return nil
 		}
 		dst := rel
-		if filepath.Base(rel) == "README.md" {
+		switch {
+		case rel == "README.md":
+			dst = "docs.md"
+		case filepath.Base(rel) == "README.md":
 			dst = filepath.Join(filepath.Dir(rel), "_index.md")
 		}
-		return writePage(out, pages, filepath.ToSlash(filepath.Join(docs, rel)), dst, weightOf(rel), "")
+		extra := ""
+		if rel == "README.md" {
+			extra = "linkTitle: \"Overview\"\n"
+		}
+		return writePage(out, pages, filepath.ToSlash(filepath.Join(docs, rel)), dst, weightOf(rel), extra)
 	})
 	if err != nil {
 		return err
@@ -101,6 +112,11 @@ func sitePages(docs, out string) error {
 		return err
 	}
 	pages["project"] = "/project"
+	landing := "---\ntitle: " + quote(brand.DisplayName) +
+		"\ntype: docs\nlayout: landing\nexcludeSearch: true\ncascade:\n  - type: docs\n---\n"
+	if err := writeFile(filepath.Join(out, "content", "_index.md"), []byte(landing)); err != nil {
+		return err
+	}
 	return siteData(out, pages)
 }
 
@@ -129,11 +145,34 @@ func writePage(out string, pages map[string]string, src, dst string, weight int,
 
 // siteData writes the site's data files.
 func siteData(out string, pages map[string]string) error {
-	b, err := json.MarshalIndent(pages, "", "  ")
-	if err != nil {
-		return fmt.Errorf("encode pages: %w", err)
+	type agent struct {
+		Title   string `json:"title"`
+		Kind    string `json:"kind"`
+		Support string `json:"support"`
+		Program string `json:"program"`
 	}
-	return writeFile(filepath.Join(out, "data", "pages.json"), append(b, '\n'))
+	var list []agent
+	for _, a := range agents.Table {
+		list = append(list, agent{Title: a.Title, Kind: a.Kind, Support: string(a.Support), Program: a.Binaries[0]})
+	}
+	files := map[string]any{
+		"pages":  pages,
+		"agents": list,
+		"brand": map[string]string{
+			"name": brand.Name, "displayName": brand.DisplayName, "tagline": brand.Tagline,
+			"hostBinary": brand.HostBinary, "envPrefix": brand.EnvPrefix,
+		},
+	}
+	for name, v := range files {
+		b, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			return fmt.Errorf("encode %s: %w", name, err)
+		}
+		if err := writeFile(filepath.Join(out, "data", name+".json"), append(b, '\n')); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // weightOf is a page's place in the sidebar: top-level sections by

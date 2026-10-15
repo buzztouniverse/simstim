@@ -101,7 +101,7 @@ func TestSitePages(t *testing.T) {
 	}
 	for src, want := range map[string]string{
 		"README.md":                    "/",
-		"docs/README.md":               "/",
+		"docs/README.md":               "/docs",
 		"docs/how-to/README.md":        "/how-to",
 		"docs/how-to":                  "/how-to",
 		"docs/how-to/install.md":       "/how-to/install",
@@ -114,7 +114,7 @@ func TestSitePages(t *testing.T) {
 			t.Errorf("pages[%q] = %q, want %q", src, got, want)
 		}
 	}
-	for _, f := range []string{"content/_index.md", "content/project/_index.md", "content/project/changelog.md"} {
+	for _, f := range []string{"content/_index.md", "content/docs.md", "content/project/_index.md", "content/project/changelog.md", "data/brand.json", "data/agents.json"} {
 		if _, err := os.Stat(filepath.Join(out, f)); err != nil {
 			t.Errorf("%s: %v", f, err)
 		}

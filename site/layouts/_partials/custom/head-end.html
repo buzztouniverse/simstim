@@ -1,0 +1,31 @@
+{{- /*
+  The site's own head: the motion setting (before anything draws), the fonts,
+  the landing page's style, and the small script every page shares. Every
+  file is the site's own: no request goes to anyone else.
+*/ -}}
+<script>
+  /* Motion: "auto" follows prefers-reduced-motion; "on" and "off" are the reader's choice (the footer's switch). */
+  (function () {
+    var m = "auto";
+    try { m = localStorage.getItem("motion") || "auto"; } catch (e) {}
+    var on = m === "on" || (m === "auto" && !matchMedia("(prefers-reduced-motion: reduce)").matches);
+    document.documentElement.dataset.motion = on ? "on" : "off";
+    document.documentElement.dataset.js = "";
+  })();
+</script>
+<meta name="theme-color" content="#0B0E14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F6F5F1" media="(prefers-color-scheme: light)">
+{{- range slice "mono" "sans" }}
+<link rel="preload" href="{{ printf "fonts/%s.woff2" . | relURL }}" as="font" type="font/woff2" crossorigin>
+{{- end }}
+<style>
+  @font-face { font-family: "Site Mono"; src: url("{{ "fonts/mono.woff2" | relURL }}") format("woff2"); font-weight: 400 800; font-display: swap; }
+  @font-face { font-family: "Site Sans"; src: url("{{ "fonts/sans.woff2" | relURL }}") format("woff2"); font-weight: 400 700; font-display: swap; }
+  @font-face { font-family: "Signal Braille"; src: url("{{ "fonts/braille.woff2" | relURL }}") format("woff2"); unicode-range: U+2800-28FF; font-display: block; }
+</style>
+{{- if eq .Layout "landing" }}
+  {{- $css := resources.Get "css/landing.css" | minify | fingerprint }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+{{- end }}
+{{- $js := resources.Get "js/site.js" | js.Build (dict "minify" true "target" "es2019") | fingerprint }}
+<script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>

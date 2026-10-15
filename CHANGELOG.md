@@ -118,6 +118,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
   - the tab title counts the sessions that need you, and a desktop notification goes out when one starts to need you while the terminal is in the background.
 - While attached, the client draws nothing of its own. It sets no window title, and a failed upload is now a system notification instead of a line on the bottom row. The reconnect notice is the one exception. End-to-end checks prove that the agent's PTY is the terminal's size, and that the screen is the session's bytes alone.
 
+- The docs site has a landing page in the launcher's look, with the launcher itself, live, in the first screen, and a three.js field of braille that loads only with motion on, on a wide screen. The docs overview moved to `/docs/`; every other page keeps its address. Links between pages, and to `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md` and the other files at the root, now stay on the site, and `just docs-check` fails if one goes to GitHub instead. One motion switch, in the footer and under the launcher, stops every animation. See [decision 0021](docs/contributing/decisions/0021-site-design.md).
+
 ### Fixed
 
 - `check-private.sh --history` could miss a match on macOS: `grep -q` stopped reading early, the writer died of SIGPIPE, and under `pipefail` the match went unreported. Linux CI caught Dependabot's sign-off address on its branches, which is now allowed with the other bots' addresses.

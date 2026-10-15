@@ -1,0 +1,10 @@
+{{- /*
+  The search button in the top bar. It replaces Hextra's so that its
+  accessible name is its visible text; Hextra's scripts find it by
+  data-search-open and set the key chip for the platform.
+*/ -}}
+<button type="button" class="hextra-search-trigger" data-search-open aria-haspopup="dialog" aria-controls="hextra-search-dialog">
+  {{- partial "utils/icon.html" (dict "name" "search" "attributes" `class="hextra-search-trigger-icon" focusable="false" aria-hidden="true"`) -}}
+  <span class="hextra-search-trigger-label">Search<span class="hx:sr-only"> the docs</span></span>
+  <kbd class="hextra-search-trigger-kbd">CTRL K</kbd>
+</button>
