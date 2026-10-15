@@ -44,6 +44,7 @@ type Conn interface {
 	Peek(ctx context.Context, id string, n int) ([]byte, int, int, error)
 	Setup(ctx context.Context) (client.SetupResult, error)
 	RoundTrip(ctx context.Context) (time.Duration, error)
+	Folders(ctx context.Context, prefix string) (client.FoldersResult, error)
 	Done() <-chan struct{}
 	Close()
 }

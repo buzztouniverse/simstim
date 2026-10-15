@@ -36,6 +36,8 @@ A client and a host helper that run AI coding agents in sessions on remote hosts
 
 End-to-end tests (`e2e/run.py`) drive the real client in a pseudo-terminal against a real host. Add the host with `host add`, set `E2E_HOST` to its name, then run `just e2e`.
 
+To see a TUI the way a person would, use `e2e/ttyshot`: it runs a program in a pseudo-terminal, sends keys from a script, and prints the rendered screen (`go run ./e2e/ttyshot -script s.tty -- ./bin/<name>`).
+
 Any change made on a test host by hand goes in [docs/sandbox-log.md](docs/sandbox-log.md). Ask the owner before rebooting a host.
 
 ## Commands

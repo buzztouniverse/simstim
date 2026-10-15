@@ -116,3 +116,10 @@ type DeleteResult struct {
 	Deleted  bool   `json:"deleted"`
 	Worktree string `json:"worktree,omitempty"`
 }
+
+// FoldersResult is what the new-session dialog completes folders from.
+type FoldersResult struct {
+	Matches []string `json:"matches"`
+	Recent  []string `json:"recent"`
+	Repos   []string `json:"repos"`
+}

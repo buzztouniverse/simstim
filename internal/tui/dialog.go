@@ -1,9 +1,11 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -59,7 +61,10 @@ type newSession struct {
 	folder   input
 	name     input
 	worktree bool
-	finding  bool // the host's agents are not known yet
+	suggest  []string // folder completions for the current folder text
+	hints    bool     // suggest holds recent folders and repositories, not completions
+	si       int      // the next suggestion Tab takes
+	finding  bool     // the host's agents are not known yet
 	starting bool
 	err      error
 }
@@ -160,12 +165,23 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		}
 		return nil
 	}
+	if d.field == 1 && ks == "tab" {
+		// Tab completes a typed path from the host's matches, cycling through
+		// them; with nothing left to complete it moves to the next field.
+		if next, ok := d.completion(); ok {
+			d.folder.set(next)
+			return m.fetchFolders(d)
+		}
+	}
 	switch ks {
 	case "esc":
 		m.modal = nil
 		return nil
 	case "tab", "down":
 		d.field = (d.field + 1) % 4
+		if d.field == 1 {
+			return m.fetchFolders(d)
+		}
 		return nil
 	case "shift+tab", "up":
 		d.field = (d.field + 3) % 4
@@ -204,7 +220,9 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 			}
 		}
 	case 1:
-		d.folder.key(k)
+		if d.folder.key(k) {
+			return m.fetchFolders(d)
+		}
 	case 2:
 		d.name.key(k)
 	case 3:
@@ -235,6 +253,7 @@ func (d *newSession) view(m *Model) string {
 		label(0, "Agent") + agentsLine,
 		"  " + strings.Repeat(" ", labelW) + under,
 		label(1, "Folder") + d.folder.view(inner-4-labelW, d.field == 1),
+		"  " + strings.Repeat(" ", labelW) + d.suggestLine(inner-4-labelW),
 		label(2, "Name") + d.name.view(inner-4-labelW, d.field == 2),
 		label(3, "Worktree") + d.worktreeRow(),
 		"",
@@ -449,4 +468,77 @@ func (d *details) view(m *Model) string {
 	}
 	hints := []hint{{"t", "test"}, {"r", "reconnect"}, {"x", "remove"}, {"esc", "back"}}
 	return box(w, len(body)+2, h.name(), sMuted.Render(strings.TrimSuffix(state, dot)), hintsFor(hints, w), body, boxNormal)
+}
+
+// fetchFolders asks the host for completions of the folder field.
+func (m *Model) fetchFolders(d *newSession) tea.Cmd {
+	h := m.hostByName(d.host)
+	if h == nil || !h.online() {
+		return nil
+	}
+	prefix, name, c, ctx := d.folder.value(), h.name(), h.conn, m.ctx
+	return func() tea.Msg {
+		cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		res, err := c.Folders(cctx, prefix)
+		if err != nil {
+			return nil
+		}
+		return foldersMsg{host: name, prefix: prefix, res: res}
+	}
+}
+
+// setSuggestions keeps completions that still fit what the user has typed.
+func (d *newSession) setSuggestions(prefix string, res client.FoldersResult) {
+	if prefix != d.folder.value() {
+		return // the user typed on; a newer answer is coming
+	}
+	var out []string
+	seen := map[string]bool{}
+	add := func(list []string) {
+		for _, s := range list {
+			if !seen[s] {
+				seen[s] = true
+				out = append(out, s)
+			}
+		}
+	}
+	d.hints = prefix == "" || prefix == "~"
+	if d.hints {
+		add(res.Recent)
+		add(res.Repos)
+	} else {
+		add(res.Matches)
+	}
+	d.suggest, d.si = out, 0
+}
+
+// suggestLine shows the completions under the folder field while it has focus.
+func (d *newSession) suggestLine(w int) string {
+	if d.field != 1 || len(d.suggest) == 0 {
+		return ""
+	}
+	lead := "↹ "
+	if d.hints {
+		lead = "recent: "
+	}
+	return sMuted.Render(fit(lead+strings.Join(d.suggest, "  "), w))
+}
+
+// completion returns the next match that extends what the user typed. Adding
+// only a trailing slash does not count, and the hints shown for an empty
+// field (recent folders, repositories) are not taken by Tab.
+func (d *newSession) completion() (string, bool) {
+	v := d.folder.value()
+	if v == "" || v == "~" || d.hints {
+		return "", false
+	}
+	for range d.suggest {
+		next := d.suggest[d.si%len(d.suggest)]
+		d.si++
+		if next != v && next != v+"/" && strings.HasPrefix(next, strings.TrimSuffix(v, "/")) {
+			return next, true
+		}
+	}
+	return "", false
 }

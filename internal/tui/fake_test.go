@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -167,6 +168,17 @@ func (c *fakeConn) isClosed() bool {
 
 func (c *fakeConn) host() *fakeHost {
 	return c.be.state[c.name]
+}
+
+func (c *fakeConn) Folders(_ context.Context, prefix string) (client.FoldersResult, error) {
+	all := []string{"~/src/api/", "~/src/app/", "~/notes/"}
+	r := client.FoldersResult{Recent: []string{"~/src/app"}, Repos: []string{"~/src/api", "~/src/app"}}
+	for _, p := range all {
+		if prefix != "" && strings.HasPrefix(p, prefix) {
+			r.Matches = append(r.Matches, p)
+		}
+	}
+	return r, nil
 }
 
 func (c *fakeConn) Sessions(context.Context) ([]client.Session, error) {

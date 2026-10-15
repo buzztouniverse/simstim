@@ -162,6 +162,10 @@ type (
 		err  error
 		drop string // a session to take off the list
 	}
+	foldersMsg struct {
+		host, prefix string
+		res          client.FoldersResult
+	}
 	startedMsg struct {
 		host   string
 		s      *client.Session
@@ -256,6 +260,11 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 			m.rename = nil
 		}
 		return cmd
+	case foldersMsg:
+		if d, ok := m.modal.(*newSession); ok && d.host == msg.host {
+			d.setSuggestions(msg.prefix, msg.res)
+		}
+		return nil
 	case startedMsg:
 		return m.onStarted(msg)
 	case attachDoneMsg:

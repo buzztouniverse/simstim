@@ -10,11 +10,11 @@
 │ │  Agent      claude   codex   opencode   shell   not installed: gemini,…  │ │
 │ │             ▔▔▔▔▔▔                                                       │ │
 │ │  Folder     ~/src/app                                                    │ │
+│ │                                                                          │ │
 │ │  Name       auth                                                         │ │
 │ │  Worktree   ● this folder   ○ new worktree                               │ │
 │ │                                                                          │ │
 │ ╰─ enter start · tab next field · ctrl+enter start detached · esc cancel ──╯ │
-│                       │ │                                                  │ │
 │                       │ │ ● Should I also migrate the old sessions table?  │ │
 │                       │ │                                                  │ │
 │                       │ │ >                                                │ │

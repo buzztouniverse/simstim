@@ -635,3 +635,28 @@ func TestHeroMotion(t *testing.T) {
 		t.Fatal("the hero did not rest between pulses")
 	}
 }
+
+func TestFolderCompletion(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("enter", "tab")
+	d := hs.m.modal.(*newSession)
+	if !d.hints || len(d.suggest) == 0 || d.suggest[0] != "~/src/app" {
+		t.Fatalf("an empty folder should show recent folders as hints, got %v (hints %v)", d.suggest, d.hints)
+	}
+	hs.key("tab") // hints are not taken by Tab: it moves on
+	if d.field != 2 {
+		t.Fatalf("tab with only hints should move to the name field, field %d", d.field)
+	}
+	hs.key("shift+tab", "ctrl+u")
+	hs.typeText("~/src/a")
+	if d.hints || len(d.suggest) != 2 {
+		t.Fatalf("typing should list matches, got %v", d.suggest)
+	}
+	hs.key("tab")
+	if got := d.folder.value(); got != "~/src/api/" {
+		t.Fatalf("first tab completed to %q", got)
+	}
+	if d.field != 1 {
+		t.Fatal("a completion should stay in the folder field")
+	}
+}

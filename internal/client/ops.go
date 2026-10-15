@@ -152,3 +152,13 @@ func RemotePath(p string) string {
 	}
 	return p
 }
+
+// FoldersResult is what the new-session dialog completes folders from.
+type FoldersResult = api.FoldersResult
+
+// Folders completes a folder path on the host and suggests recent folders and repositories.
+func (c *Conn) Folders(ctx context.Context, prefix string) (FoldersResult, error) {
+	var r FoldersResult
+	err := c.Call(ctx, "folders", map[string]any{"prefix": prefix, "limit": 12}, &r)
+	return r, err
+}
