@@ -8,8 +8,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/iAmLakshya/simstim/internal/agents"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/agents"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // modal is a notched dialog over the launcher. Only one shows at a time.

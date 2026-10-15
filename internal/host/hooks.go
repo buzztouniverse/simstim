@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/paths"
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/version"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/version"
 )
 
 // HookEvent is what an agent's hook reports.

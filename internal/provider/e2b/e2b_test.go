@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/client/clienttest"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client/clienttest"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 // testProvider points the provider at the fakes, with the key in the

@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/host/hosttest"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/host/hosttest"
 )
 
 // inTerminal runs the command line with a terminal as its stdin and stdout,

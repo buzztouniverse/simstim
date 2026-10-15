@@ -9,11 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/keys"
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/term"
-	"github.com/iAmLakshya/simstim/internal/version"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/keys"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/term"
+	"github.com/iamlakshya/simstim/internal/version"
 )
 
 // pickEscFlush is how long a lone ESC waits for the rest of a key sequence.

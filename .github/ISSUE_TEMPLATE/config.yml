@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Ask a question or share an idea
-    url: https://github.com/iAmLakshya/simstim/discussions
+    url: https://github.com/iamlakshya/simstim/discussions
     about: Discussions are the place for questions and ideas.
   - name: Report a security problem
-    url: https://github.com/iAmLakshya/simstim/security/advisories/new
+    url: https://github.com/iamlakshya/simstim/security/advisories/new
     about: Report security problems privately, never in a public issue.
   - name: Read the docs
-    url: https://github.com/iAmLakshya/simstim/tree/main/docs
+    url: https://github.com/iamlakshya/simstim/tree/main/docs
     about: Tutorials, how-to guides and the reference.

@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/host"
-	"github.com/iAmLakshya/simstim/internal/host/hosttest"
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/host"
+	"github.com/iamlakshya/simstim/internal/host/hosttest"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // waitStatus waits until a session's status has the state and source.

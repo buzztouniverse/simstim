@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // Port is a TCP port a session's processes listen on.

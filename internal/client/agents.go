@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // AgentCheck is what a host knows about one agent.

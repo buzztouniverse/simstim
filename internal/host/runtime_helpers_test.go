@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/host"
-	"github.com/iAmLakshya/simstim/internal/host/hosttest"
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/version"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/host"
+	"github.com/iamlakshya/simstim/internal/host/hosttest"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/version"
 )
 
 // start starts a session that runs argv in the home folder.

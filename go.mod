@@ -1,4 +1,4 @@
-module github.com/iAmLakshya/simstim
+module github.com/iamlakshya/simstim
 
 go 1.26.0
 

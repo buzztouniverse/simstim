@@ -6,9 +6,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/onboard"
 )
 
 // The demo's guided setup: every place looks ready, and nothing is made,

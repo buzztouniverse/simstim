@@ -16,7 +16,7 @@ The justfile and the release workflow read the name from `internal/brand/brand.g
 
 ```sh
 just rename newname                                     # name only
-scripts/rename.sh newname github.com/iAmLakshya/newname # name and module path
+scripts/rename.sh newname github.com/iamlakshya/newname # name and module path
 ```
 
 The script changes the brand package, the module path and imports (if given), and the docs, then runs the name check. It prints the steps that need a person:

@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/iAmLakshya/simstim/internal/agents"
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/onboard"
-	"github.com/iAmLakshya/simstim/internal/tui"
+	"github.com/iamlakshya/simstim/internal/agents"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/tui"
 )
 
 func isTerminal(f *os.File) bool { return term.IsTerminal(int(f.Fd())) }

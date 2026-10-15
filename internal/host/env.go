@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // LoginShell returns the user's login shell.

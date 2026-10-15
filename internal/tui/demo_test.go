@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 var _ Backend = (*demoBackend)(nil)

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 func TestControlDirFitsASocketPath(t *testing.T) {

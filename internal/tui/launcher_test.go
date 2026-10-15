@@ -10,8 +10,8 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // The launcher opens where the last run left off, with the sessions it saw,

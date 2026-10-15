@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/host"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/host"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 // The whole path: a paused sandbox is resumed on attach, the helper's real

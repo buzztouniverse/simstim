@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/client/clienttest"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client/clienttest"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 // fakeProvider makes machines in memory. With block, Create waits for its

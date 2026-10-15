@@ -6,7 +6,7 @@ package main
 import (
 	"os"
 
-	"github.com/iAmLakshya/simstim/internal/cli"
+	"github.com/iamlakshya/simstim/internal/cli"
 )
 
 func main() {

@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/paths"
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/version"
+	"github.com/iamlakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/version"
 )
 
 // Features this host helper offers. Clients check them before using a feature.

@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // probeQueries asks the terminal about everything the pass-through relies on.

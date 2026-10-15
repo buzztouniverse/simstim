@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // HostLimit is the most events one host sends in a minute, across all its sessions.

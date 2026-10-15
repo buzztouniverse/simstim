@@ -3,8 +3,8 @@ package tui
 import (
 	"fmt"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/onboard"
 )
 
 const agentW = 18 // the width of an agent's title in the lists

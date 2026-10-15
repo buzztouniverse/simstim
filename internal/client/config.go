@@ -15,7 +15,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // Host is one saved host.

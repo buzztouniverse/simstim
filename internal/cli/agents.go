@@ -10,11 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/iAmLakshya/simstim/internal/agents"
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/agents"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/onboard"
 )
 
 func agentsCmd() *cobra.Command {

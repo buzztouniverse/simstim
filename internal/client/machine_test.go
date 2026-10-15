@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/client/clienttest"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client/clienttest"
 )
 
 var fakeID atomic.Int64

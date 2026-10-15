@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 // EnvdPort is the port of envd, E2B's daemon inside each sandbox.

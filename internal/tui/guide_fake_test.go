@@ -6,8 +6,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/onboard"
 )
 
 // fakeLocal is the guided setup's computer: what is installed, the SSH key

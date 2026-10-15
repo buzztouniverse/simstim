@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 const testSecret = "fake-secret-for-tests-9876543210"

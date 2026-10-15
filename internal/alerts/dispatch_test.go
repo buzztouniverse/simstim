@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // fakeClock moves only when a test says so. Its timers run in the goroutine

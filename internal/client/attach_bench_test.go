@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/term"
-	"github.com/iAmLakshya/simstim/internal/term/termtest"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/term"
+	"github.com/iamlakshya/simstim/internal/term/termtest"
 )
 
 // The client end of the attach pump: an output frame from the host is

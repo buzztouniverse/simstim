@@ -3,7 +3,7 @@ package tui
 import (
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // nextWaiting selects the next session that waits for the user, on any host,

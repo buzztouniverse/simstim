@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/client/clienttest"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client/clienttest"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 // fakeProvider makes machines that live in memory, reached through a

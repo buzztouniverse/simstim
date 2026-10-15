@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // startArgv wraps an agent's argv in a short sh script when something must

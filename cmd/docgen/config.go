@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // field is one key of a config file, read from a struct's source.

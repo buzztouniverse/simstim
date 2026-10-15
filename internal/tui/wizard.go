@@ -8,10 +8,10 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/onboard"
 )
 
 // The add-host wizard (docs/contributing/ux-spec.md 2.10): one step per screen, Esc goes back.

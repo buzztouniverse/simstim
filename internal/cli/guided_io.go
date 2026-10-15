@@ -11,7 +11,7 @@ import (
 
 	"github.com/muesli/cancelreader"
 
-	"github.com/iAmLakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/onboard"
 )
 
 // The guided setup's prompts read one line at a time, straight from the

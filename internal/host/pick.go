@@ -16,7 +16,7 @@ import (
 	"github.com/muesli/cancelreader"
 	xterm "golang.org/x/term"
 
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // The phone path (decision 0019) is a hidden, experimental helper command,

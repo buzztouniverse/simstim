@@ -1,9 +1,9 @@
 # Getting help
 
-- **A question, or an idea:** start a [Discussion](https://github.com/iAmLakshya/simstim/discussions). Search first: someone may have asked.
-- **Something does not work as the docs say:** open a [bug report](https://github.com/iAmLakshya/simstim/issues/new?template=bug_report.yml). Include the output of `doctor` and `host doctor <host>`, with anything private removed.
-- **A host provider you want:** use the [provider request](https://github.com/iAmLakshya/simstim/issues/new?template=provider.yml) form.
-- **A problem in the docs:** use the [docs form](https://github.com/iAmLakshya/simstim/issues/new?template=docs.yml), or open a pull request.
+- **A question, or an idea:** start a [Discussion](https://github.com/iamlakshya/simstim/discussions). Search first: someone may have asked.
+- **Something does not work as the docs say:** open a [bug report](https://github.com/iamlakshya/simstim/issues/new?template=bug_report.yml). Include the output of `doctor` and `host doctor <host>`, with anything private removed.
+- **A host provider you want:** use the [provider request](https://github.com/iamlakshya/simstim/issues/new?template=provider.yml) form.
+- **A problem in the docs:** use the [docs form](https://github.com/iamlakshya/simstim/issues/new?template=docs.yml), or open a pull request.
 - **A security problem:** never in public. Follow [SECURITY.md](SECURITY.md).
 
 ## What is out of scope

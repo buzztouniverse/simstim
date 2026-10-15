@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Version is set at build time with -ldflags "-X github.com/iAmLakshya/simstim/internal/version.Version=…".
+// Version is set at build time with -ldflags "-X github.com/iamlakshya/simstim/internal/version.Version=…".
 // A build without it (go install <module>@vX.Y.Z) takes the module's version
 // from Go's build information.
 var Version = "0.0.0-dev"

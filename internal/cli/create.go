@@ -11,14 +11,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/onboard"
-	"github.com/iAmLakshya/simstim/internal/provider"
-	"github.com/iAmLakshya/simstim/internal/provider/docker"
-	"github.com/iAmLakshya/simstim/internal/provider/e2b"
-	"github.com/iAmLakshya/simstim/internal/provider/lima"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/provider/docker"
+	"github.com/iamlakshya/simstim/internal/provider/e2b"
+	"github.com/iamlakshya/simstim/internal/provider/lima"
 )
 
 // providers are the built-in providers of `host create`.

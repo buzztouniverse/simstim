@@ -10,7 +10,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files in testdata")

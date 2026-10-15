@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // The E2B REST API, as much as the provider needs. The shapes come from

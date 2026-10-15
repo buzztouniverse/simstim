@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/agents"
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/agents"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // loginStatusTimeout bounds an agent's own status command.

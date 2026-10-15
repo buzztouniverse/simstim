@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // fakeProc points procRoot at a folder of files, for the rest of the test.

@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/provider/e2b"
+	"github.com/iamlakshya/simstim/internal/provider/e2b"
 )
 
 // The places agents can run, as Place.Kind names them. Lima, Docker and E2B

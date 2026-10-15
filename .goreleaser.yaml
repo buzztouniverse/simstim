@@ -88,11 +88,11 @@ homebrew_casks:
   - name: "{{ .Env.APP_NAME }}"
     ids: [cli]
     repository:
-      owner: iAmLakshya
+      owner: iamlakshya
       name: homebrew-tap
       token: '{{ index .Env "HOMEBREW_TAP_TOKEN" }}'
     skip_upload: '{{ if index .Env "HOMEBREW_TAP_TOKEN" }}false{{ else }}true{{ end }}'
-    homepage: "https://github.com/iAmLakshya/{{ .Env.APP_NAME }}"
+    homepage: "https://github.com/iamlakshya/{{ .Env.APP_NAME }}"
     description: Run any coding agent in sessions on any host you own
     license: Apache-2.0
     hooks:

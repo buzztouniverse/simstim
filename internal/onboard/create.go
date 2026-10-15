@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/provider"
-	"github.com/iAmLakshya/simstim/internal/provider/lima"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/provider/lima"
 )
 
 // named lists the providers whose machines are named provider.MachineName

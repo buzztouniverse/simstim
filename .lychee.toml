@@ -14,7 +14,7 @@ exclude = [
   "^https?://(www\\.|old\\.)?reddit\\.com",
   "^https?://(www\\.)?(x|twitter)\\.com",
   "^https?://(www\\.)?linkedin\\.com",
-  "^https?://github\\.com/iAmLakshya/",
+  "^https?://github\\.com/iamlakshya/",
   "^https?://claude\\.ai/",
   "^https?://(www\\.)?npmjs\\.com",
   "^https?://localhost",

@@ -14,8 +14,8 @@ import (
 	"github.com/muesli/cancelreader"
 	"golang.org/x/term"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // Demo mode shows the launcher with sample hosts and sessions. Nothing

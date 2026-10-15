@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/alerts"
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/paths"
-	"github.com/iAmLakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/alerts"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/proto"
 )
 
 // alertHome gives a test its own config and state folders.

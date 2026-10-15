@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/client/helpers"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client/helpers"
 )
 
 func TestHostCommands(t *testing.T) {

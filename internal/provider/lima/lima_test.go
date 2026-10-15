@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 // testdata/list.ndjson is `limactl list --json` from Lima 2.2.0 on macOS

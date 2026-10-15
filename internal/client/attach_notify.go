@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 func (a *attacher) notifyOthers(list []Session) {

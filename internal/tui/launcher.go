@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // The launcher (docs/contributing/ux-spec.md 2.2 and 2.3) is one list in one column, with no

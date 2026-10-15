@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // BridgeIdleExit is how long a bridge started over a KeepAliver transport

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/host"
-	"github.com/iAmLakshya/simstim/internal/host/hosttest"
-	"github.com/iAmLakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/host"
+	"github.com/iamlakshya/simstim/internal/host/hosttest"
+	"github.com/iamlakshya/simstim/internal/proto"
 )
 
 // repo makes a git repository with one commit under the home folder.

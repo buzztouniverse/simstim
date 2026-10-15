@@ -9,8 +9,8 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/host"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/host"
 )
 
 // Transport is a client.Transport to this machine. Start serves the real

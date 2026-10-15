@@ -8,7 +8,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // gradient is the brand gradient over n cells, or nil with 16 colours,

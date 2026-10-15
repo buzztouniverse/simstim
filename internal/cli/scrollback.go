@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/iAmLakshya/simstim/internal/agents"
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/agents"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // scrollbackAdvice is what host doctor says about sessions that draw full

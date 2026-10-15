@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/paths"
-	"github.com/iAmLakshya/simstim/internal/ring"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/ring"
 )
 
 const secretValue = "fake-secret-for-tests-0123456789"

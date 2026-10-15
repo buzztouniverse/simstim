@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/host"
-	"github.com/iAmLakshya/simstim/internal/host/hosttest"
-	"github.com/iAmLakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/host"
+	"github.com/iamlakshya/simstim/internal/host/hosttest"
+	"github.com/iamlakshya/simstim/internal/proto"
 )
 
 func TestAttachReplaysThenStreams(t *testing.T) {

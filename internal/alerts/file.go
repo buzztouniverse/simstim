@@ -12,8 +12,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // Read returns the config in the file at path, and whether the file exists.

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 func TestPruneKeepsWhatIsInUse(t *testing.T) {

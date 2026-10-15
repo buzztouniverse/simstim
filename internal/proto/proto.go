@@ -15,7 +15,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // Magic identifies a peer in the hello frame.

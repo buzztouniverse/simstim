@@ -11,11 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/client/clienttest"
-	"github.com/iAmLakshya/simstim/internal/provider"
-	"github.com/iAmLakshya/simstim/internal/provider/docker"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client/clienttest"
+	"github.com/iamlakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/provider/docker"
 )
 
 // fakeDocker is a docker on PATH that keeps each container's state in a

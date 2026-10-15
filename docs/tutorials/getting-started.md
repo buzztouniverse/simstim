@@ -14,7 +14,7 @@ You need:
 
 <!-- test: skip (needs a published release; scripts/test-install.sh tests the installer) -->
 ```sh
-curl -fsSL https://raw.githubusercontent.com/iAmLakshya/simstim/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/iamlakshya/simstim/main/install.sh | sh
 ```
 
 The installer checks the release's signature and checksum, then puts the client in `~/.local/bin`. Check it:

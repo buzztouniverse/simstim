@@ -3,7 +3,7 @@ package tui
 import (
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 type rowKind int

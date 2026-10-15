@@ -9,7 +9,7 @@ import (
 
 	"golang.design/x/clipboard"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // MaxImage is the largest image pasted from the clipboard.

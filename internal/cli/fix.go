@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // offerFixes shows each fix, with what it does and the command it runs, and

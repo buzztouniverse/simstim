@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // EveryByte is every byte value, then n random bytes, so that a channel which

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // procRoot is /proc; tests point it at a fake one.

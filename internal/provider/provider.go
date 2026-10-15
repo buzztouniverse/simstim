@@ -14,8 +14,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // Provider makes machines for new hosts, and opens the lifecycle of the

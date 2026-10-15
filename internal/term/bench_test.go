@@ -3,7 +3,7 @@ package term
 import (
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/term/termtest"
+	"github.com/iamlakshya/simstim/internal/term/termtest"
 )
 
 // The client side of the attach pump: each output frame goes through the

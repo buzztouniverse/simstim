@@ -17,7 +17,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 const (

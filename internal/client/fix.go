@@ -13,8 +13,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // Fix is one problem a doctor found, and what fixing it does.

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // notified runs notifyOthers over each list in turn and returns what it

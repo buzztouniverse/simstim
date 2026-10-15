@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/keys"
-	"github.com/iAmLakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/keys"
+	"github.com/iamlakshya/simstim/internal/proto"
 )
 
 // sendUpload uploads a file and pastes its remote path into the session.

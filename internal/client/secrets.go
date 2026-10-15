@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // SecretTimeout is how long the command of one secret may run. It is long

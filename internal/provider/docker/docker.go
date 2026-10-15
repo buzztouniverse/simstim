@@ -13,9 +13,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 const install = "Install Docker (https://docs.docker.com/get-docker/), start it, then run this again."

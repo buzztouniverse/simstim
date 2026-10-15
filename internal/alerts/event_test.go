@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 func TestSummary(t *testing.T) {

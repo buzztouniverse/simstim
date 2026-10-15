@@ -3,8 +3,8 @@ package host
 import (
 	"encoding/json"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/proto"
 )
 
 // moreFeatures are the features that set hosts and sessions up: the requests

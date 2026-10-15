@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // SSH runs the system OpenSSH client for one host. It never edits ~/.ssh/config:

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/alerts"
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/alerts"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // alertsRequest answers the bridge's alerts.* requests.

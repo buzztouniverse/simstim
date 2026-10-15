@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 func TestScrollbackAdvice(t *testing.T) {

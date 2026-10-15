@@ -7,7 +7,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // The welcome mark (docs/contributing/ux-spec.md 2.1): three strands of a signal, woven into

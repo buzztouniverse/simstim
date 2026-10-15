@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/api"
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // FoldersResult is what the new-session dialog completes folders from.

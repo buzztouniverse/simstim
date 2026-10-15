@@ -19,8 +19,8 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 	"golang.org/x/term"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client"
 )
 
 // Run opens the launcher, with no providers for the guided setup.

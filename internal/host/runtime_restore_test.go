@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/host"
-	"github.com/iAmLakshya/simstim/internal/host/hosttest"
+	"github.com/iamlakshya/simstim/internal/host"
+	"github.com/iamlakshya/simstim/internal/host/hosttest"
 )
 
 // crash kills a session's holder, as a crash or a power cut would.

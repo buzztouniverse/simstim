@@ -3,8 +3,8 @@ package cli
 import (
 	"context"
 
-	"github.com/iAmLakshya/simstim/internal/onboard"
-	"github.com/iAmLakshya/simstim/internal/tui"
+	"github.com/iamlakshya/simstim/internal/onboard"
+	"github.com/iamlakshya/simstim/internal/tui"
 )
 
 // runHome opens the launcher.

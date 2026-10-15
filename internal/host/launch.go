@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // SystemdUser reports whether a systemd user manager is running for this user.

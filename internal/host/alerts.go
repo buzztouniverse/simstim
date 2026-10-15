@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/alerts"
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/term"
+	"github.com/iamlakshya/simstim/internal/alerts"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/term"
 )
 
 // holderAlerts links a holder to its alert dispatcher (decision 0019), and

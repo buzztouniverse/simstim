@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/provider"
-	"github.com/iAmLakshya/simstim/internal/provider/e2b"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/provider/e2b"
 )
 
 // Local is what the guided setup reads and changes on this computer. System

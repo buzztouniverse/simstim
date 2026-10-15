@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // kill stops the agent's whole process group, then the holder.

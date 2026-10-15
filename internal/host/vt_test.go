@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/ring"
-	"github.com/iAmLakshya/simstim/internal/term"
+	"github.com/iamlakshya/simstim/internal/ring"
+	"github.com/iamlakshya/simstim/internal/term"
 )
 
 // The shadow terminal is built from vt/ with Zig. These tests use the

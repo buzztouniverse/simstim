@@ -12,8 +12,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/client"
-	"github.com/iAmLakshya/simstim/internal/provider"
+	"github.com/iamlakshya/simstim/internal/client"
+	"github.com/iamlakshya/simstim/internal/provider"
 )
 
 const install = "Install Lima (https://lima-vm.io/docs/installation/), then run this again."

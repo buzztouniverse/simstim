@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 // w goes to the session that needs you, from anywhere, and says why.

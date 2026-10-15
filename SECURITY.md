@@ -4,7 +4,7 @@ This tool runs AI agents with shell access on your hosts and carries your termin
 
 ## Report a vulnerability
 
-Do not open a public issue. Report it privately through GitHub: <https://github.com/iAmLakshya/simstim/security/advisories/new> (**Security → Report a vulnerability** on this repository).
+Do not open a public issue. Report it privately through GitHub: <https://github.com/iamlakshya/simstim/security/advisories/new> (**Security → Report a vulnerability** on this repository).
 
 Include the version, the host and client systems, the steps to reproduce, and the impact you see.
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/x/vt"
 
-	"github.com/iAmLakshya/simstim/internal/agents"
+	"github.com/iamlakshya/simstim/internal/agents"
 )
 
 // screenModel keeps a rendered copy of the session's screen, only to read its

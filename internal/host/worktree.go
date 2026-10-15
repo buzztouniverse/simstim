@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/paths"
 )
 
 // GitInfo is the git part of a manifest, for a session that has its own worktree.

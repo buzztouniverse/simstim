@@ -9,8 +9,8 @@ import (
 	"github.com/creack/pty"
 	"golang.org/x/sys/unix"
 
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/version"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/version"
 )
 
 func (h *Holder) acceptLoop() {

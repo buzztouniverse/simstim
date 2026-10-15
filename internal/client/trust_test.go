@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iamlakshya/simstim/internal/api"
 )
 
 func TestSetupTrustIsKeptByHostAndRepository(t *testing.T) {

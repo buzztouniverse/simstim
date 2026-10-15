@@ -4,7 +4,7 @@
 
 <!-- test: skip (needs a published release; scripts/test-install.sh tests the installer) -->
 ```sh
-curl -fsSL https://raw.githubusercontent.com/iAmLakshya/simstim/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/iamlakshya/simstim/main/install.sh | sh
 ```
 
 It downloads the release for your system, checks its signature with `ssh-keygen` and its SHA-256, and installs into `~/.local/bin`. It changes nothing else. Options, as environment variables:
@@ -18,7 +18,7 @@ It downloads the release for your system, checks its signature with `ssh-keygen`
 
 <!-- test: skip (installs into your GOBIN) -->
 ```sh
-go install github.com/iAmLakshya/simstim@latest
+go install github.com/iamlakshya/simstim@latest
 ```
 
 A client built this way has no host helpers inside it. The first time it connects a host, it downloads the helper bundle of its own release, checks the release's signature with `ssh-keygen` and the bundle's SHA-256, and keeps it in `~/.cache/simstim/helpers/`. Set `SIMSTIM_RELEASES_URL` to fetch from a mirror instead.
@@ -30,7 +30,7 @@ The tap opens with the first public release.
 ## From source
 
 ```sh
-git clone https://github.com/iAmLakshya/simstim
+git clone https://github.com/iamlakshya/simstim
 cd simstim
 scripts/setup.sh
 just build

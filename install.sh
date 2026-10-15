@@ -14,7 +14,7 @@
 #   SIGNERS       an allowed-signers line other than the release key (tests)
 set -eu
 
-MODULE="github.com/iAmLakshya/simstim"
+MODULE="github.com/iamlakshya/simstim"
 REPO="${MODULE#github.com/}"
 NAME="${REPO##*/}"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"

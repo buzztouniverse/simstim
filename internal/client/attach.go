@@ -12,10 +12,10 @@ import (
 	"github.com/muesli/cancelreader"
 	xterm "golang.org/x/term"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/keys"
-	"github.com/iAmLakshya/simstim/internal/proto"
-	"github.com/iAmLakshya/simstim/internal/term"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/keys"
+	"github.com/iamlakshya/simstim/internal/proto"
+	"github.com/iamlakshya/simstim/internal/term"
 )
 
 // AttachState is what the client remembers about the last session attached in

@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
-	"github.com/iAmLakshya/simstim/internal/client/helpers"
-	"github.com/iAmLakshya/simstim/internal/version"
+	"github.com/iamlakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/client/helpers"
+	"github.com/iamlakshya/simstim/internal/version"
 )
 
 // HelperVersion names the folder the helper is installed into on hosts. It

@@ -3,8 +3,8 @@ package host
 import (
 	"testing"
 
-	"github.com/iAmLakshya/simstim/internal/agents"
-	"github.com/iAmLakshya/simstim/internal/term/termtest"
+	"github.com/iamlakshya/simstim/internal/agents"
+	"github.com/iamlakshya/simstim/internal/term/termtest"
 )
 
 // The holder feeds each chunk of the agent's output to its screen model,

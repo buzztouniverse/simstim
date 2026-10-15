@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iamlakshya/simstim/internal/brand"
 )
 
 // Machine records the VM, container or sandbox that `host create` made for a
