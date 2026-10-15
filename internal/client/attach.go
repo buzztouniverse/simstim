@@ -66,9 +66,7 @@ type attacher struct {
 	ssh     *SSH
 	fd      int
 	tracker *term.Tracker
-	san     term.Sanitizer
-	live    int64
-	offset  int64
+	cu      term.Catchup // where the terminal is in the session's output
 	filter  *keys.Filter
 	inCh    chan []byte
 	res     AttachResult
@@ -157,7 +155,7 @@ func Attach(ctx context.Context, o AttachOptions) (AttachResult, error) {
 	_ = xterm.Restore(a.fd, old)
 	_ = cr.Close()
 
-	o.State.Key, o.State.Offset, o.State.Modes, o.State.Valid = a.key, a.offset, a.tracker.M, true
+	o.State.Key, o.State.Offset, o.State.Modes, o.State.Valid = a.key, a.cu.Offset, a.tracker.M, true
 	if a.res.Ended != nil {
 		o.State.Valid = false
 	}
@@ -204,18 +202,17 @@ func (a *attacher) handshake(last int64, cols, rows, xpx, ypx int) (proto.Attach
 
 // begin prepares the screen for the bytes that follow.
 func (a *attacher) begin(att proto.Attached, st *AttachState, rows int) {
-	a.live = att.Live
-	a.san = term.Sanitizer{}
+	a.cu.History(att.Live)
 	if att.Mode == "replay" && st.Valid && st.Key == a.key {
 		// The terminal still shows this session up to st.Offset: put its modes back and continue.
 		a.tracker = &term.Tracker{M: st.Modes}
-		a.offset = att.From
+		a.cu.Offset = att.From
 		a.write(st.Modes.RestoreSequence())
 		return
 	}
 	// A full redraw. Keep what is on screen in the scrollback, then start clean.
 	a.tracker = term.NewTracker()
-	a.offset = att.From
+	a.cu.Offset = att.From
 	// For "snapshot", a TSnapshot frame redraws the screen as of From, and the
 	// output from From follows; bytes before Live are history and are sanitised.
 	if a.o.Settings.Attach.Scrollback == "clear" {
@@ -227,29 +224,12 @@ func (a *attacher) begin(att proto.Attached, st *AttachState, rows int) {
 
 // output shows bytes from offset off, skipping any the terminal already has.
 func (a *attacher) output(off int64, data []byte) {
-	end := off + int64(len(data))
-	if end <= a.offset {
-		return
+	show, fresh := a.cu.Feed(off, data)
+	if fresh == nil {
+		return // the terminal already shows it
 	}
-	if off < a.offset {
-		data = data[a.offset-off:]
-		off = a.offset
-	}
-	w := data
-	if off < a.live {
-		n := a.live - off
-		if n > int64(len(data)) {
-			n = int64(len(data))
-		}
-		hist := a.san.Feed(data[:n])
-		if off+n >= a.live {
-			hist = append(hist, a.san.Flush()...)
-		}
-		w = append(hist, data[n:]...)
-	}
-	a.write(w)
-	a.tracker.Feed(data)
-	a.offset = end
+	a.write(show)
+	a.tracker.Feed(fresh)
 }
 
 func (a *attacher) loop(ctx context.Context) error {
@@ -629,13 +609,12 @@ func (a *attacher) reconnect(ctx context.Context) (detached bool, err error) {
 			a.conn.Close()
 			a.conn = conn
 			cols, rows, xpx, ypx := a.size()
-			before := a.offset
-			att, herr := a.handshake(a.offset, cols, rows, xpx, ypx)
+			before := a.cu.Offset
+			att, herr := a.handshake(a.cu.Offset, cols, rows, xpx, ypx)
 			if herr == nil {
 				a.clearFlash()
 				if att.Mode == "replay" {
-					a.live = att.Live
-					a.san = term.Sanitizer{}
+					a.cu.History(att.Live)
 				} else {
 					a.begin(att, &AttachState{}, rows)
 				}

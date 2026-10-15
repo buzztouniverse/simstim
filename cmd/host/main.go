@@ -127,6 +127,10 @@ func main() {
 		}
 	case "keytest":
 		err = host.KeyTest()
+	case "pick":
+		// The phone path: experimental, and left out of the usage on purpose
+		// until it is launched (docs/contributing/phone-path.md).
+		err = host.RunPick(os.Stdin, os.Stdout)
 	case "version", "--version":
 		fmt.Printf("%s %s (protocol %s)\n", name, version.Version, version.Protocol)
 	case "help", "-h", "--help":
