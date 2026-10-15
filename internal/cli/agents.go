@@ -210,6 +210,9 @@ func printAgentChecks(w io.Writer, host string, checks []api.AgentCheck) {
 				try = "if it asks you to log in: " + l
 			}
 		}
+		if try == "" && c.Login != api.LoginYes && a.Setup != nil && len(a.Setup.LoginEnv) > 0 && c.OnPath {
+			try = fmt.Sprintf("pass its key from your laptop: %s new %s --agent %s --secret %s", brand.Name, host, c.Kind, a.Setup.LoginEnv[0])
+		}
 		fmt.Fprintf(w, "  %s %-16s %s\n", mark, c.Title, line)
 		if try != "" {
 			fmt.Fprintf(w, "    Try: %s\n", try)

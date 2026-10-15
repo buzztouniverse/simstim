@@ -4,8 +4,9 @@ import (
 	"github.com/iAmLakshya/simstim/internal/proto"
 )
 
-// moreFeatures are the features of the requests in this file.
-var moreFeatures = []string{"agents.check"}
+// moreFeatures are the features that set hosts and sessions up: the requests
+// in this file, and the secrets of a new session (secrets.go).
+var moreFeatures = []string{"agents.check", "secrets"}
 
 func init() { Features = append(Features, moreFeatures...) }
 

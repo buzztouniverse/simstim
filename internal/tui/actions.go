@@ -74,10 +74,15 @@ func (m *Model) startSession(h *hostConn, a client.NewArgs, attach bool) tea.Cmd
 		return func() tea.Msg { return startedMsg{host: h.name(), err: offlineErr(h)} }
 	}
 	a = client.TerminalArgs(a, m.width, m.height)
-	name, c, ctx := h.name(), h.conn, m.ctx
+	name, c, ctx, be, host := h.name(), h.conn, m.ctx, m.be, h.host
 	return func() tea.Msg {
 		cctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 		defer cancel()
+		secrets, err := be.Secrets(cctx, host)
+		if err != nil {
+			return startedMsg{host: name, err: err, attach: attach}
+		}
+		a.Secrets = secrets
 		s, err := c.NewSession(cctx, a)
 		return startedMsg{host: name, s: s, err: err, attach: attach}
 	}

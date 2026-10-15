@@ -33,6 +33,9 @@ type NewArgs struct {
 	Base     string `json:"base,omitempty"`
 	// Inline starts the agent in its inline mode, when it has one.
 	Inline bool `json:"inline,omitempty"`
+	// Secrets go into the agent's environment only. The client fetches them
+	// for this start; the host never writes them down (host/secrets.go).
+	Secrets map[string]Secret `json:"secrets,omitempty"`
 }
 
 // SessionInfo is one row of the session list.
@@ -61,6 +64,9 @@ type SessionInfo struct {
 	// FullScreen is true while the program draws on the alternate screen,
 	// so the terminal keeps no scrollback of it.
 	FullScreen bool `json:"full_screen,omitempty"`
+	// MissingSecrets names the secrets the session asked for but started
+	// without, for example after a host restart.
+	MissingSecrets []string `json:"missing_secrets,omitempty"`
 }
 
 // Check is one line of the host doctor.

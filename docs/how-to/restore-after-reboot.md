@@ -11,4 +11,6 @@ simstim host restore my-server
 
 `--all` also restarts sessions whose holder stopped for another reason. A process that was running when the host stopped does not come back; the conversation does.
 
+A session that had [secrets](secrets.md) comes back without them, because nothing on the host keeps them. Its terminal and the launcher say so; start a new session to pass them again.
+
 Which agents resume, and with which command, is in the [agent table](../reference/agents.md).

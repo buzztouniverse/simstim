@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/client"
 	"github.com/iAmLakshya/simstim/internal/client/helpers"
 )
@@ -35,6 +36,9 @@ type Backend interface {
 	// Memory and Remember read and write the launcher's memory.
 	Memory() memory
 	Remember(memory)
+	// Secrets fetches the values of a host's own secrets for a new
+	// session. It never prompts.
+	Secrets(ctx context.Context, h client.Host) (map[string]api.Secret, error)
 }
 
 // Conn is one connection to a host. *client.Conn satisfies it.
@@ -63,6 +67,10 @@ func (realBackend) Settings() client.Settings         { return client.LoadSettin
 func (realBackend) HelperVersion() string             { return client.HelperVersion() }
 func (realBackend) Memory() memory                    { return loadMemory() }
 func (realBackend) Remember(mem memory)               { _ = saveMemory(mem) }
+
+func (realBackend) Secrets(ctx context.Context, h client.Host) (map[string]api.Secret, error) {
+	return client.FetchSecrets(ctx, client.LoadSettings(), client.SecretNames(h, nil), false)
+}
 
 func (realBackend) Dial(ctx context.Context, h client.Host) (Conn, error) {
 	// Opening the launcher must not boot every stopped VM or resume every

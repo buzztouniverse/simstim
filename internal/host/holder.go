@@ -91,6 +91,10 @@ type Holder struct {
 	ruleID    string
 	// Alerts to the user's own destinations (alerts.go).
 	al holderAlerts
+	// Before the agent starts: its secrets (secrets.go), and notes to show in
+	// its terminal first (start.go).
+	secretEnv []string
+	notes     []string
 }
 
 // RunHolder runs the holder for session id until the session is killed.
@@ -117,6 +121,7 @@ func RunHolder(id string) error {
 		h.log.Printf("listen: %v", err)
 		return err
 	}
+	h.secretsBeforeStart(restored)
 	if err := h.start(); err != nil {
 		h.log.Printf("start agent: %v", err)
 		h.mu.Lock()
@@ -172,21 +177,18 @@ func (h *Holder) start() error {
 	if len(m.Agent.Argv) == 0 {
 		return errors.New("no command to run")
 	}
-	argv := m.Agent.Argv
-	if m.RunHook != "" {
-		// Run the setup (or resume) hook in the session's terminal, so its output
-		// is visible, then the agent. A failing hook is reported, not fatal.
-		script := `"$0"; s=$?; [ $s -eq 0 ] || printf '\n[hook %s exited with %s]\n\n' "$0" $s; exec "$@"`
-		argv = append([]string{"/bin/sh", "-c", script, m.RunHook}, argv...)
-		m.RunHook = ""
-	}
+	// The setup (or resume) hook and any notes show in the session's
+	// terminal before the agent (start.go).
+	argv := startArgv(m.Agent.Argv, m.RunHook, h.notes)
+	m.RunHook = ""
 	bin, err := lookPath(argv[0], envValue(m.Env, "PATH"))
 	if err != nil {
 		return err
 	}
 	cmd := exec.Command(bin, argv[1:]...)
 	cmd.Args[0] = argv[0]
-	cmd.Env = m.Env
+	// Secrets go into the agent's environment and nowhere else.
+	cmd.Env = append(append([]string(nil), m.Env...), h.secretEnv...)
 	cmd.Dir = m.Cwd
 	cols, rows := m.Term.Cols, m.Term.Rows
 	if cols <= 0 {
@@ -196,6 +198,7 @@ func (h *Holder) start() error {
 		rows = 24
 	}
 	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Cols: uint16(cols), Rows: uint16(rows)})
+	cmd.Env, h.secretEnv = nil, nil // the agent has its copy; the holder keeps none
 	if err != nil {
 		return err
 	}

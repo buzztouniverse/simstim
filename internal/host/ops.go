@@ -90,6 +90,10 @@ func New(a NewArgs) (*SessionInfo, error) {
 	if st, err := os.Stat(cwd); err != nil || !st.IsDir() {
 		return nil, UserError("bad_folder", fmt.Sprintf("the folder %s does not exist on this host", cwd), "Pick an existing folder.")
 	}
+	secrets, err := checkSecrets(a.Secrets)
+	if err != nil {
+		return nil, err
+	}
 	login, err := LoginEnv(15 * time.Second)
 	if err != nil {
 		login = os.Environ()
@@ -168,6 +172,7 @@ func New(a NewArgs) (*SessionInfo, error) {
 		Restart: Restart{Policy: "resume", MaxAttempts: 3},
 	}
 	m.Git = gi
+	m.Secrets = secrets
 	m.SetupHook, m.ResumeHook = findHook(cwd, "setup"), findHook(cwd, "resume")
 	m.RunHook = m.SetupHook
 	if known {
@@ -190,6 +195,10 @@ func New(a NewArgs) (*SessionInfo, error) {
 	}
 	if err := launchHolder(m); err != nil {
 		return nil, UserError("start_failed", err.Error(), "Check the session log with the host doctor.")
+	}
+	if err := deliverSecrets(id, a.Secrets); err != nil {
+		_ = deleteSession(id, &DeleteResult{})
+		return nil, UserError("secrets_failed", "the session could not get its secrets, so it was removed", "Try again.")
 	}
 	if mm, err := LoadManifest(id); err == nil {
 		mm.Run.Unit = m.Run.Unit
@@ -215,7 +224,7 @@ func infoFrom(m *Manifest, alive bool) SessionInfo {
 		State: st.State, Source: st.Source, Since: st.Since, Reason: st.Reason, ExitCode: st.ExitCode, Signal: st.Signal, OOM: st.OOM,
 		CreatedAt: m.CreatedAt, LastActivityAt: m.LastActivityAt, LastAttachedAt: m.LastAttachedAt,
 		Alive: alive, Unit: m.Run.Unit, MemoryMax: m.Limits.MemoryMax, MemoryCurrent: memoryCurrent(m.Run.Unit),
-		HostVersion: m.HostVersion, Cols: m.Term.Cols, Rows: m.Term.Rows,
+		HostVersion: m.HostVersion, Cols: m.Term.Cols, Rows: m.Term.Rows, MissingSecrets: m.MissingSecrets,
 		FullScreen: st.FullScreen && alive,
 	}
 }

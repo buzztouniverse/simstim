@@ -35,6 +35,9 @@ type Host struct {
 	// Machine records the VM, container or sandbox that `host create` made
 	// for this host. Hosts you added yourself have none.
 	Machine *Machine `toml:"machine,omitempty"`
+	// Secrets lists secrets from config.toml that every new session on this
+	// host gets, for example ["ANTHROPIC_API_KEY"]. `new --secret` adds more.
+	Secrets []string `toml:"secrets,omitempty"`
 }
 
 // Settings are the user's preferences, from config.toml. The comments on its
@@ -73,6 +76,12 @@ type Settings struct {
 	// Keymap rebinds launcher commands by name ("session: delete"). A value is
 	// a key, a list of keys, or "" to unbind. `config keymap` lists the names.
 	Keymap map[string]any `toml:"keymap"`
+	// Secrets names environment variables for sessions, each with a command
+	// that prints its value on this computer, such as a keychain or password
+	// manager read: OPENAI_API_KEY = "op read op://dev/openai/key". A session
+	// gets one only when asked (`new --secret`, or a host's secrets). The
+	// value goes to that session's environment and is never stored.
+	Secrets map[string]string `toml:"secrets"`
 }
 
 // DefaultSettings are the settings with nothing in config.toml.

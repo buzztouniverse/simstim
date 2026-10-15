@@ -19,6 +19,7 @@ Your preferences. Every key is optional; a missing key takes its default.
 | `attach.scrollback` | string | `"keep"` | Says what happens to the terminal's scrollback when you attach again: "keep" replays what you missed after what you saw, "clear" starts from a clean screen. |
 | `agents.inline` | boolean | `false` | Starts each agent that has one in its inline mode, where it draws in the terminal's normal screen, so your terminal keeps its scrollback: Claude Code's classic renderer, Codex with --no-alt-screen. Off by default, so each agent starts as its own defaults say. `new --inline` does it for one session. |
 | `keymap` | table | — | Rebinds launcher commands by name ("session: delete"). A value is a key, a list of keys, or "" to unbind. `config keymap` lists the names. |
+| `secrets` | table | — | Names environment variables for sessions, each with a command that prints its value on this computer, such as a keychain or password manager read: OPENAI_API_KEY = "op read op://dev/openai/key". A session gets one only when asked (`new --secret`, or a host's secrets). The value goes to that session's environment and is never stored. |
 
 ## hosts.toml
 
@@ -43,3 +44,4 @@ The hosts you added. `host add` writes it, and you can edit it by hand. Each hos
 | `machine.busy_lease` | string | Sets how long an E2B sandbox keeps running after the last client goes, while a session is working (60m by default). |
 | `machine.token_command` | string | Prints the E2B API key, for example a read from your keychain. It is used when E2B_API_KEY is not set and the E2B CLI is not logged in. The key is never written down. |
 | `machine.stdin` | string | Says how keys reach an E2B sandbox: "send" (one request for each chunk, the default) or "stream" (one long request; not yet proved on E2B's servers). |
+| `secrets` | array of string | Lists secrets from config.toml that every new session on this host gets, for example ["ANTHROPIC_API_KEY"]. `new --secret` adds more. |

@@ -30,7 +30,7 @@ simstim new my-server -- codex login --device-auth
 
 For an agent whose first start is its login, such as Antigravity CLI, start the agent: `simstim new my-server --agent antigravity`.
 
-An agent that takes an API key instead, such as Aider, needs the key in its environment.
+An agent that takes an API key instead, such as Aider, can get it from your laptop at the start of each session: see [pass secrets to a session](secrets.md).
 
 ## Check the agents
 

@@ -20,6 +20,7 @@ func TestPrintAgentChecks(t *testing.T) {
 		{Kind: "opencode", Title: "opencode", Installed: true, Path: "/home/u/.opencode/bin/opencode"},
 		{Kind: "antigravity", Title: "Antigravity CLI", Installed: true, OnPath: true, Path: "/home/u/.local/bin/agy", Login: api.LoginUnknown},
 		{Kind: "gemini", Title: "Gemini CLI"},
+		{Kind: "aider", Title: "Aider", Installed: true, OnPath: true, Path: "/home/u/.local/bin/aider", Login: api.LoginNo},
 	})
 	out := b.String()
 	for _, want := range []string{
@@ -31,6 +32,7 @@ func TestPrintAgentChecks(t *testing.T) {
 		"Try: if it asks you to log in: " + brand.Name + " new vps --agent antigravity",
 		"✕ Gemini CLI       not installed",
 		"Try: " + brand.Name + " agents install gemini --host vps",
+		"Try: pass its key from your laptop: " + brand.Name + " new vps --agent aider --secret ANTHROPIC_API_KEY",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in:\n%s", want, out)

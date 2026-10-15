@@ -53,6 +53,15 @@ type fakeBackend struct {
 	blocked   *atomic.Int64 // goroutines waiting in Done
 	mem       memory        // what the launcher remembers between runs
 	saves     int
+	secrets   map[string]api.Secret // a host's own secrets, for every start
+	secretErr error
+}
+
+func (b *fakeBackend) Secrets(_ context.Context, h client.Host) (map[string]api.Secret, error) {
+	b.record("secrets %s", h.Name)
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.secrets, b.secretErr
 }
 
 func newFakeBackend() *fakeBackend {
@@ -211,6 +220,9 @@ func (c *fakeConn) Sessions(context.Context) ([]client.Session, error) {
 }
 
 func (c *fakeConn) NewSession(_ context.Context, a client.NewArgs) (*client.Session, error) {
+	for k := range a.Secrets {
+		c.be.record("new %s secret %s=%v", c.name, k, a.Secrets[k])
+	}
 	if len(a.Argv) > 0 {
 		c.be.record("new %s agent=%s argv=%v cwd=%s name=%s worktree=%v size=%dx%d", c.name, a.Agent, a.Argv, a.Cwd, a.Name, a.Worktree, a.Cols, a.Rows)
 	} else {

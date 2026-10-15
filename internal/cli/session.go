@@ -31,14 +31,22 @@ func termSize() (int, int) {
 func newCmd() *cobra.Command {
 	var agent, dir, name, base string
 	var detach, worktree, inline bool
+	var secrets []string
 	cmd := &cobra.Command{
 		Use:   "new <host> [-- command…]",
 		Short: "Start a session on a host, and attach to it",
 		Example: "  " + brand.Name + " new my-vps --agent claude --dir ~/src/app\n" +
+			"  " + brand.Name + " new my-vps --agent claude --secret ANTHROPIC_API_KEY\n" +
 			"  " + brand.Name + " new my-vps --detach -- htop",
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := client.FindHost(args[0])
+			if err != nil {
+				return err
+			}
+			// Fetch the secrets first: a password manager may want a touch,
+			// and a failing command should not cost a connection.
+			values, err := client.FetchSecrets(cmd.Context(), client.LoadSettings(), client.SecretNames(h, secrets), isTerminal(os.Stdin))
 			if err != nil {
 				return err
 			}
@@ -49,7 +57,7 @@ func newCmd() *cobra.Command {
 				return err
 			}
 			cols, rows := termSize()
-			a := client.TerminalArgs(client.NewArgs{Agent: agent, Cwd: client.RemotePath(dir), Name: name, Worktree: worktree, Base: base, Inline: inline}, cols, rows)
+			a := client.TerminalArgs(client.NewArgs{Agent: agent, Cwd: client.RemotePath(dir), Name: name, Worktree: worktree, Base: base, Inline: inline, Secrets: values}, cols, rows)
 			if dash := cmd.ArgsLenAtDash(); dash >= 0 {
 				a.Argv = args[dash:]
 			}
@@ -73,6 +81,7 @@ func newCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&worktree, "worktree", "w", false, "give the session its own git worktree and branch")
 	cmd.Flags().BoolVar(&inline, "inline", false, "start the agent in its inline mode, so your terminal keeps its scrollback (see agents.inline in config.toml)")
 	cmd.Flags().StringVar(&base, "base", "", "the commit or branch the worktree starts from (default: HEAD)")
+	cmd.Flags().StringArrayVar(&secrets, "secret", nil, "pass a secret from config.toml's [secrets] into the session's environment (repeatable)")
 	return cmd
 }
 

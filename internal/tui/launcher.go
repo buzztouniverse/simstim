@@ -366,6 +366,9 @@ func (m *Model) sessionDetail(h *hostConn, s client.Session, cw int, withHost bo
 	switch a := m.activity[sessKey{h.name(), s.ID}]; {
 	case s.State == "needs_input" && s.Reason != "":
 		now = sWarning.Render("● " + s.Reason)
+	case len(s.MissingSecrets) > 0 && s.Alive:
+		// After a host restart the agent runs without the secrets it had.
+		now = sWarning.Render("● started without its secrets: " + strings.Join(s.MissingSecrets, ", "))
 	case a.text != "" && s.Alive:
 		now = sAccent.Render("▸ ") + m.decode(a.text, a.at)
 	}

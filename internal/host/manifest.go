@@ -52,6 +52,11 @@ type Manifest struct {
 	ResumeHook string `json:"resume_hook,omitempty"`
 	// RunHook is the hook for the next start: the setup hook, or the resume hook after a restart.
 	RunHook string `json:"run_hook,omitempty"`
+	// Secrets names the variables the client passed at the start. Their
+	// values are never written down (secrets.go). MissingSecrets names the
+	// ones this run of the agent started without.
+	Secrets        []string `json:"secrets,omitempty"`
+	MissingSecrets []string `json:"missing_secrets,omitempty"`
 
 	extra map[string]json.RawMessage
 }
@@ -135,7 +140,8 @@ func (m *Manifest) UnmarshalJSON(b []byte) error {
 	known := map[string]bool{"schema": true, "id": true, "name": true, "created_at": true, "updated_at": true,
 		"last_activity_at": true, "last_attached_at": true, "host_version": true, "holder_binary": true,
 		"agent": true, "cwd": true, "env": true, "term": true, "limits": true, "runtime": true, "status": true,
-		"labels": true, "restart": true, "git": true, "setup_hook": true, "resume_hook": true, "run_hook": true}
+		"labels": true, "restart": true, "git": true, "setup_hook": true, "resume_hook": true, "run_hook": true,
+		"secrets": true, "missing_secrets": true}
 	for k := range all {
 		if known[k] {
 			delete(all, k)

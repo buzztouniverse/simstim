@@ -14,20 +14,22 @@ simstim new <host> [-- command…] [flags]
 
 ```text
   simstim new my-vps --agent claude --dir ~/src/app
+  simstim new my-vps --agent claude --secret ANTHROPIC_API_KEY
   simstim new my-vps --detach -- htop
 ```
 
 ## Options
 
 ```text
-  -a, --agent string   the agent: claude, codex, opencode, antigravity, gemini, amp, cursor, aider, goose or shell (default "shell")
-      --base string    the commit or branch the worktree starts from (default: HEAD)
-      --detach         start it without attaching
-  -d, --dir string     the folder on the host (default "~")
-  -h, --help           help for new
-      --inline         start the agent in its inline mode, so your terminal keeps its scrollback (see agents.inline in config.toml)
-  -n, --name string    a name for the session (default: the folder name)
-  -w, --worktree       give the session its own git worktree and branch
+  -a, --agent string         the agent: claude, codex, opencode, antigravity, gemini, amp, cursor, aider, goose or shell (default "shell")
+      --base string          the commit or branch the worktree starts from (default: HEAD)
+      --detach               start it without attaching
+  -d, --dir string           the folder on the host (default "~")
+  -h, --help                 help for new
+      --inline               start the agent in its inline mode, so your terminal keeps its scrollback (see agents.inline in config.toml)
+  -n, --name string          a name for the session (default: the folder name)
+      --secret stringArray   pass a secret from config.toml's [secrets] into the session's environment (repeatable)
+  -w, --worktree             give the session its own git worktree and branch
 ```
 
 ## SEE ALSO

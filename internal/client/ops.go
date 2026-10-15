@@ -39,6 +39,9 @@ func (c *Conn) Sessions(ctx context.Context) ([]Session, error) {
 
 // NewSession starts a session.
 func (c *Conn) NewSession(ctx context.Context, a NewArgs) (*Session, error) {
+	if err := c.RequireSecrets(a); err != nil {
+		return nil, err
+	}
 	var s Session
 	if err := c.Call(ctx, "new", a, &s); err != nil {
 		return nil, err

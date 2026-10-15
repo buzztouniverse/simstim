@@ -14,6 +14,7 @@ import (
 	"github.com/muesli/cancelreader"
 	"golang.org/x/term"
 
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
@@ -88,6 +89,9 @@ func (b *demoBackend) HelperVersion() string { return "0.1.0" }
 // The demo forgets: it starts the same way every time.
 func (b *demoBackend) Memory() memory  { return memory{} }
 func (b *demoBackend) Remember(memory) {}
+func (b *demoBackend) Secrets(context.Context, client.Host) (map[string]api.Secret, error) {
+	return nil, nil
+}
 
 func (b *demoBackend) Dial(_ context.Context, h client.Host) (Conn, error) {
 	b.mu.Lock()
