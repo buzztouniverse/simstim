@@ -51,3 +51,13 @@ func TestAntigravity(t *testing.T) {
 func rank(s Support) int {
 	return map[Support]int{FirstClass: 0, Supported: 1, BestEffort: 2}[s]
 }
+
+func TestEveryCheckedAgentCanBeInstalled(t *testing.T) {
+	for _, a := range Table {
+		if (a.Support == FirstClass || a.Support == Supported) && a.Kind != "shell" {
+			if a.Setup == nil || a.Setup.Install == "" || a.Setup.Source == "" || a.Setup.Login == "" {
+				t.Errorf("%s: a first-class or supported agent needs an install command, its source and a login", a.Kind)
+			}
+		}
+	}
+}

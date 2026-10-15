@@ -78,15 +78,22 @@ func newCmd() *cobra.Command {
 
 // attach runs a session in this terminal.
 func attach(ctx context.Context, h client.Host, id, name string) error {
+	_, err := attachEnded(ctx, h, id, name)
+	return err
+}
+
+// attachEnded runs a session in this terminal, and reports whether the
+// session ended (rather than the user detaching).
+func attachEnded(ctx context.Context, h client.Host, id, name string) (bool, error) {
 	if !isTerminal(os.Stdin) || !isTerminal(os.Stdout) {
-		return &client.UserError{Msg: "attach needs a terminal", Hint: "Run it from a terminal, not a pipe."}
+		return false, &client.UserError{Msg: "attach needs a terminal", Hint: "Run it from a terminal, not a pipe."}
 	}
 	tui.RememberLast(h.Name, id, name)
 	res, err := client.Attach(ctx, client.AttachOptions{
 		Host: h, Session: id, Settings: client.LoadSettings(), Interactive: true,
 	})
 	if err != nil {
-		return err
+		return false, err
 	}
 	switch {
 	case res.Ended != nil && res.Ended.ExitCode == -1:
@@ -102,7 +109,7 @@ func attach(ctx context.Context, h client.Host, id, name string) error {
 	default:
 		fmt.Printf("\r\nDetached. %s keeps running on %s.\n", name, h.Name)
 	}
-	return nil
+	return res.Ended != nil, nil
 }
 
 // resolve finds a session by ID or by unique name.

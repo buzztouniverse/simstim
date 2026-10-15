@@ -28,4 +28,20 @@ Any terminal program runs in a session (`simstim new <host> -- <command>`). The 
 
 **Inline mode** is how an agent draws in the terminal's normal screen, so your terminal keeps its scrollback. `new --inline`, or `agents.inline` in [the configuration](config.md), starts agents that have one this way; see [keep your scrollback](../how-to/scrollback.md).
 
+## Install and log in
+
+`simstim agents install <agent>` runs the install command in a session on the host. `host add` and `host doctor` check each first-class and supported agent, and any other installed one: is it installed, does a login shell find it, and is it logged in. You log in yourself, with the agent's own login in a session ([install agents](../how-to/install-agents.md)).
+
+| Agent | Install command | Log in with | Logged in when |
+| --- | --- | --- | --- |
+| Claude Code | [`curl -fsSL https://claude.ai/install.sh \| bash`](https://code.claude.com/docs/en/setup) | `claude auth login` | `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` or `CLAUDE_CODE_OAUTH_TOKEN` is set; or `claude auth status` exits 0; or `~/.claude/.credentials.json` exists |
+| Codex | [`curl -fsSL https://chatgpt.com/codex/install.sh \| sh`](https://github.com/openai/codex#readme) | `codex login --device-auth` | `codex login status` exits 0; or `~/.codex/auth.json` exists |
+| opencode | [`curl -fsSL https://opencode.ai/install \| bash`](https://opencode.ai/docs/) | `opencode auth login` | `~/.local/share/opencode/auth.json` exists |
+| Antigravity CLI | [`curl -fsSL https://antigravity.google/cli/install.sh \| bash`](https://www.antigravity.google/docs/getting-started?tab=cli) | `agy` | unknown |
+| Gemini CLI | [`npm install -g @google/gemini-cli`](https://github.com/google-gemini/gemini-cli#readme) | `gemini` | `GEMINI_API_KEY` or `GOOGLE_API_KEY` is set; or `~/.gemini/oauth_creds.json` exists |
+| Amp | [`curl -fsSL https://ampcode.com/install.sh \| bash`](https://ampcode.com/docs/cli) | `amp login` | `AMP_API_KEY` is set |
+| Cursor CLI | [`curl https://cursor.com/install -fsS \| bash`](https://cursor.com/docs/cli/installation) | `agent login` | `CURSOR_API_KEY` is set |
+| Aider | [`curl -LsSf https://aider.chat/install.sh \| sh`](https://aider.chat/docs/install.html) | — | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` is set |
+| Goose | [`curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh \| bash`](https://goose-docs.ai/docs/getting-started/installation) | `goose configure` | unknown |
+
 To add an agent, add a row to the table and, if it has them, screen rules in `internal/agents/rules/`. See [the contributing guide](../../CONTRIBUTING.md).

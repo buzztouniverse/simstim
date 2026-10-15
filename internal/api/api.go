@@ -86,6 +86,9 @@ type HostInfo struct {
 	Agents    map[string]string `json:"agents"`
 	Checks    []Check           `json:"checks"`
 	MemoryMax int64             `json:"memory_max"`
+	// AgentChecks come from a request of their own ("agents.check"), which
+	// is slower: the client adds them for `host doctor`.
+	AgentChecks []AgentCheck `json:"agent_checks,omitempty"`
 }
 
 // SetupArgs asks the host to prepare itself.

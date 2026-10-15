@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
@@ -129,13 +128,11 @@ func addHost(ctx context.Context, h client.Host, yes bool) error {
 	if err != nil {
 		return err
 	}
-	var agents []string
-	for k := range d.Agents {
-		agents = append(agents, k)
-	}
-	sort.Strings(agents)
 	step("✓ %s, %d CPUs, %.1f GiB; %.1f GiB per session", d.Distro, d.CPUs, float64(d.MemTotal)/(1<<30), float64(d.MemoryMax)/(1<<30))
-	step("✓ agents found: %s", strings.Join(agents, ", "))
+	if checks, err := conn.AgentChecks(dctx); err == nil {
+		fmt.Println("\nAgents:")
+		printAgentChecks(os.Stdout, h.Name, checks)
+	}
 	hosts, err := client.LoadHosts()
 	if err != nil {
 		return err
@@ -280,6 +277,9 @@ func hostDoctorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if d.AgentChecks, err = conn.AgentChecks(ctx); err != nil {
+				return err
+			}
 			if asJSON {
 				return printJSON(d)
 			}
@@ -295,12 +295,8 @@ func hostDoctorCmd() *cobra.Command {
 					fmt.Printf("    Try: %s\n", c.Fix)
 				}
 			}
-			var agents []string
-			for k, p := range d.Agents {
-				agents = append(agents, k+" ("+p+")")
-			}
-			sort.Strings(agents)
-			fmt.Printf("  agents: %s\n", strings.Join(agents, ", "))
+			fmt.Println("Agents:")
+			printAgentChecks(os.Stdout, h.Name, d.AgentChecks)
 			printScrollback(ctx, conn)
 			return nil
 		},

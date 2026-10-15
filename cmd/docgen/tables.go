@@ -76,8 +76,37 @@ func agentsPage() []byte {
 		fmt.Fprintf(&b, "| %s | `%s` | %s | `%s` | `%s` | %s | %s | %s |\n", a.Title, a.Kind, a.Support, strings.Join(a.Binaries, "`, `"), strings.Join(a.Launch, " "), resume, status, inline)
 	}
 	b.WriteString("\n**Inline mode** is how an agent draws in the terminal's normal screen, so your terminal keeps its scrollback. `new --inline`, or `agents.inline` in [the configuration](config.md), starts agents that have one this way; see [keep your scrollback](../how-to/scrollback.md).\n")
+	installTable(&b)
 	b.WriteString("\nTo add an agent, add a row to the table and, if it has them, screen rules in `internal/agents/rules/`. See [the contributing guide](../../CONTRIBUTING.md).\n")
 	return []byte(b.String())
+}
+
+// installTable lists each agent's install command and how a host tells that
+// it is logged in.
+func installTable(b *strings.Builder) {
+	fmt.Fprintf(b, "\n## Install and log in\n\n`%s agents install <agent>` runs the install command in a session on the host. `host add` and `host doctor` check each first-class and supported agent, and any other installed one: is it installed, does a login shell find it, and is it logged in. You log in yourself, with the agent's own login in a session ([install agents](../how-to/install-agents.md)).\n\n", brand.Name)
+	b.WriteString("| Agent | Install command | Log in with | Logged in when |\n| --- | --- | --- | --- |\n")
+	for _, a := range agents.Installable() {
+		s := a.Setup
+		var when []string
+		if len(s.LoginEnv) > 0 {
+			when = append(when, codeOr(s.LoginEnv)+" is set")
+		}
+		if len(s.LoginStatus) > 0 {
+			when = append(when, "`"+strings.Join(s.LoginStatus, " ")+"` exits 0")
+		}
+		if len(s.LoginFiles) > 0 {
+			when = append(when, codeOr(s.LoginFiles)+" exists")
+		}
+		whenText, login := "unknown", "—"
+		if len(when) > 0 {
+			whenText = strings.Join(when, "; or ")
+		}
+		if s.Login != "" {
+			login = "`" + s.Login + "`"
+		}
+		fmt.Fprintf(b, "| %s | [`%s`](%s) | %s | %s |\n", a.Title, strings.ReplaceAll(s.Install, "|", "\\|"), s.Source, login, whenText)
+	}
 }
 
 // indexPage is the reference section's home.
@@ -99,4 +128,16 @@ func sortedKeys(m map[string]string) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// codeOr writes names as code, joined with commas and a last "or".
+func codeOr(names []string) string {
+	q := make([]string, len(names))
+	for i, n := range names {
+		q[i] = "`" + n + "`"
+	}
+	if len(q) < 2 {
+		return strings.Join(q, "")
+	}
+	return strings.Join(q[:len(q)-1], ", ") + " or " + q[len(q)-1]
 }

@@ -24,6 +24,7 @@ simstim [flags]
 
 ## SEE ALSO
 
+* [simstim agents](agents.md)     - List the agents, and install one on a host
 * [simstim attach](attach.md)     - Attach to a session (detach with Ctrl+\); - is the last one
 * [simstim config](config.md)     - Show the configuration
 * [simstim demo](demo.md)     - Try the launcher with sample hosts and sessions (nothing connects anywhere)

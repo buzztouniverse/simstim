@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `agents install <agent> [--host <host>]`: runs the agent's official installer, kept with its source in the agent table, in a session on the host, so you see its output and can answer its questions; then it says how to log in with the agent's own login, in a session. `agents ls` lists the install commands. `host add` and `host doctor` check each first-class and supported agent: installed, on `PATH` in a login shell, and logged in, read from the agent's own status command, credentials file or key variable ("unknown" when it has none). See [docs/how-to/install-agents.md](docs/how-to/install-agents.md).
 - Benchmarks for each step of the attach pump, and `just bench` (`scripts/bench.sh`), which compares them with a base commit on the same machine and fails on a slowdown over 10 %; CI runs it on pull requests.
 - `just vulncheck`, also in CI: govulncheck, and deadcode with tests included, which fails on code nothing reaches. Two unused functions were removed.
 - `scripts/time-to-agent.sh` measures the time from a clean machine to an agent running on a host: 2.2 s of machine time on the test host ([testing](docs/contributing/testing.md#time-to-first-agent)).

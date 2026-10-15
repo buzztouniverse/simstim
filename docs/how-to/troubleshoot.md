@@ -19,7 +19,8 @@ simstim host doctor my-server
 | `cannot reach my-server` | Run `ssh my-server true`. If that fails, the problem is in SSH, not here. |
 | Asked for a password every time | Load your key into an SSH agent, or use a key without a passphrase for this host. |
 | A key does nothing in the agent | `simstim doctor keys` shows what your terminal sends. Some terminals keep keys for themselves. |
-| An agent is "not installed" | Install it on the host, as the user you log in as, and check it is on that user's `PATH` in a login shell. |
+| An agent is "not installed" | `simstim agents install <agent> --host my-server` runs its installer in a session ([install agents](install-agents.md)). An agent installed by hand must be on your `PATH` in a login shell. |
+| An agent asks you to log in | Run its own login in a session; `host doctor` prints the command. |
 | Sessions stop when you log out | Linger is off: `host doctor` says so. Run `loginctl enable-linger` on the host. |
 | The screen looks wrong after attaching | Detach and attach again. If it stays wrong, open an issue with your terminal's name and version. |
 

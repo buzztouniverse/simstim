@@ -30,6 +30,8 @@ type Agent struct {
 	// agent that draws full screen (on the alternate screen) keeps its own
 	// scrollback instead. Empty when the agent has no such mode.
 	Inline Inline `json:"inline,omitzero"`
+	// Setup is how to install the agent and log in (setup.go).
+	Setup *Setup `json:"setup,omitempty"`
 }
 
 // Inline is an agent's switch to its inline mode: arguments, environment
@@ -81,6 +83,19 @@ var Table = []Agent{
 		// https://code.claude.com/docs/en/fullscreen: forces the classic
 		// renderer, which keeps the conversation in the terminal's scrollback.
 		Inline: Inline{Env: map[string]string{"CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"}},
+		Setup: &Setup{
+			Install: "curl -fsSL https://claude.ai/install.sh | bash",
+			Source:  "https://code.claude.com/docs/en/setup",
+			Paths:   []string{"~/.local/bin/claude"},
+			// `claude auth login` and `claude auth status` (exit 0 when logged
+			// in, 1 when not): https://code.claude.com/docs/en/cli-reference.
+			// The credentials file and the variables:
+			// https://code.claude.com/docs/en/authentication.
+			Login:       "claude auth login",
+			LoginStatus: []string{"claude", "auth", "status"},
+			LoginFiles:  []string{"~/.claude/.credentials.json"},
+			LoginEnv:    []string{"ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN"},
+		},
 	},
 	{
 		Kind: "codex", Title: "Codex", Binaries: []string{"codex"},
@@ -95,6 +110,18 @@ var Table = []Agent{
 		// codex-rs/tui/src/cli.rs in openai/codex: "Runs the TUI in inline
 		// mode, preserving terminal scrollback history."
 		Inline: Inline{Args: []string{"--no-alt-screen"}},
+		Setup: &Setup{
+			// The installer puts codex in $CODEX_INSTALL_DIR, by default ~/.local/bin.
+			Install: "curl -fsSL https://chatgpt.com/codex/install.sh | sh",
+			Source:  "https://github.com/openai/codex#readme",
+			Paths:   []string{"~/.local/bin/codex"},
+			// Device-code login for hosts without a browser, and auth.json:
+			// https://developers.openai.com/codex/auth. `codex login status`
+			// exits 0 when logged in and 1 when not (codex-rs/cli/src/login.rs).
+			Login:       "codex login --device-auth",
+			LoginStatus: []string{"codex", "login", "status"},
+			LoginFiles:  []string{"~/.codex/auth.json"},
+		},
 	},
 	{
 		Kind: "opencode", Title: "opencode", Binaries: []string{"opencode"},
@@ -103,6 +130,14 @@ var Table = []Agent{
 		Continue:  []string{"opencode", "-c"},
 		IDCapture: "scan",
 		Support:   Supported,
+		Setup: &Setup{
+			Install: "curl -fsSL https://opencode.ai/install | bash",
+			Source:  "https://opencode.ai/docs/",
+			Paths:   []string{"~/.opencode/bin/opencode"},
+			// `opencode auth login` keeps keys in auth.json: https://opencode.ai/docs/cli/.
+			Login:      "opencode auth login",
+			LoginFiles: []string{"~/.local/share/opencode/auth.json"},
+		},
 	},
 	{
 		// Antigravity CLI replaced Gemini CLI for Google's consumer plans on
@@ -113,6 +148,14 @@ var Table = []Agent{
 		Continue:  []string{"agy", "--continue"},
 		IDCapture: "none",
 		Support:   Supported,
+		Setup: &Setup{
+			// The first start walks through the sign-in. The docs name no
+			// status command or credentials file, so the login is unknown.
+			Install: "curl -fsSL https://antigravity.google/cli/install.sh | bash",
+			Source:  "https://www.antigravity.google/docs/getting-started?tab=cli",
+			Paths:   []string{"~/.local/bin/agy"},
+			Login:   "agy",
+		},
 	},
 	{
 		Kind: "gemini", Title: "Gemini CLI", Binaries: []string{"gemini"},
@@ -121,6 +164,16 @@ var Table = []Agent{
 		Continue:  []string{"gemini", "--resume"},
 		IDCapture: "choose",
 		Support:   BestEffort, // consumer plans moved to Antigravity CLI
+		Setup: &Setup{
+			Install: "npm install -g @google/gemini-cli",
+			Source:  "https://github.com/google-gemini/gemini-cli#readme",
+			// The first start offers "Sign in with Google", kept in
+			// ~/.gemini/oauth_creds.json (packages/core/src/config/storage.ts);
+			// the variables: https://www.geminicli.com/docs/get-started/authentication.
+			Login:      "gemini",
+			LoginFiles: []string{"~/.gemini/oauth_creds.json"},
+			LoginEnv:   []string{"GEMINI_API_KEY", "GOOGLE_API_KEY"},
+		},
 	},
 	{
 		Kind: "amp", Title: "Amp", Binaries: []string{"amp"},
@@ -129,6 +182,14 @@ var Table = []Agent{
 		Continue:  []string{"amp", "threads", "continue", "--last"},
 		IDCapture: "scan",
 		Support:   BestEffort,
+		Setup: &Setup{
+			// `amp login` and AMP_API_KEY: https://ampcode.com/docs/cli.
+			Install:  "curl -fsSL https://ampcode.com/install.sh | bash",
+			Source:   "https://ampcode.com/docs/cli",
+			Paths:    []string{"~/.local/bin/amp", "~/.amp/bin/amp"},
+			Login:    "amp login",
+			LoginEnv: []string{"AMP_API_KEY"},
+		},
 	},
 	{
 		Kind: "cursor", Title: "Cursor CLI", Binaries: []string{"agent", "cursor-agent"},
@@ -137,6 +198,15 @@ var Table = []Agent{
 		Continue:  []string{"agent", "--continue"},
 		IDCapture: "scan",
 		Support:   BestEffort,
+		Setup: &Setup{
+			// `agent login` and CURSOR_API_KEY:
+			// https://cursor.com/docs/cli/reference/authentication.
+			Install:  "curl https://cursor.com/install -fsS | bash",
+			Source:   "https://cursor.com/docs/cli/installation",
+			Paths:    []string{"~/.local/bin/agent", "~/.local/bin/cursor-agent"},
+			Login:    "agent login",
+			LoginEnv: []string{"CURSOR_API_KEY"},
+		},
 	},
 	{
 		Kind: "aider", Title: "Aider", Binaries: []string{"aider"},
@@ -144,6 +214,13 @@ var Table = []Agent{
 		Continue:  []string{"aider", "--restore-chat-history"},
 		IDCapture: "none",
 		Support:   BestEffort,
+		Setup: &Setup{
+			// Aider has no login of its own: it uses the model provider's API key.
+			Install:  "curl -LsSf https://aider.chat/install.sh | sh",
+			Source:   "https://aider.chat/docs/install.html",
+			Paths:    []string{"~/.local/bin/aider"},
+			LoginEnv: []string{"ANTHROPIC_API_KEY", "OPENAI_API_KEY"},
+		},
 	},
 	{
 		Kind: "goose", Title: "Goose", Binaries: []string{"goose"},
@@ -151,6 +228,13 @@ var Table = []Agent{
 		Continue:  []string{"goose", "session", "-r"},
 		IDCapture: "none",
 		Support:   BestEffort,
+		Setup: &Setup{
+			// `goose configure` sets up a provider and its key.
+			Install: "curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash",
+			Source:  "https://goose-docs.ai/docs/getting-started/installation",
+			Paths:   []string{"~/.local/bin/goose"},
+			Login:   "goose configure",
+		},
 	},
 	{
 		Kind: "shell", Title: "Shell", Binaries: []string{"$SHELL"},
