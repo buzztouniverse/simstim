@@ -1,0 +1,4 @@
+# The key that signs checksums.txt of every release (checksums.txt.sig).
+# Check a release by hand:
+#   ssh-keygen -Y verify -f .github/release-signers -I release -n file -s checksums.txt.sig < checksums.txt
+release namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGyv3BRbYeIpUvqwia5q4CuqngP+aUzouWZ8x73U2LOy

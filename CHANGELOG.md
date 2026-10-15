@@ -44,6 +44,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Builds are reproducible: `just repro` (also in CI) builds every release binary twice from empty caches and checks they match byte for byte.
 - CodeQL and OpenSSF Scorecard run once the repository is public; `just scorecard` scores it before then.
 - SECURITY.md has a reporting link and a disclosure timeline.
+- `install.sh` checks the release's signature before the checksum: the release job signs `checksums.txt` with an SSH key, and the script verifies it with `ssh-keygen`, which every machine with OpenSSH has. The public key is in `.github/release-signers`. `just test-install` (also in CI, on Linux and macOS) installs a signed snapshot release and checks that changed checksums, signatures and archives are refused.
 - The launcher fits a 60×20 terminal: below 70 cells a session list drops its folder column instead of squeezing it to two letters and spilling past the margin. Golden screens now cover 60×20 too.
 - Tests render the screens in every colour profile (truecolour, 256, 16, `NO_COLOR`, no terminal) and check the contrast of the fixed colours on dark and light backgrounds.
 - The repo holds nothing private: the working goal, the status page, the test-host log and the owner's checklist moved to the git-ignored `private/` folder, and examples use generic host names, users and documentation addresses.
@@ -76,4 +77,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- `install.sh` stopped with "unbound variable" in shells that read the `…` after `$arch` as part of the name.
 - On a light background, the end of the brand gradient showed pink: blended colours with a channel near zero were sent as their 16-bit value. The gradient is now sent as plain 8-bit RGB.

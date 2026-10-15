@@ -77,7 +77,7 @@ homebrew_casks:
     repository:
       owner: iAmLakshya
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      token: '{{ index .Env "HOMEBREW_TAP_TOKEN" }}'
     skip_upload: '{{ if index .Env "HOMEBREW_TAP_TOKEN" }}false{{ else }}true{{ end }}'
     homepage: "https://github.com/iAmLakshya/{{ .Env.APP_NAME }}"
     description: Run any coding agent in sessions on any host you own

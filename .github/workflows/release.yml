@@ -47,6 +47,21 @@ jobs:
           # Set this secret once the tap repository exists; until then the
           # cask is built into dist/ and not pushed.
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      - name: Sign the checksums with the release SSH key
+        # install.sh checks this signature with ssh-keygen, which every host
+        # with OpenSSH has; the public key is .github/release-signers.
+        env:
+          RELEASE_SSH_KEY: ${{ secrets.RELEASE_SSH_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          umask 077
+          key=$(mktemp)
+          trap 'rm -f "$key"' EXIT
+          printf '%s\n' "$RELEASE_SSH_KEY" > "$key"
+          ssh-keygen -q -Y sign -n file -f "$key" dist/checksums.txt
+          ssh-keygen -Y verify -f .github/release-signers -I release -n file -s dist/checksums.txt.sig < dist/checksums.txt
+          gh release upload "$TAG" dist/checksums.txt.sig
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-checksums: dist/checksums.txt

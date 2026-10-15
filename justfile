@@ -98,6 +98,10 @@ rename new:
 repro:
     scripts/repro.sh
 
+# Test install.sh against a local, signed snapshot release.
+test-install:
+    scripts/test-install.sh
+
 # Score the pushed repository with OpenSSF Scorecard (needs the scorecard CLI and `gh auth login`).
 scorecard:
     GITHUB_AUTH_TOKEN=$(gh auth token) scorecard --repo={{module}} --format=default
