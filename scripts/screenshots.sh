@@ -13,7 +13,7 @@ out=docs/images
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-go build -o "$tmp/ttyshot" ./e2e/ttyshot
+go build -o "$tmp/ttyshot" ./test/ttyshot
 # A fresh config with motion off: the spinner stands still, and the user's own
 # settings never show in an image.
 mkdir -p "$tmp/config/$name" "$out"
