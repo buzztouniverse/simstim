@@ -1,10 +1,11 @@
 # External link checks (scripts/docs-check.sh --external, and CI on main).
-max_retries = 3
-retry_wait_time = 5
+max_retries = 4
+retry_wait_time = 10
 timeout = 30
 max_concurrency = 16
-# 403 and 429: many sites refuse or slow down automated requests.
-accept = [200, 203, 204, 206, 301, 302, 307, 308, 403, 429]
+# 403 and 429: many sites refuse or slow down automated requests. 502 to 504:
+# the server is busy now, not the link gone; a 404 still fails.
+accept = [200, 203, 204, 206, 301, 302, 307, 308, 403, 429, 502, 503, 504]
 cache = true
 max_cache_age = "3d"
 # Sites that refuse automated requests, or need a login, and the repository
@@ -19,5 +20,7 @@ exclude = [
   "^https?://localhost",
   "^https?://127\\.0\\.0\\.1",
   "example\\.(com|org|net)",
+  # The OpenSSH mailing-list archive often refuses connections from CI.
+  "^https?://lists\\.mindrot\\.org",
 ]
 exclude_path = ["docs/research/private", "private", "build"]
