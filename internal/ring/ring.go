@@ -18,9 +18,6 @@ func New(size int) *Ring {
 	return &Ring{buf: make([]byte, size)}
 }
 
-// Size is the capacity.
-func (r *Ring) Size() int { return len(r.buf) }
-
 // End is the offset after the newest byte.
 func (r *Ring) End() int64 { return r.end }
 

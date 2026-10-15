@@ -33,6 +33,10 @@ A container made with `host create docker` runs the suite too, over `docker exec
 
 It covers start, attach and detach, resize, byte-exact output, replay after a dropped link, a simulated laptop sleep, the memory cap, snapshots after the ring wraps, a crashed shadow terminal, image paste and file drops, worktrees, ports, rename and delete. Host reboots are tested by hand, with the host owner's agreement.
 
+## Vulnerabilities and dead code
+
+`just vulncheck` runs govulncheck, which reports known vulnerabilities only in code the project calls, and deadcode, which fails on any function that neither the program nor a test reaches. CI runs both on every push.
+
 ## Time to first agent
 
 `scripts/time-to-agent.sh <ssh target> [ssh config] [agent]` measures the path in [getting started](../tutorials/getting-started.md) on a host you can already reach: it builds a snapshot release, signs it with a throwaway key, serves it on localhost, and times `install.sh`, `host add` and `new --agent` in a throwaway config folder, until the agent's state is known.

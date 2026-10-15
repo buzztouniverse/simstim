@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `just vulncheck`, also in CI: govulncheck, and deadcode with tests included, which fails on code nothing reaches. Two unused functions were removed.
 - `scripts/time-to-agent.sh` measures the time from a clean machine to an agent running on a host: 2.2 s of machine time on the test host ([testing](docs/contributing/testing.md#time-to-first-agent)).
 - An explanation page, [how simstim compares](docs/explanation/comparison.md): multiplexers, pass-through session tools, hosted agents, vendor agents on your own machine and cloud development environments, with when to choose each instead, and where simstim is behind.
 - `host create <provider> [name]` makes a host and sets it up in one step: a local Lima VM (`lima`), a Docker container for testing (`docker`, experimental) or an E2B sandbox (`e2b`). It creates the machine, installs the helper (printing what and where), and connects. `host destroy <name>` asks first, refuses while a session is working unless `--force`, deletes the machine, and forgets the host. `hosts.toml` records the provider and the machine in a `[host.machine]` table. See [Create a host](docs/how-to/create-a-host.md).

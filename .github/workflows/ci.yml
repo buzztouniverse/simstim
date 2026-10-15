@@ -146,6 +146,10 @@ jobs:
           version: v2.14.0
       - name: Known vulnerabilities in the code we call
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+      - name: No dead code, tests included
+        run: |
+          out=$(GOTOOLCHAIN=auto go run golang.org/x/tools/cmd/deadcode@v0.38.0 -test ./...)
+          [ -z "$out" ] || { echo "$out"; echo "::error::Dead code: remove it, or use it."; exit 1; }
 
   workflows:
     # Lint the workflows themselves: template injection, credentials left in

@@ -73,6 +73,11 @@ lint: check-name check-private check-scripts
     go vet ./...
     golangci-lint run
 
+# Known vulnerabilities in the code we call, and code nothing reaches, tests included.
+vulncheck:
+    go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+    out=$(GOTOOLCHAIN=auto go run golang.org/x/tools/cmd/deadcode@v0.38.0 -test ./...); [ -z "$out" ] || { echo "$out"; echo "Dead code: remove it, or use it."; exit 1; }
+
 # Lint the GitHub workflows and Dependabot config with zizmor (needs uv).
 lint-workflows:
     uvx zizmor --offline .github

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sort"
 	"sync"
 	"time"
 
@@ -93,18 +92,6 @@ func RegisterProvider(name string, open func(Host) (Lifecycle, error)) {
 	providersMu.Lock()
 	defer providersMu.Unlock()
 	providers[name] = open
-}
-
-// ProviderNames lists the registered providers.
-func ProviderNames() []string {
-	providersMu.RLock()
-	defer providersMu.RUnlock()
-	names := make([]string, 0, len(providers))
-	for n := range providers {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
 }
 
 // OpenMachine returns the lifecycle of the machine behind h.
