@@ -97,6 +97,9 @@ func Install(ctx context.Context, s Transport, p Platform) error {
 			return err
 		}
 	}
+	// Each install leaves the old versions behind. The new helper removes
+	// those that nothing uses; a failure here never fails the install.
+	_, _ = s.Run(ctx, RemoteHelper(ver)+" prune", nil)
 	return nil
 }
 

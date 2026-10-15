@@ -24,6 +24,7 @@ Usage:
   %[1]s keytest             print every key the terminal sends
   %[1]s restore [--all]     start again sessions a restart (or, with --all, a crash) stopped
   %[1]s idle setup <30m|never>   power this VM off when idle (a user timer runs "idle check")
+  %[1]s prune               remove the helper versions nothing uses any more
   %[1]s version
 `
 
@@ -130,6 +131,11 @@ func main() {
 			for _, r := range res {
 				fmt.Printf("%-10s %-20s %-9s %s\n", r.ID, r.Name, r.Action, r.Why)
 			}
+		}
+	case "prune":
+		var removed []string
+		if removed, err = host.Prune(); err == nil {
+			fmt.Printf("removed %d old helper versions\n", len(removed))
 		}
 	case "keytest":
 		err = host.KeyTest()
