@@ -1,0 +1,20 @@
+
+  ⢄⡠⠊ simstim  › atlas-dev  9ms · 4 sessions · 1 needs you
+  ────────────────────────────────────────────────────────
+
+  ▍ 1 ● auth-refa…  claude    needs input     2m  ⣀⣀⣀⣀⣀⣀⣀⣀
+    2 ⠶ api-tests   codex     working        14s  ⣀⣀⣀⣀⣀⣀⣀⣼
+  ── Commands ────────────────────────────────────────────
+
+    ❯ ses
+
+    ▍ New session                                      n
+      Attach session                               enter
+      Rename session                                   r
+      Delete session                                   d
+      Peek at the screen                           space
+      All sessions
+      New session, with the form
+      Copy the attach command                          y
+
+    enter run   ↑↓ move   esc close

@@ -1,0 +1,20 @@
+
+  ⢄⡠⠊ simstim  › raspberry                    · 0 sessions
+  ────────────────────────────────────────────────────────
+
+    No sessions on raspberry yet.
+
+    n start one from a single line, like: claude ~/src/app
+  ── Add a host ─────────────────────────── step 4 of 4 ──
+
+    ✓ connect
+    ✓ linger      on
+    ✓ terminfo    xterm-ghostty installed
+
+    ✓ raspberry is ready.
+
+      Agents  claude · shell
+      System  Ubuntu 24.04 · arm64 · 2 CPUs · 4 GiB
+      Limits  1.5 GiB per session
+
+    enter start a session   esc close

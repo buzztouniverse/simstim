@@ -370,7 +370,7 @@ func (m *Model) sessionsView(cw int) listView {
 		v.rows = append(v.rows, marker(i == m.selIdx && rows[i].kind == rowSession)+m.sessRowView(rows[i], n, cols, i == m.selIdx, false))
 	}
 	if hc, s := m.selectedPair(); s != nil {
-		v.detail = "  " + m.sessionDetail(hc, *s, cw-2)
+		v.detail = "  " + m.sessionDetail(hc, *s, cw-2, false)
 	}
 	return v
 }
@@ -393,7 +393,7 @@ func (m *Model) searchView(cw int) listView {
 		v.rows = append(v.rows, marker(i == p.sel)+m.sessRowView(rs[i], i+1, cols, i == p.sel, true))
 	}
 	if r := rs[p.sel]; true {
-		v.detail = "  " + m.sessionDetail(r.h, r.s, cw-2)
+		v.detail = "  " + m.sessionDetail(r.h, r.s, cw-2, cols.folder == 0)
 	}
 	return v
 }
@@ -428,16 +428,24 @@ const (
 	colAge   = 4
 )
 
-// sessColumns is the width of the columns that share the free space.
+// minFolder is the narrowest folder column worth showing. Below it the
+// column goes, and the line under the list still shows the folder.
+const minFolder = 8
+
+// sessColumns is the width of the columns that share the free space. A
+// folder of 0 means the column is hidden.
 type sessColumns struct {
 	name, folder int
 }
 
 func sessCols(cw int) sessColumns {
-	fixed := 4 + 2 + colAgent + 2 + 2 + colState + 2 + colAge + 2 + traceCells
-	rest := max(cw-fixed, 12)
+	fixed := 4 + 2 + colAgent + 2 + colState + 2 + colAge + 2 + traceCells // all but the folder
+	rest := cw - fixed - 2                                                 // name and folder, after the folder's gap
 	c := sessColumns{name: min(max(rest*45/100, 10), 28)}
 	c.folder = rest - c.name
+	if c.folder < minFolder {
+		c = sessColumns{name: max(cw-fixed, 6)}
+	}
 	return c
 }
 
@@ -474,10 +482,11 @@ func (m *Model) sessRowView(r sessRow, n int, c sessColumns, selected, withHost 
 	}
 	segs := []seg{gutter(n), {" ", sPlain}, glyph, {" ", sPlain}}
 	segs = append(segs, name...)
+	segs = append(segs, seg{"  ", sPlain}, seg{fit(s.Agent, colAgent), sFaint}, seg{"  ", sPlain})
+	if c.folder > 0 {
+		segs = append(segs, seg{fit(where, c.folder), sFaint}, seg{"  ", sPlain})
+	}
 	segs = append(segs,
-		seg{"  ", sPlain},
-		seg{fit(s.Agent, colAgent), sFaint}, seg{"  ", sPlain},
-		seg{fit(where, c.folder), sFaint}, seg{"  ", sPlain},
 		seg{fit(label.s, colState), label.st}, seg{"  ", sPlain},
 		seg{fitRight(fmtAge(m.now().Sub(since(s))), colAge), sFaint}, seg{"  ", sPlain},
 		seg{m.trace(r.key(), traceSt), sPlain})
@@ -487,7 +496,7 @@ func (m *Model) sessRowView(r sessRow, n int, c sessColumns, selected, withHost 
 // sessionDetail is the line under the sessions: what the selected one is
 // doing now, read from its screen, or what it waits for; then where it runs
 // and its memory.
-func (m *Model) sessionDetail(h *hostConn, s client.Session, cw int) string {
+func (m *Model) sessionDetail(h *hostConn, s client.Session, cw int, withHost bool) string {
 	var now string
 	switch a := m.activity[sessKey{h.name(), s.ID}]; {
 	case s.State == "needs_input" && s.Reason != "":
@@ -495,8 +504,12 @@ func (m *Model) sessionDetail(h *hostConn, s client.Session, cw int) string {
 	case a.text != "" && s.Alive:
 		now = sAccent.Render("▸ ") + m.decode(a.text, a.at)
 	}
+	where := homePath(h, s.Cwd)
+	if withHost {
+		where = h.name() + ":" + where
+	}
 	var facts []string
-	for _, p := range []string{homePath(h, s.Cwd), fmtMemory(s.MemoryCurrent, s.MemoryMax), s.ID} {
+	for _, p := range []string{where, fmtMemory(s.MemoryCurrent, s.MemoryMax), s.ID} {
 		if p != "" {
 			facts = append(facts, p)
 		}

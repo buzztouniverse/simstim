@@ -291,17 +291,21 @@ These keys work in the launcher. You can rebind any key in `config.toml`, and `s
 
 Every token is a terminal palette slot, the terminal's default colour, or the faint attribute. So the launcher looks the same in 256- and 16-colour terminals as in truecolour: your theme decides the colours. The truecolour column gives the colours in the reference theme, the owner's Ghostty theme, which the README images use.
 
-| Token | Sent as | Truecolour (reference theme) | 256 colours | 16 colours | Used for |
-| --- | --- | --- | --- | --- | --- |
-| text | default foreground | `#BFBDB6` | default | default | Names, body text |
-| background | default background | `#0B0E14` | default | default | Never painted, except the tint |
-| faint | SGR 2 on the text | `#656565` (half way to the background) | SGR 2 | SGR 2 | Details, words in the keys, rules, the dimmed backdrop |
-| accent | slot 6 | `#90E1C6` | 6 | cyan | Keys, sheet titles, the marker, working, the prompt, links, the scan |
-| tint | the accent mixed 13 % into the background | `#1C292B` | none | none | The selected row (truecolour only: elsewhere the marker shows it) |
-| success | slot 2 | `#7FD962` | 2 | green | `✓`, an online host |
-| warning | slot 3 | `#F9AF4F` | 3 | yellow | Needs input, its question, its trace |
-| danger | slot 1 | `#EA6C73` | 1 | red | `✕`, failed states, the delete sheet |
-| cursor | reverse video | `#BFBDB6` block | reverse | reverse | Text fields |
+| Token | Sent as | Truecolour (reference theme) | 256 colours | 16 colours | No colour | Used for |
+| --- | --- | --- | --- | --- | --- | --- |
+| text | default foreground | `#BFBDB6` | default | default | default | Names, body text |
+| background | default background | `#0B0E14` | default | default | default | Never painted, except the tint |
+| faint | SGR 2 on the text | `#656565` (half way to the background) | SGR 2 | SGR 2 | SGR 2 | Details, words in the keys, rules, the dimmed backdrop |
+| accent | slot 6 | `#90E1C6` | 6 | cyan | default | Keys, sheet titles, the marker, working, the prompt, links, the scan |
+| tint | the accent mixed 13 % into the background | `#1C292B` | none | none | none | The selected row (truecolour only: elsewhere the marker shows it) |
+| success | slot 2 | `#7FD962` | 2 | green | default | `✓`, an online host |
+| warning | slot 3 | `#F9AF4F` | 3 | yellow | default | Needs input, its question, its trace |
+| danger | slot 1 | `#EA6C73` | 1 | red | default | `✕`, failed states, the delete sheet |
+| cursor | reverse video | `#BFBDB6` block | reverse | reverse | reverse | Text fields |
+
+**No colour.** With `NO_COLOR` set, or `TERM=dumb`, the terminal gets no colour at all, only bold, faint, underline and reverse, and motion is off. Nothing depends on colour alone: the marker `▍` shows the selection, and each state has its own glyph (`●`, `⠶`, `○`, `✓`, `✕`, `◌`).
+
+**Tested.** `internal/tui/theme_test.go` renders the screens through each colour profile (truecolour, 256, 16, no colour, no terminal) and checks what each one sends. It also checks that every fixed colour keeps a contrast of 3:1 or more on dark and light backgrounds. The golden screens cover 60×20, 80×24 and 120×36.
 
 ### 4.2 The brand
 
@@ -321,6 +325,7 @@ One fixed gradient, from deep teal to electric cyan, colours the welcome mark, t
   - A two-cell gutter holds the marker.
   - The number and the glyph each take one cell, with one space after each.
   - Columns are two spaces apart, and hints three.
+- **Narrow terminals:** the column keeps a two-cell margin down to 60 cells. Below 70 cells the folder column of a session list goes; the line under the list still shows the folder, and in search the host too.
 - **Truncation:** `…`. Paths keep whole folders, `/home/dev/…/auth`; names are cut at the end.
 - **Sheets** rise over the list, which is dimmed with the faint attribute, so the effect works with any theme. One sheet shows at a time.
 

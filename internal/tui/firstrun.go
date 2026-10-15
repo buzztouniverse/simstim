@@ -17,7 +17,15 @@ func (m *Model) gradient(n int) []color.Color {
 	if !m.richColor || n <= 0 {
 		return nil
 	}
-	return lipgloss.Blend1D(n, brandStops(m.dark)...)
+	cs := lipgloss.Blend1D(n, brandStops(m.dark)...)
+	for i, c := range cs {
+		// Blend1D gives colorful colours, and a channel under 1/256 of
+		// those is sent as its 16-bit value (243 instead of 0), which
+		// turns the light gradient's end pink. Plain 8-bit RGB is sent
+		// right.
+		cs[i] = toRGB(c).color()
+	}
+	return cs
 }
 
 // When the welcome's parts arrive, after the ribbon starts to open.

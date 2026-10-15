@@ -65,7 +65,7 @@ func sessions(t *testing.T, w, h int) *harness {
 	return hs
 }
 
-var sizes = []struct{ w, h int }{{80, 24}, {120, 36}}
+var sizes = []struct{ w, h int }{{60, 20}, {80, 24}, {120, 36}}
 
 func TestGolden(t *testing.T) {
 	views := []struct {

@@ -39,6 +39,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- The launcher fits a 60×20 terminal: below 70 cells a session list drops its folder column instead of squeezing it to two letters and spilling past the margin. Golden screens now cover 60×20 too.
+- Tests render the screens in every colour profile (truecolour, 256, 16, `NO_COLOR`, no terminal) and check the contrast of the fixed colours on dark and light backgrounds.
 - The repo holds nothing private: the working goal, the status page, the test-host log and the owner's checklist moved to the git-ignored `private/` folder, and examples use generic host names, users and documentation addresses.
 - Sessions are capped with `MemoryMax` only; `MemoryHigh` made a runaway process hang (decision 0008).
 - Commits carry no sign-off or attribution lines, and contributions are covered by Apache-2.0 section 5 (decision 0010, which replaces the DCO).
@@ -66,3 +68,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
   - rows have numbers (1–9 open them), and the mouse selects, opens and scrolls;
   - the tab title counts the sessions that need you, and a desktop notification goes out when one starts to need you while the terminal is in the background.
 - While attached, the client draws nothing of its own. It sets no window title, and a failed upload is now a system notification instead of a line on the bottom row. The reconnect notice is the one exception. End-to-end checks prove that the agent's PTY is the terminal's size, and that the screen is the session's bytes alone.
+
+### Fixed
+
+- On a light background, the end of the brand gradient showed pink: blended colours with a channel near zero were sent as their 16-bit value. The gradient is now sent as plain 8-bit RGB.

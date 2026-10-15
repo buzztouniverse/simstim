@@ -1,0 +1,20 @@
+  ── Keys ────────────────────────────────────────────────
+
+    ↑↓ jk          move
+    1–9            open that row
+    esc            back to hosts
+    n              new session
+    enter          attach
+    space          peek at the screen
+    r f2           rename
+    d              delete
+    y              copy the attach command
+    a              add host
+    i              host details
+    /              search every host
+    alt+e          show ended
+    ?              keys
+    q              quit
+    ctrl+o         commands
+    ctrl+c ctrl+c  quit
+
