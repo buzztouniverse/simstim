@@ -117,11 +117,18 @@ func New(a NewArgs) (*SessionInfo, error) {
 	if colorterm == "" {
 		colorterm = "truecolor"
 	}
-	env := AgentEnv(login, map[string]string{
+	extra := map[string]string{
 		"TERM": term, "COLORTERM": colorterm,
 		"TERM_PROGRAM": a.TermProgram, "TERM_PROGRAM_VERSION": a.TermProgramVersion,
 		brand.Env("SESSION"): id, brand.Env("SOCK"): paths.Socket(id),
-	})
+	}
+	inline := a.Inline && known && len(a.Argv) == 0 && agent.Inline.Has()
+	if inline {
+		for k, v := range agent.Inline.Env {
+			extra[k] = v
+		}
+	}
+	env := AgentEnv(login, extra)
 	vars := map[string]string{"session_uuid": newUUID()}
 	argv = agents.Expand(argv, vars)
 	for i, s := range argv {
@@ -136,6 +143,9 @@ func New(a NewArgs) (*SessionInfo, error) {
 	if known && len(agent.Hooks) > 0 && len(a.Argv) == 0 {
 		hooks = hookArgs(agent.Hooks)
 		argv = append(argv, hooks...)
+	}
+	if inline {
+		argv = append(argv, agent.Inline.Args...)
 	}
 	if _, err := lookPath(argv[0], envValue(env, "PATH")); err != nil {
 		return nil, UserError("agent_missing", fmt.Sprintf("%s is not installed on this host", argv[0]), "Install it on the host, then try again.")
@@ -166,6 +176,9 @@ func New(a NewArgs) (*SessionInfo, error) {
 		m.Agent.ResumeArgv = agent.Resume
 		m.Agent.ContinueArgv = agent.Continue
 		m.Agent.Hooks = hooks
+		if inline {
+			m.Agent.Inline = agent.Inline.Args
+		}
 		if agent.IDCapture == "choose" {
 			m.Agent.AgentSessionID = vars["session_uuid"]
 			m.Agent.IDSource = "chosen"
@@ -205,6 +218,7 @@ func infoFrom(m *Manifest, alive bool) SessionInfo {
 		CreatedAt: m.CreatedAt, LastActivityAt: m.LastActivityAt, LastAttachedAt: m.LastAttachedAt,
 		Alive: alive, Unit: m.Run.Unit, MemoryMax: m.Limits.MemoryMax, MemoryCurrent: memoryCurrent(m.Run.Unit),
 		HostVersion: m.HostVersion, Cols: m.Term.Cols, Rows: m.Term.Rows,
+		FullScreen: st.FullScreen && alive,
 	}
 }
 

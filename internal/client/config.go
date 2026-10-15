@@ -58,6 +58,15 @@ type Settings struct {
 		// "clear" starts from a clean screen.
 		Scrollback string `toml:"scrollback"`
 	} `toml:"attach"`
+	// Agents holds how agents start.
+	Agents struct {
+		// Inline starts each agent that has one in its inline mode, where it
+		// draws in the terminal's normal screen, so your terminal keeps its
+		// scrollback: Claude Code's classic renderer, Codex with
+		// --no-alt-screen. Off by default, so each agent starts as its own
+		// defaults say. `new --inline` does it for one session.
+		Inline bool `toml:"inline"`
+	} `toml:"agents"`
 	// Keymap rebinds launcher commands by name ("session: delete"). A value is
 	// a key, a list of keys, or "" to unbind. `config keymap` lists the names.
 	Keymap map[string]any `toml:"keymap"`

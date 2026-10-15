@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/iAmLakshya/simstim/internal/agents"
@@ -43,7 +44,7 @@ func agentsPage() []byte {
 	b.WriteString("| first-class | Tested end to end on every release; status from the agent's own hooks; resumes after a reboot |\n")
 	b.WriteString("| supported | Tested when the test host has it |\n")
 	b.WriteString("| best-effort | In the table; contributors keep it working |\n\n")
-	b.WriteString("| Agent | `--agent` | Support | Program | Starts with | Resumes with | Status from |\n| --- | --- | --- | --- | --- | --- | --- |\n")
+	b.WriteString("| Agent | `--agent` | Support | Program | Starts with | Resumes with | Status from | Inline mode |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n")
 	rules, _ := agents.LoadRules()
 	for _, a := range agents.Table {
 		var from []string
@@ -63,8 +64,18 @@ func agentsPage() []byte {
 		} else if len(a.Continue) > 0 {
 			resume = "`" + strings.Join(a.Continue, " ") + "`"
 		}
-		fmt.Fprintf(&b, "| %s | `%s` | %s | `%s` | `%s` | %s | %s |\n", a.Title, a.Kind, a.Support, strings.Join(a.Binaries, "`, `"), strings.Join(a.Launch, " "), resume, status)
+		inline := "—"
+		if a.Inline.Has() {
+			var parts []string
+			for _, k := range sortedKeys(a.Inline.Env) {
+				parts = append(parts, k+"="+a.Inline.Env[k])
+			}
+			parts = append(parts, a.Inline.Args...)
+			inline = "`" + strings.Join(parts, " ") + "`"
+		}
+		fmt.Fprintf(&b, "| %s | `%s` | %s | `%s` | `%s` | %s | %s | %s |\n", a.Title, a.Kind, a.Support, strings.Join(a.Binaries, "`, `"), strings.Join(a.Launch, " "), resume, status, inline)
 	}
+	b.WriteString("\n**Inline mode** is how an agent draws in the terminal's normal screen, so your terminal keeps its scrollback. `new --inline`, or `agents.inline` in [the configuration](config.md), starts agents that have one this way; see [keep your scrollback](../how-to/scrollback.md).\n")
 	b.WriteString("\nTo add an agent, add a row to the table and, if it has them, screen rules in `internal/agents/rules/`. See [the contributing guide](../../CONTRIBUTING.md).\n")
 	return []byte(b.String())
 }
@@ -79,4 +90,13 @@ func indexPage() []byte {
 	b.WriteString("- [Keys](keymap.md): the launcher's commands and keys.\n")
 	b.WriteString("- [Agents](agents.md): the agent table.\n")
 	return []byte(b.String())
+}
+
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

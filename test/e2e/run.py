@@ -310,6 +310,17 @@ host_ssh("rm -f " + ALERTS_OUT)
 if saved:
     host_ssh("mv %s.e2e-saved %s" % (ALERTS_TOML, ALERTS_TOML))
 
+# M. Full screen (roadmap N2): a program on the alternate screen is reported
+#    as full screen, and host doctor says so.
+sid_fs = start("e2e-fullscreen", "/bin/bash", "-c", 'printf "\\033[?1049hFULL"; sleep 600')
+created.append(sid_fs)
+time.sleep(4)
+ls = subprocess.run([cli, "ls", "--json"], capture_output=True, text=True).stdout
+rows = {s["id"]: s for h in json.loads(ls) for s in (h["sessions"] or [])}
+ok(rows.get(sid_fs, {}).get("full_screen") is True, "full screen: a program on the alternate screen is reported as full screen")
+doc = subprocess.run([cli, "host", "doctor", HOST], capture_output=True, text=True).stdout
+ok("e2e-fullscreen" in doc and "full screen" in doc, "full screen: host doctor names the session")
+
 # Clean up.
 for s in created:
     subprocess.run([cli, "kill", HOST + "/" + s], capture_output=True)

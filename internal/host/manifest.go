@@ -67,6 +67,9 @@ type AgentInfo struct {
 	IDHistory      []IDEvent `json:"id_history,omitempty"`
 	// Hooks are the extra arguments that report status; kept so a respawn adds them again.
 	Hooks []string `json:"hooks,omitempty"`
+	// Inline are the arguments that start the agent in its inline mode, when
+	// the session asked for it; kept so a respawn adds them again.
+	Inline []string `json:"inline,omitempty"`
 }
 
 // IDEvent records a change of the agent's own session ID, for example after /clear.
@@ -109,6 +112,8 @@ type Status struct {
 	Signal   string    `json:"signal,omitempty"`
 	OOM      bool      `json:"oom_killed,omitempty"`
 	Reason   string    `json:"reason,omitempty"`
+	// FullScreen is true while the program draws on the alternate screen.
+	FullScreen bool `json:"full_screen,omitempty"`
 }
 
 // Restart is the respawn policy (v2).

@@ -13,17 +13,19 @@ Any terminal program runs in a session (`simstim new <host> -- <command>`). The 
 | supported | Tested when the test host has it |
 | best-effort | In the table; contributors keep it working |
 
-| Agent | `--agent` | Support | Program | Starts with | Resumes with | Status from |
-| --- | --- | --- | --- | --- | --- | --- |
-| Claude Code | `claude` | first-class | `claude` | `claude --session-id {session_uuid}` | `claude --resume {agent_session_id}` | hooks, screen rules |
-| Codex | `codex` | first-class | `codex` | `codex --no-daemon` | `codex --no-daemon resume {agent_session_id}` | hooks, screen rules |
-| opencode | `opencode` | supported | `opencode` | `opencode` | `opencode -s {agent_session_id}` | screen rules |
-| Antigravity CLI | `antigravity` | supported | `agy` | `agy` | `agy --conversation {agent_session_id}` | output |
-| Gemini CLI | `gemini` | best-effort | `gemini` | `gemini --session-id {session_uuid}` | `gemini --resume {agent_session_id}` | screen rules |
-| Amp | `amp` | best-effort | `amp` | `amp` | `amp threads continue {agent_session_id}` | screen rules |
-| Cursor CLI | `cursor` | best-effort | `agent`, `cursor-agent` | `agent` | `agent --resume {agent_session_id}` | output |
-| Aider | `aider` | best-effort | `aider` | `aider` | `aider --restore-chat-history` | output |
-| Goose | `goose` | best-effort | `goose` | `goose session` | `goose session -r` | output |
-| Shell | `shell` | supported | `$SHELL` | `$SHELL -l` | `$SHELL -l` | output |
+| Agent | `--agent` | Support | Program | Starts with | Resumes with | Status from | Inline mode |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Claude Code | `claude` | first-class | `claude` | `claude --session-id {session_uuid}` | `claude --resume {agent_session_id}` | hooks, screen rules | `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` |
+| Codex | `codex` | first-class | `codex` | `codex --no-daemon` | `codex --no-daemon resume {agent_session_id}` | hooks, screen rules | `--no-alt-screen` |
+| opencode | `opencode` | supported | `opencode` | `opencode` | `opencode -s {agent_session_id}` | screen rules | — |
+| Antigravity CLI | `antigravity` | supported | `agy` | `agy` | `agy --conversation {agent_session_id}` | output | — |
+| Gemini CLI | `gemini` | best-effort | `gemini` | `gemini --session-id {session_uuid}` | `gemini --resume {agent_session_id}` | screen rules | — |
+| Amp | `amp` | best-effort | `amp` | `amp` | `amp threads continue {agent_session_id}` | screen rules | — |
+| Cursor CLI | `cursor` | best-effort | `agent`, `cursor-agent` | `agent` | `agent --resume {agent_session_id}` | output | — |
+| Aider | `aider` | best-effort | `aider` | `aider` | `aider --restore-chat-history` | output | — |
+| Goose | `goose` | best-effort | `goose` | `goose session` | `goose session -r` | output | — |
+| Shell | `shell` | supported | `$SHELL` | `$SHELL -l` | `$SHELL -l` | output | — |
+
+**Inline mode** is how an agent draws in the terminal's normal screen, so your terminal keeps its scrollback. `new --inline`, or `agents.inline` in [the configuration](config.md), starts agents that have one this way; see [keep your scrollback](../how-to/scrollback.md).
 
 To add an agent, add a row to the table and, if it has them, screen rules in `internal/agents/rules/`. See [the contributing guide](../../CONTRIBUTING.md).

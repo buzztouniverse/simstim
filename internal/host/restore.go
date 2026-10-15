@@ -90,7 +90,7 @@ func resumeArgv(m *Manifest) ([]string, string) {
 			argv[i] = LoginShell()
 		}
 	}
-	return append(argv, m.Agent.Hooks...), why
+	return append(append(argv, m.Agent.Hooks...), m.Agent.Inline...), why
 }
 
 func withLabel(l map[string]string, k, v string) map[string]string {

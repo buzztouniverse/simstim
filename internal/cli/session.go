@@ -30,7 +30,7 @@ func termSize() (int, int) {
 
 func newCmd() *cobra.Command {
 	var agent, dir, name, base string
-	var detach, worktree bool
+	var detach, worktree, inline bool
 	cmd := &cobra.Command{
 		Use:   "new <host> [-- command…]",
 		Short: "Start a session on a host, and attach to it",
@@ -49,7 +49,7 @@ func newCmd() *cobra.Command {
 				return err
 			}
 			cols, rows := termSize()
-			a := client.TerminalArgs(client.NewArgs{Agent: agent, Cwd: client.RemotePath(dir), Name: name, Worktree: worktree, Base: base}, cols, rows)
+			a := client.TerminalArgs(client.NewArgs{Agent: agent, Cwd: client.RemotePath(dir), Name: name, Worktree: worktree, Base: base, Inline: inline}, cols, rows)
 			if dash := cmd.ArgsLenAtDash(); dash >= 0 {
 				a.Argv = args[dash:]
 			}
@@ -71,6 +71,7 @@ func newCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&name, "name", "n", "", "a name for the session (default: the folder name)")
 	cmd.Flags().BoolVar(&detach, "detach", false, "start it without attaching")
 	cmd.Flags().BoolVarP(&worktree, "worktree", "w", false, "give the session its own git worktree and branch")
+	cmd.Flags().BoolVar(&inline, "inline", false, "start the agent in its inline mode, so your terminal keeps its scrollback (see agents.inline in config.toml)")
 	cmd.Flags().StringVar(&base, "base", "", "the commit or branch the worktree starts from (default: HEAD)")
 	return cmd
 }

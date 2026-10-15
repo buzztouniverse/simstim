@@ -17,6 +17,7 @@ Your preferences. Every key is optional; a missing key takes its default.
 | `attach.detach_key` | string | `"ctrl+\"` | Leaves the session and keeps it running. Press it twice to send it to the agent. |
 | `attach.image_paste_key` | string | `"ctrl+v"` | Uploads the image on the clipboard to the host and pastes its path. Without an image, the key goes to the agent. |
 | `attach.scrollback` | string | `"keep"` | Says what happens to the terminal's scrollback when you attach again: "keep" replays what you missed after what you saw, "clear" starts from a clean screen. |
+| `agents.inline` | boolean | `false` | Starts each agent that has one in its inline mode, where it draws in the terminal's normal screen, so your terminal keeps its scrollback: Claude Code's classic renderer, Codex with --no-alt-screen. Off by default, so each agent starts as its own defaults say. `new --inline` does it for one session. |
 | `keymap` | table | — | Rebinds launcher commands by name ("session: delete"). A value is a key, a list of keys, or "" to unbind. `config keymap` lists the names. |
 
 ## hosts.toml

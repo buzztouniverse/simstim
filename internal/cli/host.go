@@ -293,6 +293,7 @@ func hostDoctorCmd() *cobra.Command {
 			}
 			sort.Strings(agents)
 			fmt.Printf("  agents: %s\n", strings.Join(agents, ", "))
+			printScrollback(ctx, conn)
 			return nil
 		},
 	}

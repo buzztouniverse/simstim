@@ -34,3 +34,22 @@ func TestScannerSignals(t *testing.T) {
 		}
 	}
 }
+
+func TestScreenModelSeesTheAlternateScreen(t *testing.T) {
+	m := newScreenModel(80, 24)
+	if m.altScreen() {
+		t.Fatal("a fresh screen is full screen")
+	}
+	m.feed([]byte("\x1b[?1049h"))
+	if !m.altScreen() {
+		t.Fatal("1049h did not switch to the alternate screen")
+	}
+	m.feed([]byte("\x1b[?1049l"))
+	if m.altScreen() {
+		t.Fatal("1049l did not switch back")
+	}
+	var off *screenModel
+	if off.altScreen() {
+		t.Fatal("a nil model is full screen")
+	}
+}

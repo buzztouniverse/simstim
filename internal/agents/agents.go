@@ -25,7 +25,22 @@ type Agent struct {
 	Hooks []string `json:"hooks,omitempty"`
 	// Support says how much the project promises for this agent.
 	Support Support `json:"support"`
+	// Inline is how to start the agent in its inline mode, where it draws in
+	// the terminal's normal screen, so the terminal keeps its scrollback. An
+	// agent that draws full screen (on the alternate screen) keeps its own
+	// scrollback instead. Empty when the agent has no such mode.
+	Inline Inline `json:"inline,omitzero"`
 }
+
+// Inline is an agent's switch to its inline mode: arguments, environment
+// variables, or both.
+type Inline struct {
+	Args []string          `json:"args,omitempty"`
+	Env  map[string]string `json:"env,omitempty"`
+}
+
+// Has is true when the agent has an inline mode.
+func (i Inline) Has() bool { return len(i.Args) > 0 || len(i.Env) > 0 }
 
 // Support is how much the project promises for an agent.
 type Support string
@@ -63,6 +78,9 @@ var Table = []Agent{
 		IDCapture: "choose",
 		Hooks:     []string{"--settings", claudeHooks},
 		Support:   FirstClass,
+		// https://code.claude.com/docs/en/fullscreen: forces the classic
+		// renderer, which keeps the conversation in the terminal's scrollback.
+		Inline: Inline{Env: map[string]string{"CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN": "1"}},
 	},
 	{
 		Kind: "codex", Title: "Codex", Binaries: []string{"codex"},
@@ -74,6 +92,9 @@ var Table = []Agent{
 		// Codex runs the notify program after each turn, with a JSON argument.
 		Hooks:   []string{"-c", `notify=["{hook_bin}","hook","codex-notify"]`},
 		Support: FirstClass,
+		// codex-rs/tui/src/cli.rs in openai/codex: "Runs the TUI in inline
+		// mode, preserving terminal scrollback history."
+		Inline: Inline{Args: []string{"--no-alt-screen"}},
 	},
 	{
 		Kind: "opencode", Title: "opencode", Binaries: []string{"opencode"},

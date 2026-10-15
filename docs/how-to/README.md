@@ -9,6 +9,7 @@ One task per page.
 | [Get alerts](alerts.md) | Hear from a session that needs you, with the laptop shut: ntfy, webhooks, commands |
 | [Worktrees](worktrees.md) | Give each task its own git worktree and branch |
 | [Ports](ports.md) | Open a web server that runs in a session |
+| [Keep your scrollback](scrollback.md) | Start agents inline, so your terminal keeps the conversation |
 | [Paste images](image-paste.md) | Paste a screenshot into a remote agent |
 | [Restore after a reboot](restore-after-reboot.md) | Bring sessions back after the host restarts |
 | [Change keys](rebind-keys.md) | Rebind the launcher's keys and the detach key |

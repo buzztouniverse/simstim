@@ -26,6 +26,7 @@ func TerminalArgs(a NewArgs, cols, rows int) NewArgs {
 	a.TermProgram = os.Getenv("TERM_PROGRAM")
 	a.TermProgramVersion = os.Getenv("TERM_PROGRAM_VERSION")
 	a.Cols, a.Rows = cols, rows
+	a.Inline = a.Inline || LoadSettings().Agents.Inline
 	return a
 }
 

@@ -59,6 +59,15 @@ func (m *screenModel) resize(cols, rows int) {
 	m.dirty = true
 }
 
+// altScreen is true while the program draws on the alternate screen.
+func (m *screenModel) altScreen() bool {
+	if m == nil || m.off {
+		return false
+	}
+	defer func() { _ = recover() }()
+	return m.e.IsAltScreen()
+}
+
 // screen returns the visible text, one string per row.
 func (m *screenModel) screen() (s agents.Screen) {
 	if m == nil || m.off {

@@ -352,6 +352,10 @@ func (h *Holder) tick() {
 			if h.scr != nil && h.scr.dirty {
 				h.scr.dirty = false
 				h.ruleState, h.ruleID, _ = agents.Detect(h.m.Agent.Kind, h.scr.screen())
+				if full := h.scr.altScreen(); full != h.m.Status.FullScreen {
+					h.m.Status.FullScreen = full
+					h.dirty = true
+				}
 			}
 			state := StateIdle
 			src := "quiet"
@@ -374,7 +378,7 @@ func (h *Holder) tick() {
 			if state != h.m.Status.State {
 				prev := h.m.Status.State
 				oom, reason := h.m.Status.OOM, h.m.Status.Reason
-				h.m.Status = Status{State: state, Since: time.Now().UTC(), Source: src}
+				h.m.Status = Status{State: state, Since: time.Now().UTC(), Source: src, FullScreen: h.m.Status.FullScreen}
 				if oom {
 					h.m.Status.OOM, h.m.Status.Reason = true, reason
 				} else if state == StateNeedsInput && h.notifyMsg != "" {

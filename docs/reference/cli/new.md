@@ -25,6 +25,7 @@ simstim new <host> [-- command…] [flags]
       --detach         start it without attaching
   -d, --dir string     the folder on the host (default "~")
   -h, --help           help for new
+      --inline         start the agent in its inline mode, so your terminal keeps its scrollback (see agents.inline in config.toml)
   -n, --name string    a name for the session (default: the folder name)
   -w, --worktree       give the session its own git worktree and branch
 ```

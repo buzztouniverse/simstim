@@ -31,6 +31,8 @@ type NewArgs struct {
 	// Worktree gives the session its own git worktree and branch, from Base (default HEAD).
 	Worktree bool   `json:"worktree,omitempty"`
 	Base     string `json:"base,omitempty"`
+	// Inline starts the agent in its inline mode, when it has one.
+	Inline bool `json:"inline,omitempty"`
 }
 
 // SessionInfo is one row of the session list.
@@ -56,6 +58,9 @@ type SessionInfo struct {
 	HostVersion    string    `json:"host_version"`
 	Cols           int       `json:"cols"`
 	Rows           int       `json:"rows"`
+	// FullScreen is true while the program draws on the alternate screen,
+	// so the terminal keeps no scrollback of it.
+	FullScreen bool `json:"full_screen,omitempty"`
 }
 
 // Check is one line of the host doctor.
