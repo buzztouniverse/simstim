@@ -1,3 +1,7 @@
+//go:build !windows
+
+// These tests run the real host side, which runs on Linux and macOS only.
+
 package client_test
 
 import (

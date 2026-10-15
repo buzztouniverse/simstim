@@ -20,7 +20,9 @@ exclude = [
   "^https?://localhost",
   "^https?://127\\.0\\.0\\.1",
   "example\\.(com|org|net)",
-  # The OpenSSH mailing-list archive often refuses connections from CI.
+  # These sites refuse connections from CI runners, though the pages are up.
   "^https?://lists\\.mindrot\\.org",
+  "^https?://hackerlinks\\.cc",
+  "^https?://pi\\.dev",
 ]
 exclude_path = ["docs/research/private", "private", "build"]
