@@ -54,7 +54,11 @@ func Restore(all bool) []RestoreResult {
 			m.RunHook = m.ResumeHook
 			m.Run.RespawnCount++
 			m.Run.BootID = boot
-			m.Labels = withLabel(m.Labels, "restored_at", time.Now().UTC().Format(time.RFC3339))
+			// The old processes are gone; the new holder records its own.
+			m.Run.HolderPID, m.Run.AgentPID, m.Run.Unit = 0, 0, ""
+			// To the nanosecond: wasRestored compares it with the last start, which
+			// can be in the same second.
+			m.Labels = withLabel(m.Labels, "restored_at", time.Now().UTC().Format(time.RFC3339Nano))
 			m.Status = Status{State: StateStarting, Since: time.Now().UTC(), Reason: "restored after a host restart: " + why}
 			if err := m.Save(); err != nil {
 				r.Action, r.Why = "failed", err.Error()
@@ -62,6 +66,12 @@ func Restore(all bool) []RestoreResult {
 			}
 			if err := launchHolder(m); err != nil {
 				r.Action, r.Why = "failed", err.Error()
+				break
+			}
+			// The holder answers on its socket before it starts the agent, as
+			// New knows too: wait for the start before saying it worked.
+			if mm := waitStarted(id, 5*time.Second); mm != nil && mm.Status.State == StateErrored && mm.Run.AgentPID == 0 {
+				r.Action, r.Why = "failed", mm.Status.Reason
 				break
 			}
 			r.Action, r.Why = "restored", why

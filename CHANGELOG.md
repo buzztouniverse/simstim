@@ -129,6 +129,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- A session's out-of-memory count came from whatever cgroup its holder ran in; without a systemd user manager that could be another program's service, so its kills counted for the session. Only the session's own unit counts now.
+- `new --worktree` with an agent that is not installed left the worktree and its branch behind; the agent is now found before anything is made.
+- `host restore` could say "restored" for an agent that then failed to start, and a session restored within a second of its last start waited 30 s for secrets that nobody can send after a restart. Restore now waits for the start, clears the old process IDs, and stamps the restore to the nanosecond.
 - `new` with a program that cannot run, such as a file that is not a program, said the session had started when the host was busy, or when the session had secrets. It now always fails, and says why.
 - On a host without a systemd user manager, a session's holder took any systemd service it ran in, such as a CI runner's or a sandbox's own, for the session's unit, so `ports` listed the ports of every program in that service. A holder now takes only the unit made for its session; elsewhere it counts the agent's own processes.
 - After a detach on Linux, the next attach in the same terminal could lose the keys typed into it: the old attach's reader of the terminal was still running, and it was closed under that reader. Each attach now stops its reader before it returns.
