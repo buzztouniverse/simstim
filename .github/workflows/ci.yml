@@ -182,6 +182,33 @@ jobs:
           install-only: true
       - run: scripts/test-install.sh
 
+  public-check:
+    # Everything that must hold before the repository goes public: no
+    # secrets or private details in the tree or the history, REUSE, the docs,
+    # the workflows and the Scorecard checks this repository controls.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # Scorecard reads the workflow runs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: false
+      - run: scripts/setup.sh --only gitleaks,scorecard,hugo,typos,vale,lychee
+      - name: Public-readiness checks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/public-check.sh
+
   secrets:
     runs-on: ubuntu-latest
     permissions:

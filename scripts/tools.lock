@@ -33,4 +33,8 @@ lychee 0.24.2 darwin-arm64 c9d3740ea2d891854d37116c9fba840f37b6e7c89d330e7db84ac
 lychee 0.24.2 darwin-amd64 887503a9cff667d322b8d0892b40bf49976eb9507af8483220a3706cdad55978 https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-apple-darwin.tar.gz
 lychee 0.24.2 linux-amd64 73657a111819a30c47c08352896796f23d64e4eb2b3ed39b6d32149241566fc5 https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-musl.tar.gz
 lychee 0.24.2 linux-arm64 5d0b0e3aeab240f41920c633a6eaf97599be6eedda034b36e858ede7dba5e535 https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-aarch64-unknown-linux-musl.tar.gz
+scorecard 5.5.0 darwin-arm64 bac6371a4f810d6bdd0b65d63c3311906bdfe3ba0d76a5ea743ce24ced170fcf https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_darwin_arm64.tar.gz
+scorecard 5.5.0 darwin-amd64 979487ca20e726f6a4d2bd63a0a4c544184f589724b3d12d2ba8d0ea80889063 https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_darwin_amd64.tar.gz
+scorecard 5.5.0 linux-amd64 83b90a05c1540ef1390db1cd5711e5fd04be9c1d8537fb84d39d02092d6a8dff https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_linux_amd64.tar.gz
+scorecard 5.5.0 linux-arm64 3ce59d20c1d53e540c4a14e0da1e0d96b3b294e8ddc96a3c5a7b8a637b32991e https://github.com/ossf/scorecard/releases/download/v5.5.0/scorecard_5.5.0_linux_arm64.tar.gz
 hugo 0.167.0 go - github.com/gohugoio/hugo@v0.167.0

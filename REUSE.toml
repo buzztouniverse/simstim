@@ -1,0 +1,23 @@
+# Licence and copyright of every file, in the REUSE format
+# (https://reuse.software). `just public-check` runs `reuse lint` on it.
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Lakshya Singh Panwar and contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Adapted from zmx's serializeTerminalState; see the file's header and NOTICE.
+[[annotations]]
+path = "vt/src/snapshot.zig"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Eric Bower"
+SPDX-License-Identifier = "MIT"
+
+# Screen-rule patterns adapted from Herdr's agent detection manifests; see NOTICE.
+[[annotations]]
+path = "internal/agents/rules/*.toml"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "The Herdr authors"
+SPDX-License-Identifier = "Apache-2.0"

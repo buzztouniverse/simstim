@@ -32,8 +32,48 @@ if [ -f private/deny.txt ]; then
 fi
 
 # Matches that are fine: generic users, documentation names and addresses,
-# and the bots' addresses.
-allow='/Users/(me|you|runner|shared)([/" ]|$)|/home/(me|you|u|dev|user|runner|linuxbrew|admin|ubuntu|debian|vscode|node)([/" .:;)\]|$)|example-tailnet\.ts\.net|@([A-Za-z0-9-]+\.)*(example|example\.(com|org|net)|openssh\.com|users\.noreply\.github\.com)([^A-Za-z0-9.-]|$)|git@github\.com|noreply@|user@UID|@v[0-9]|@sha256|@latest'
+# the bots' addresses, and another project's public contact addresses that an
+# old version of a research note quoted.
+allow='/Users/(me|you|runner|shared)([/" ]|$)|/home/(me|you|u|dev|user|runner|linuxbrew|admin|ubuntu|debian|vscode|node)([/" .:;)\<&]|$)|example-tailnet\.ts\.net|@([A-Za-z0-9-]+\.)*(example|example\.(com|org|net)|openssh\.com|users\.noreply\.github\.com)([^A-Za-z0-9.-]|$)|git@github\.com|noreply@|user@UID|@v[0-9]|@sha256|@latest|[a-z]+@herdr\.dev'
+
+# --history checks every version of every file in every commit, plus the
+# commit messages: run it before the repository goes public.
+if [ "${1:-}" = "--history" ]; then
+    fail=0
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    git rev-list --all --objects | while read -r sha path; do
+        [ -n "$path" ] || continue
+        case "$path" in go.sum | vt/build.zig.zon | scripts/check-private.sh) continue ;; esac
+        [ "$(git cat-file -t "$sha")" = blob ] || continue
+        git cat-file -p "$sha" | grep -I -q . 2>/dev/null || continue
+        printf '%s %s\n' "$sha" "$path"
+    done | sort -u -k1,1 >"$tmp/blobs"
+    git log --all --format='%B' >"$tmp/messages"
+    while read -r sha path; do
+        text=$(git cat-file -p "$sha" | sed -E "s#${allow}##g")
+        for p in "${patterns[@]}"; do
+            if printf '%s\n' "$text" | grep -q -E -- "$p"; then
+                echo "history: $path (blob ${sha:0:7}): $p"
+                fail=1
+            fi
+        done
+    done <"$tmp/blobs"
+    for p in "${patterns[@]}"; do
+        if sed -E "s#${allow}##g" "$tmp/messages" | grep -q -E -- "$p"; then
+            echo "history: a commit message: $p"
+            fail=1
+        fi
+    done
+    if [ "$fail" -ne 0 ]; then
+        echo
+        echo "Error: the history holds a private detail."
+        echo "Try: docs/contributing/going-public.md says how to plan a history rewrite; it needs the owner's yes."
+        exit 1
+    fi
+    echo "check-private: ok, history clean ($(wc -l <"$tmp/blobs" | tr -d ' ') blobs and $(git rev-list --all | wc -l | tr -d ' ') commit messages)"
+    exit 0
+fi
 
 fail=0
 while IFS= read -r file; do

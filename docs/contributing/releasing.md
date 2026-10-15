@@ -49,3 +49,7 @@ The builds are reproducible: `just repro` builds every binary twice from empty c
 ## Checking a release
 
 Anyone can check a release three ways: the SSH signature above, the cosign bundle (`cosign verify-blob --bundle checksums.txt.sigstore.json --certificate-identity-regexp 'https://github.com/.*/.github/workflows/release.yml@refs/tags/v.*' --certificate-oidc-issuer https://token.actions.githubusercontent.com checksums.txt`), or the GitHub attestation (`gh attestation verify <archive> --repo <owner>/<repo>`).
+
+## Why one action is pinned by tag
+
+Every action in the workflows is pinned to a full commit SHA, except the SLSA generator (`slsa-framework/slsa-github-generator`), which the release job calls by tag. The generator checks how it was called, and a provenance file made from a SHA reference does not verify. OpenSSF Scorecard counts this one reference against Pinned-Dependencies (9 of 10), which `just public-check` accepts.

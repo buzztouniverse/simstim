@@ -117,6 +117,10 @@ repro:
 test-install:
     scripts/test-install.sh
 
+# Everything that must hold before the repository goes public (docs/contributing/going-public.md).
+public-check:
+    scripts/public-check.sh
+
 # Score the pushed repository with OpenSSF Scorecard (needs the scorecard CLI and `gh auth login`).
 scorecard:
     GITHUB_AUTH_TOKEN=$(gh auth token) scorecard --repo={{module}} --format=default
