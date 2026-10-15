@@ -222,7 +222,7 @@ func (h *Holder) start() error {
 
 	h.mu.Lock()
 	now := time.Now().UTC()
-	if u := selfUnit(); u != "" {
+	if u := ownUnit(h.id); u != "" {
 		m.Run.Unit = u
 	}
 	m.Run.HolderPID = os.Getpid()

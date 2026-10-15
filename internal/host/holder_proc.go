@@ -75,15 +75,19 @@ func (h *Holder) save(m *Manifest, last bool) error {
 	return m.Save()
 }
 
-// selfUnit returns the systemd unit this process runs in, if any.
-func selfUnit() string {
-	b, err := os.ReadFile("/proc/self/cgroup")
+// ownUnit returns the systemd unit this holder runs in, when it is the unit
+// that launchHolder started for session id with systemd-run, or "". Without
+// a systemd user manager, a holder stays in the cgroup of whatever started
+// it, such as a CI runner's service, and the processes there are not the
+// session's.
+func ownUnit(id string) string {
+	b, err := os.ReadFile(filepath.Join(procRoot, "self", "cgroup"))
 	if err != nil {
 		return ""
 	}
 	for _, line := range strings.Split(string(b), "\n") {
 		if rest, ok := strings.CutPrefix(line, "0::"); ok {
-			if leaf := filepath.Base(rest); strings.HasSuffix(leaf, ".service") {
+			if leaf := filepath.Base(rest); leaf == UnitName(id) {
 				return leaf
 			}
 		}
