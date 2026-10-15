@@ -110,7 +110,7 @@ func RunHolder(id string) error {
 	}
 	lf, err := os.OpenFile(paths.HolderLog(id), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
 	if err != nil {
-		return err
+		return fmt.Errorf("open the holder log: %w", err)
 	}
 	defer lf.Close()
 	h := &Holder{
@@ -168,11 +168,11 @@ func (h *Holder) listen() error {
 	_ = os.Remove(sock)
 	ln, err := net.Listen("unix", sock)
 	if err != nil {
-		return err
+		return fmt.Errorf("listen on the session's socket: %w", err)
 	}
 	if err := os.Chmod(sock, 0o600); err != nil {
 		ln.Close()
-		return err
+		return fmt.Errorf("make the session's socket private: %w", err)
 	}
 	h.ln = ln
 	return nil
@@ -206,7 +206,7 @@ func (h *Holder) start() error {
 	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Cols: uint16(cols), Rows: uint16(rows)})
 	cmd.Env, h.secretEnv = nil, nil // the agent has its copy; the holder keeps none
 	if err != nil {
-		return err
+		return fmt.Errorf("start %s in a terminal: %w", argv[0], err)
 	}
 	h.ptmx = ptmx
 	h.fd = int(ptmx.Fd())

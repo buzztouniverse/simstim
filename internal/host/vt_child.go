@@ -96,11 +96,11 @@ func (v *VT) spawn(cols, rows int) (*vtChild, error) {
 	cmd := exec.Command(v.opt.Path, args...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect to the shadow terminal's input: %w", err)
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect to the shadow terminal's output: %w", err)
 	}
 	if v.opt.Logf != nil {
 		cmd.Stderr = &vtLogWriter{logf: v.opt.Logf}

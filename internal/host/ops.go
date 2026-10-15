@@ -265,7 +265,7 @@ func List() ([]SessionInfo, error) {
 		if errors.Is(err, os.ErrNotExist) {
 			return []SessionInfo{}, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("list the sessions: %w", err)
 	}
 	out := make([]SessionInfo, 0, len(entries))
 	var mu sync.Mutex
@@ -297,7 +297,7 @@ func List() ([]SessionInfo, error) {
 func HolderRequest(id, op string, args any, timeout time.Duration) (json.RawMessage, error) {
 	conn, err := net.DialTimeout("unix", paths.Socket(id), timeout)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reach the holder of session %s: %w", id, err)
 	}
 	defer conn.Close()
 	_ = conn.SetDeadline(time.Now().Add(timeout))
@@ -326,7 +326,7 @@ func HolderRequest(id, op string, args any, timeout time.Duration) (json.RawMess
 		}
 		var resp proto.Response
 		if err := json.Unmarshal(f.Payload, &resp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("read the holder's reply: %w", err)
 		}
 		if !resp.OK {
 			if resp.Error != nil {
@@ -373,7 +373,7 @@ func deleteSession(id string, res *DeleteResult) error {
 		res.Worktree = removeWorktree(m.Git)
 	}
 	if err := os.RemoveAll(paths.SessionDir(id)); err != nil {
-		return err
+		return fmt.Errorf("remove the files of session %s: %w", id, err)
 	}
 	res.Deleted = true
 	return nil

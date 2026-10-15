@@ -72,7 +72,7 @@ func makeWorktree(cwd, name, id, base string) (*GitInfo, error) {
 	branch := brand.Name + "/" + slug + "-" + id
 	wt := filepath.Join(WorktreesDir(), filepath.Base(root), slug+"-"+id)
 	if err := os.MkdirAll(filepath.Dir(wt), 0o755); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("make the folder for the worktree: %w", err)
 	}
 	if _, err := git(root, "worktree", "add", "-b", branch, wt, sha); err != nil {
 		return nil, UserError("worktree", err.Error(), "Check the repository's state with git status.")
@@ -109,26 +109,32 @@ func copyWorktreeInclude(root, wt string) {
 
 func copyFile(src, dst string) error {
 	st, err := os.Stat(src)
-	if err != nil || !st.Mode().IsRegular() {
-		return err
+	if err != nil {
+		return fmt.Errorf("copy %s: %w", src, err)
+	}
+	if !st.Mode().IsRegular() {
+		return nil
 	}
 	in, err := os.Open(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("copy %s: %w", src, err)
 	}
 	defer in.Close()
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
-		return err
+		return fmt.Errorf("copy %s: %w", src, err)
 	}
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, st.Mode().Perm())
 	if err != nil {
-		return err
+		return fmt.Errorf("copy %s: %w", src, err)
 	}
 	if _, err := io.Copy(out, in); err != nil {
 		out.Close()
-		return err
+		return fmt.Errorf("copy %s: %w", src, err)
 	}
-	return out.Close()
+	if err := out.Close(); err != nil {
+		return fmt.Errorf("copy %s: %w", src, err)
+	}
+	return nil
 }
 
 // removeWorktree removes a session's worktree and branch only when that loses

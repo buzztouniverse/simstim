@@ -51,5 +51,5 @@ func (w *watched) Read(p []byte) (int, error) {
 	if n > 0 {
 		w.last.Store(time.Now().UnixNano())
 	}
-	return n, err
+	return n, err //nolint:wrapcheck // a Reader returns io.EOF itself: callers compare it with ==
 }

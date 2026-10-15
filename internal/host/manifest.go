@@ -2,6 +2,7 @@ package host
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -131,11 +132,11 @@ type Restart struct {
 func (m *Manifest) UnmarshalJSON(b []byte) error {
 	type plain Manifest
 	if err := json.Unmarshal(b, (*plain)(m)); err != nil {
-		return err
+		return fmt.Errorf("decode the manifest: %w", err)
 	}
 	var all map[string]json.RawMessage
 	if err := json.Unmarshal(b, &all); err != nil {
-		return err
+		return fmt.Errorf("decode the manifest: %w", err)
 	}
 	known := map[string]bool{"schema": true, "id": true, "name": true, "created_at": true, "updated_at": true,
 		"last_activity_at": true, "last_attached_at": true, "host_version": true, "holder_binary": true,
@@ -155,28 +156,35 @@ func (m *Manifest) UnmarshalJSON(b []byte) error {
 func (m Manifest) MarshalJSON() ([]byte, error) {
 	type plain Manifest
 	b, err := json.Marshal(plain(m))
-	if err != nil || len(m.extra) == 0 {
-		return b, err
+	if err != nil {
+		return nil, fmt.Errorf("encode the manifest: %w", err)
+	}
+	if len(m.extra) == 0 {
+		return b, nil
 	}
 	var all map[string]json.RawMessage
 	if err := json.Unmarshal(b, &all); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("encode the manifest: %w", err)
 	}
 	for k, v := range m.extra {
 		all[k] = v
 	}
-	return json.Marshal(all)
+	out, err := json.Marshal(all)
+	if err != nil {
+		return nil, fmt.Errorf("encode the manifest: %w", err)
+	}
+	return out, nil
 }
 
 // LoadManifest reads one session's manifest.
 func LoadManifest(id string) (*Manifest, error) {
 	b, err := os.ReadFile(paths.Manifest(id))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read the manifest of session %s: %w", id, err)
 	}
 	var m Manifest
 	if err := json.Unmarshal(b, &m); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read the manifest of session %s: %w", id, err)
 	}
 	return &m, nil
 }
@@ -186,7 +194,7 @@ func (m *Manifest) Save() error {
 	m.UpdatedAt = time.Now().UTC()
 	b, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("save the manifest of session %s: %w", m.ID, err)
 	}
 	dir := paths.SessionDir(m.ID)
 	if err := paths.EnsurePrivateDir(dir); err != nil {
@@ -194,21 +202,21 @@ func (m *Manifest) Save() error {
 	}
 	tmp, err := os.CreateTemp(dir, ".manifest-*")
 	if err != nil {
-		return err
+		return fmt.Errorf("save the manifest of session %s: %w", m.ID, err)
 	}
 	if _, err := tmp.Write(append(b, '\n')); err != nil {
 		tmp.Close()
 		os.Remove(tmp.Name())
-		return err
+		return fmt.Errorf("save the manifest of session %s: %w", m.ID, err)
 	}
 	if err := tmp.Sync(); err != nil {
 		tmp.Close()
 		os.Remove(tmp.Name())
-		return err
+		return fmt.Errorf("save the manifest of session %s: %w", m.ID, err)
 	}
 	tmp.Close()
 	if err := os.Rename(tmp.Name(), filepath.Join(dir, "manifest.json")); err != nil {
-		return err
+		return fmt.Errorf("save the manifest of session %s: %w", m.ID, err)
 	}
 	// Make the rename itself durable, so a shutdown right after cannot lose it.
 	if d, err := os.Open(dir); err == nil {

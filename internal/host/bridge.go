@@ -60,7 +60,7 @@ func RunBridge(in io.Reader, out io.Writer) error {
 	}
 	var hello proto.Hello
 	if err := json.Unmarshal(f.Payload, &hello); err != nil {
-		return err
+		return fmt.Errorf("read the client's hello: %w", err)
 	}
 	if err := hello.Check(version.Protocol); err != nil {
 		_ = w.WriteJSON(proto.TError, proto.Error{Code: "protocol", Message: err.Error(), Hint: "Update the client."})

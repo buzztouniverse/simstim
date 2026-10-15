@@ -96,14 +96,14 @@ func launchHolder(m *Manifest) error {
 		// No systemd user manager: start the holder in its own session, detached.
 		devnull, err := os.OpenFile(os.DevNull, os.O_RDWR, 0)
 		if err != nil {
-			return err
+			return fmt.Errorf("start the holder: %w", err)
 		}
 		defer devnull.Close()
 		cmd := exec.Command(exe, "holder", m.ID)
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = devnull, devnull, devnull
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 		if err := cmd.Start(); err != nil {
-			return err
+			return fmt.Errorf("start the holder: %w", err)
 		}
 		_ = cmd.Process.Release()
 	}

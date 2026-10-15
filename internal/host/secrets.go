@@ -117,7 +117,7 @@ func readSecrets(conn net.Conn, want []string, deadline time.Time) ([]string, er
 	}
 	var req proto.Request
 	if err := json.Unmarshal(f.Payload, &req); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read the request: %w", err)
 	}
 	fail := func(code, msg string) error {
 		_ = w.WriteJSON(proto.TResponse, proto.Response{ID: req.ID, Error: &proto.Error{Code: code, Message: msg, Hint: "Try again in a moment."}})

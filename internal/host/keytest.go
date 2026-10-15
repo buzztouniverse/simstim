@@ -17,7 +17,7 @@ func KeyTest() error {
 	}
 	old, err := term.MakeRaw(fd)
 	if err != nil {
-		return err
+		return fmt.Errorf("put the terminal in raw mode: %w", err)
 	}
 	defer func() { _ = term.Restore(fd, old) }()
 	fmt.Print("\x1b[>31u")

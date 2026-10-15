@@ -98,11 +98,11 @@ func IdleSetup(after string) (string, error) {
 	}
 	service, timer := IdleUnits(currentHelper(), d)
 	if err := os.MkdirAll(userUnitDir(), 0o755); err != nil {
-		return "", err
+		return "", fmt.Errorf("make the folder for the idle units: %w", err)
 	}
 	for name, text := range map[string]string{idleUnit("service"): service, idleUnit("timer"): timer} {
 		if err := os.WriteFile(filepath.Join(userUnitDir(), name), []byte(text), 0o644); err != nil {
-			return "", err
+			return "", fmt.Errorf("write the idle unit %s: %w", name, err)
 		}
 	}
 	_ = os.Remove(idleStatePath()) // start counting now
@@ -229,7 +229,7 @@ func RunIdle(args []string) (string, error) {
 		if len(args) == 3 && args[1] == "--after" {
 			d, err := time.ParseDuration(args[2])
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("read the idle time: %w", err)
 			}
 			after = d
 		}
