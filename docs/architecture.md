@@ -52,12 +52,26 @@ Installed by the client into `~/.local/share/simstim/bin/<version>/`, with a `cu
 | `simstim-vt` (internal) | The shadow terminal. A child of the holder, restarted on a crash. | The session |
 | `attach <id>` | Raw fallback: bridges a plain `ssh -t` to one holder, for any SSH client | One attach |
 | `ls --json`, `watch --json` | Reads manifests and probes holders in parallel. `watch` streams status events as NDJSON. | Seconds, or one client |
-| `hook <event>` | Called by agent hooks. Forwards the event to the holder named in `SIMSTIM_SESSION`. | Milliseconds |
+| `hook <event>` | Called by agent hooks. Forwards the event to the session's holder (its socket is in the agent's environment). | Milliseconds |
+| `keytest` | Prints every key it receives; run inside a session, it proves keys cross the whole path unchanged | One test |
 | `kill`, `rm` | Stops the session's whole cgroup. Removes the manifest, and in v2 the worktree when it is safe. | Seconds |
 | `doctor` | Checks linger, cgroups, terminfo, agents on `PATH` and the disk, and prints fixes | Seconds |
-| `restore`, `gc` (v2) | Respawns sessions after a reboot. Cleans old binaries, dead manifests and orphan worktrees. | Run at boot, then exit |
+| `restore [--all]` | Respawns sessions after a reboot with each agent's resume command. A user unit, `<name>-restore.service`, runs it at boot. | Run at boot, then exit |
 
-### 2.3 The agent table
+### 2.3 Session status
+
+The holder decides each session's state from four layers, strongest first:
+
+| Layer | Source | Examples |
+| --- | --- | --- |
+| L0 | The process | Exit code, signal, out-of-memory kill (from the cgroup's `memory.events`) |
+| L3 | Screen rules, kept as data in `internal/agents/rules/*.toml` and read from an x/vt copy of the screen | Claude Code's "Do you want to proceed?", an interrupt hint, a spinner title |
+| L1 | The agent's own hooks, added per launch from the agent table | Claude Code's `SessionStart`, `UserPromptSubmit`, `Stop`, `Notification`; Codex's `notify` |
+| L2 | Terminal signals in the output | BEL, OSC 9/777/99 notifications, OSC 9;4 progress, recent output |
+
+Each session row says which layer and rule set its state.
+
+### 2.4 The agent table
 
 All agent knowledge is data, shipped with the host helper and overridable by the user.
 
@@ -69,7 +83,8 @@ All agent knowledge is data, shipped with the host helper and overridable by the
 | `id_capture` | `choose` (we pick the ID), `create`, `hook`, `scan` or `none` |
 | `hooks` | `SessionStart` calls `simstim-host hook session-start`, because the ID changes on `/clear` |
 | `quirks` | For Codex: add `--no-daemon`, so its work stays inside the session |
-| `status_rules` (v1.x) | Screen rules for L3, as in Herdr's manifests |
+| `hooks` | Extra arguments that make the agent report status and its session ID |
+| screen rules | A TOML file per agent in `internal/agents/rules` |
 
 The full resume table for eight agents is in [the host runtime note](research/host-runtime.md#71-resume-commands).
 
@@ -180,6 +195,13 @@ Triggers: the detach key, closing the tab, `simstim kill` from elsewhere, or SIG
    3. count retries, with backoff.
 3. The old screen snapshot is printed above the resumed agent. It is only used if the same pinned vt build wrote it.
 4. The session is marked `restored`. A turn that was running when the host went down is not resumed.
+
+### 3.10 Worktrees, hooks, ports and providers
+
+- **Worktree:** `new --worktree` runs `git worktree add -b <name>/<slug>-<id>` from the base (default `HEAD`) into `~/.local/share/<name>/worktrees/<repo>/`, locks it, and copies the files listed in `.worktreeinclude`. Delete removes it and its branch only when it has no changes and no new commits; otherwise it keeps it and says so.
+- **Setup and resume hooks:** an executable `.<name>/setup` in the folder (or `~/.config/<name>/hooks/setup` on the host) runs in the session's terminal before the agent; `resume` runs before a respawn. A failing hook is reported, not fatal.
+- **Ports:** the holder lists TCP listening sockets owned by the session's processes (its cgroup, or the agent's descendants). `forward` runs `ssh -N -L 127.0.0.1:…` for them.
+- **Providers:** a host may name a script that starts, stops and reports on it (JSON on stdin). With `--wake`, a host that does not answer is started first. See `examples/providers`.
 
 ## 4. Protocol
 

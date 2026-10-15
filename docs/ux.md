@@ -245,6 +245,8 @@ simstim's own screens use this keymap. Everything can be rebound in `config.toml
 | `space` | Sessions | Show or hide the preview |
 | `/` | Lists | Filter as you type |
 | `alt+e` | Sessions | Show or hide exited sessions |
+| `i` | Hosts | Host details |
+| `ctrl+enter`, `alt+enter` or `ctrl+j` | New-session dialog | Start detached |
 | `ctrl+o` | Anywhere | Command palette |
 | `?` | Anywhere | Help |
 | `esc` | Dialogs | Back or cancel |
@@ -340,17 +342,20 @@ The TUI is the home, and every action also has a command, for scripts and termin
 | Command | Does |
 | --- | --- |
 | `simstim` | Opens the home screen |
-| `simstim host add [target]`, `ls`, `test`, `details`, `rm`, `doctor` | Host management |
-| `simstim new <host> [--agent claude] [--dir ~/src/app] [--name x] [--detach]` | Starts a session, and attaches unless `--detach` |
-| `simstim ls [--host h] [--json]` | Lists sessions |
-| `simstim attach <host>/<session>` | Attaches directly. Good for a Ghostty keybinding. |
-| `simstim flip` | A quick switcher: the session list on its own, then attach |
-| `simstim kill <host>/<session>`, `rename` | Stops a session, or renames it |
-| `simstim watch [--stream-jsonl]` | A live status stream, for scripts and status bars |
-| `simstim doctor [keys]` | Local and host checks. `keys` prints each key event as JSON lines, here and through the pass-through. |
-| `simstim update`, `version`, `completion zsh\|bash\|fish` | Housekeeping |
+| `simstim host add <name> [target] [--ssh-config f] [--provider-script s --wake] [--yes]` | Connects a host: probe, consent, install, setup, doctor |
+| `simstim host ls`, `test`, `doctor`, `rm` | Host management |
+| `simstim host restore <name> [--all]` | Starts again the sessions a host restart (or, with `--all`, a crash) stopped |
+| `simstim host start\|stop\|status <name>` | Runs the host's provider script |
+| `simstim new <host> [--agent claude] [--dir ~/src/app] [--name x] [--worktree [--base ref]] [--detach] [-- cmd…]` | Starts a session, and attaches unless `--detach` |
+| `simstim ls [--host h] [--json]` | Lists sessions, with their state and where it came from |
+| `simstim attach <host>/<session>` (also `flip`) | Attaches directly. Good for a Ghostty keybinding. |
+| `simstim send <host>/<session> <text> [--no-enter]` | Types text into a session without attaching |
+| `simstim rename <host>/<session> <name>`, `kill <host>/<session>` | Renames; stops and removes (keeping a worktree that has work) |
+| `simstim ports <host>/<session>`, `forward <host>/<session> [port…]` | Lists the ports a session listens on; forwards them to localhost |
+| `simstim doctor keys` | Prints each key event as the terminal sends it, and marks the client's own keys |
+| `simstim version`, `completion zsh\|bash\|fish` | Housekeeping |
 
-**Exit codes:** 0 for success, 1 for a user error, 2 for a host or network error, 3 for a session that is not found.
+**Exit codes:** 0 for success, 1 for a user error, 2 for a host or network error, 3 for a session or host that is not found.
 
 ## 7. Config
 
