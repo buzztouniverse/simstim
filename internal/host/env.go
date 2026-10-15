@@ -106,5 +106,5 @@ func HasTerminfo(term string) bool {
 	if term == "" {
 		return false
 	}
-	return exec.Command("infocmp", term).Run() == nil
+	return exec.CommandContext(context.Background(), "infocmp", term).Run() == nil
 }

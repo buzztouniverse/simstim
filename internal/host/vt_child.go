@@ -3,6 +3,7 @@ package host
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -93,7 +94,7 @@ func (v *VT) spawn(cols, rows int) (*vtChild, error) {
 	if v.opt.Scrollback > 0 {
 		args = append(args, "--scrollback", strconv.Itoa(v.opt.Scrollback))
 	}
-	cmd := exec.Command(v.opt.Path, args...)
+	cmd := exec.CommandContext(context.Background(), v.opt.Path, args...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, fmt.Errorf("connect to the shadow terminal's input: %w", err)

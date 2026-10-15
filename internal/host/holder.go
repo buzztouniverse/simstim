@@ -1,6 +1,7 @@
 package host
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -166,7 +167,8 @@ func (h *Holder) listen() error {
 		return err
 	}
 	_ = os.Remove(sock)
-	ln, err := net.Listen("unix", sock)
+	var lc net.ListenConfig
+	ln, err := lc.Listen(context.Background(), "unix", sock)
 	if err != nil {
 		return fmt.Errorf("listen on the session's socket: %w", err)
 	}
@@ -191,7 +193,7 @@ func (h *Holder) start() error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(bin, argv[1:]...)
+	cmd := exec.CommandContext(context.Background(), bin, argv[1:]...)
 	cmd.Args[0] = argv[0]
 	// Secrets go into the agent's environment and nowhere else.
 	cmd.Env = append(append([]string(nil), m.Env...), h.secretEnv...)

@@ -1,6 +1,7 @@
 package host
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -83,10 +84,10 @@ WantedBy=timers.target
 // "never".
 func IdleSetup(after string) (string, error) {
 	if after == "never" {
-		_ = exec.Command("systemctl", "--user", "disable", "--now", idleUnit("timer")).Run()
+		_ = exec.CommandContext(context.Background(), "systemctl", "--user", "disable", "--now", idleUnit("timer")).Run()
 		_ = os.Remove(filepath.Join(userUnitDir(), idleUnit("timer")))
 		_ = os.Remove(filepath.Join(userUnitDir(), idleUnit("service")))
-		_ = exec.Command("systemctl", "--user", "daemon-reload").Run()
+		_ = exec.CommandContext(context.Background(), "systemctl", "--user", "daemon-reload").Run()
 		return "idle stop is off", nil
 	}
 	d, err := time.ParseDuration(after)
@@ -106,10 +107,10 @@ func IdleSetup(after string) (string, error) {
 		}
 	}
 	_ = os.Remove(idleStatePath()) // start counting now
-	if out, err := exec.Command("systemctl", "--user", "daemon-reload").CombinedOutput(); err != nil {
+	if out, err := exec.CommandContext(context.Background(), "systemctl", "--user", "daemon-reload").CombinedOutput(); err != nil {
 		return "", fmt.Errorf("systemctl daemon-reload: %w: %s", err, strings.TrimSpace(string(out)))
 	}
-	if out, err := exec.Command("systemctl", "--user", "enable", "--now", idleUnit("timer")).CombinedOutput(); err != nil {
+	if out, err := exec.CommandContext(context.Background(), "systemctl", "--user", "enable", "--now", idleUnit("timer")).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("enable the idle timer: %w: %s", err, strings.TrimSpace(string(out)))
 	}
 	if !canPowerOff() {
@@ -133,7 +134,9 @@ func idleAfter() time.Duration {
 	return d
 }
 
-func canPowerOff() bool { return exec.Command("sudo", "-n", "true").Run() == nil }
+func canPowerOff() bool {
+	return exec.CommandContext(context.Background(), "sudo", "-n", "true").Run() == nil
+}
 
 // IdleDoctor is the doctor's line about idle stop, or nil when it is off.
 func IdleDoctor() []Check {
@@ -166,7 +169,7 @@ func IdleCheck(after time.Duration, now time.Time) (string, error) {
 	if !off {
 		return fmt.Sprintf("busy %s ago (clients %d, working %v); powers off after %s", now.Sub(next.BusyAt).Round(time.Second), clients, working, after), nil
 	}
-	out, err := exec.Command("sudo", "-n", "systemctl", "poweroff").CombinedOutput()
+	out, err := exec.CommandContext(context.Background(), "sudo", "-n", "systemctl", "poweroff").CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("idle for %s, but could not power off: %w: %s", after, err, strings.TrimSpace(string(out)))
 	}

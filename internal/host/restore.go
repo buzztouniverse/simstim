@@ -1,6 +1,7 @@
 package host
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -139,9 +140,9 @@ func InstallRestoreUnit() Check {
 			c.Detail = err.Error()
 			return c
 		}
-		_ = exec.Command("systemctl", "--user", "daemon-reload").Run()
+		_ = exec.CommandContext(context.Background(), "systemctl", "--user", "daemon-reload").Run()
 	}
-	out, err := exec.Command("systemctl", "--user", "enable", restoreUnit()).CombinedOutput()
+	out, err := exec.CommandContext(context.Background(), "systemctl", "--user", "enable", restoreUnit()).CombinedOutput()
 	if err != nil {
 		c.Detail = "could not enable it: " + strings.TrimSpace(string(out))
 		return c

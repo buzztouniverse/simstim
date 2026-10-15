@@ -2,6 +2,7 @@ package host
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"io"
 	"net"
@@ -72,7 +73,8 @@ func RunHook(event string, args []string) {
 	if len(payload) > 0 && !json.Valid(payload) {
 		payload = nil
 	}
-	conn, err := net.DialTimeout("unix", sock, 300*time.Millisecond)
+	d := net.Dialer{Timeout: 300 * time.Millisecond}
+	conn, err := d.DialContext(context.Background(), "unix", sock)
 	if err != nil {
 		return
 	}

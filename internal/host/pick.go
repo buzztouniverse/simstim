@@ -2,6 +2,7 @@ package host
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -182,7 +183,8 @@ func parseChoice(line string, sessions []SessionInfo) (i int, quit bool, err err
 // attachTerminal attaches this terminal to session id, in raw mode, until the
 // user detaches or the session ends. r holds anything typed after the choice.
 func attachTerminal(r *bufio.Reader, in, out *os.File, id string) (pickEnd, error) {
-	conn, err := net.DialTimeout("unix", paths.Socket(id), 3*time.Second)
+	d := net.Dialer{Timeout: 3 * time.Second}
+	conn, err := d.DialContext(context.Background(), "unix", paths.Socket(id))
 	if err != nil {
 		return pickEnd{}, errors.New("the session is not running")
 	}

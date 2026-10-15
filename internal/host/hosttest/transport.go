@@ -94,7 +94,7 @@ func (t *Transport) Start(_ context.Context, remote string) (client.Proc, error)
 		t.open = map[*bridgeProc]bool{}
 	}
 	t.open[p] = true
-	go func() {
+	go func() { //nolint:contextcheck // RunBridge has no context: like the real bridge, it runs until its input closes
 		p.err = host.RunBridge(inR, outW)
 		_ = outW.Close()
 		_ = inR.Close()

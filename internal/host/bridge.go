@@ -2,6 +2,7 @@ package host
 
 import (
 	"bufio"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -236,7 +237,8 @@ func (b *bridge) attach(a proto.Attach) error {
 	if !validID(a.Session) {
 		return fmt.Errorf("no session %s", a.Session)
 	}
-	conn, err := net.DialTimeout("unix", paths.Socket(a.Session), 3*time.Second)
+	d := net.Dialer{Timeout: 3 * time.Second}
+	conn, err := d.DialContext(context.Background(), "unix", paths.Socket(a.Session))
 	if err != nil {
 		return fmt.Errorf("session %s is not running", a.Session)
 	}

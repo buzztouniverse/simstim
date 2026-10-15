@@ -1,6 +1,7 @@
 package host
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -81,7 +82,7 @@ func lingerFix() []fixItem {
 	return []fixItem{{Fix: api.Fix{ID: "linger", Problem: "linger is off, so sessions stop when your last login on the host ends",
 		Action: "turn on linger for " + u.Username + " with loginctl, without sudo; if the host needs root for it, the fix says so", Command: cmd},
 		run: func() error {
-			out, err := exec.Command("loginctl", "enable-linger", u.Username).CombinedOutput()
+			out, err := exec.CommandContext(context.Background(), "loginctl", "enable-linger", u.Username).CombinedOutput()
 			if err == nil && lingerOn() {
 				return nil
 			}
@@ -97,7 +98,7 @@ func restoreUnitFix() []fixItem {
 		problem = "the unit that restores sessions after a restart is missing"
 	} else if string(b) != restoreUnitText() {
 		problem = "the unit that restores sessions after a restart is out of date"
-	} else if out, _ := exec.Command("systemctl", "--user", "is-enabled", restoreUnit()).Output(); strings.TrimSpace(string(out)) != "enabled" {
+	} else if out, _ := exec.CommandContext(context.Background(), "systemctl", "--user", "is-enabled", restoreUnit()).Output(); strings.TrimSpace(string(out)) != "enabled" {
 		problem = "the unit that restores sessions after a restart is not enabled"
 	}
 	if problem == "" {
@@ -203,7 +204,8 @@ func staleSocketsFix() []fixItem {
 		if e.Type()&os.ModeSocket == 0 || !strings.HasSuffix(e.Name(), ".sock") {
 			continue
 		}
-		if c, err := net.DialTimeout("unix", p, 300*time.Millisecond); err == nil {
+		d := net.Dialer{Timeout: 300 * time.Millisecond}
+		if c, err := d.DialContext(context.Background(), "unix", p); err == nil {
 			c.Close()
 			continue
 		}

@@ -1,6 +1,7 @@
 package host
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -29,7 +30,7 @@ func Doctor() HostInfo {
 	if u != nil {
 		info.User = u.Username
 	}
-	if b, err := exec.Command("uname", "-r").Output(); err == nil {
+	if b, err := exec.CommandContext(context.Background(), "uname", "-r").Output(); err == nil {
 		info.Kernel = strings.TrimSpace(string(b))
 	}
 	if b, err := os.ReadFile("/etc/os-release"); err == nil {
@@ -85,7 +86,7 @@ func lingerOn() bool {
 	if err != nil {
 		return false
 	}
-	out, err := exec.Command("loginctl", "show-user", u.Username, "-p", "Linger", "--value").Output()
+	out, err := exec.CommandContext(context.Background(), "loginctl", "show-user", u.Username, "-p", "Linger", "--value").Output()
 	return err == nil && strings.TrimSpace(string(out)) == "yes"
 }
 
@@ -108,11 +109,11 @@ func Setup(a SetupArgs) SetupResult {
 		} else {
 			u, _ := user.Current()
 			detail := "turned on"
-			err := exec.Command("loginctl", "enable-linger", u.Username).Run()
+			err := exec.CommandContext(context.Background(), "loginctl", "enable-linger", u.Username).Run()
 			if err != nil {
 				// sudo -n never asks for a password: it works only where sudo
 				// needs none, and the step says that it was used.
-				err = exec.Command("sudo", "-n", "loginctl", "enable-linger", u.Username).Run()
+				err = exec.CommandContext(context.Background(), "sudo", "-n", "loginctl", "enable-linger", u.Username).Run()
 				detail = "turned on with sudo -n loginctl enable-linger " + u.Username
 			}
 			ok := err == nil && lingerOn()
@@ -152,7 +153,7 @@ func installTerminfo(src string) error {
 	f.Close()
 	defer os.Remove(f.Name())
 	home, _ := os.UserHomeDir()
-	out, err := exec.Command("tic", "-x", "-o", filepath.Join(home, ".terminfo"), f.Name()).CombinedOutput()
+	out, err := exec.CommandContext(context.Background(), "tic", "-x", "-o", filepath.Join(home, ".terminfo"), f.Name()).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("tic: %w: %s", err, strings.TrimSpace(string(out)))
 	}

@@ -2,6 +2,7 @@ package host
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -18,7 +19,7 @@ import (
 
 // SystemdUser reports whether a systemd user manager is running for this user.
 func SystemdUser() bool {
-	out, err := exec.Command("systemctl", "--user", "is-system-running").Output()
+	out, err := exec.CommandContext(context.Background(), "systemctl", "--user", "is-system-running").Output()
 	s := strings.TrimSpace(string(out))
 	if err != nil && s == "" {
 		return false
@@ -87,7 +88,7 @@ func launchHolder(m *Manifest) error {
 				"-p", "MemorySwapMax=0")
 		}
 		args = append(args, exe, "holder", m.ID)
-		out, err := exec.Command("systemd-run", args...).CombinedOutput()
+		out, err := exec.CommandContext(context.Background(), "systemd-run", args...).CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("systemd-run: %w: %s", err, strings.TrimSpace(string(out)))
 		}
@@ -99,7 +100,7 @@ func launchHolder(m *Manifest) error {
 			return fmt.Errorf("start the holder: %w", err)
 		}
 		defer devnull.Close()
-		cmd := exec.Command(exe, "holder", m.ID)
+		cmd := exec.CommandContext(context.Background(), exe, "holder", m.ID)
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = devnull, devnull, devnull
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 		if err := cmd.Start(); err != nil {
@@ -113,7 +114,8 @@ func launchHolder(m *Manifest) error {
 func waitSocket(id string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		if c, err := net.DialTimeout("unix", paths.Socket(id), 200*time.Millisecond); err == nil {
+		d := net.Dialer{Timeout: 200 * time.Millisecond}
+		if c, err := d.DialContext(context.Background(), "unix", paths.Socket(id)); err == nil {
 			c.Close()
 			return nil
 		}

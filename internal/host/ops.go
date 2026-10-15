@@ -2,6 +2,7 @@ package host
 
 import (
 	"bufio"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -250,7 +251,8 @@ func memoryCurrent(unit string) int64 {
 }
 
 func alive(id string) bool {
-	c, err := net.DialTimeout("unix", paths.Socket(id), 300*time.Millisecond)
+	d := net.Dialer{Timeout: 300 * time.Millisecond}
+	c, err := d.DialContext(context.Background(), "unix", paths.Socket(id))
 	if err != nil {
 		return false
 	}
@@ -295,7 +297,8 @@ func List() ([]SessionInfo, error) {
 
 // HolderRequest sends one request to a session's holder.
 func HolderRequest(id, op string, args any, timeout time.Duration) (json.RawMessage, error) {
-	conn, err := net.DialTimeout("unix", paths.Socket(id), timeout)
+	d := net.Dialer{Timeout: timeout}
+	conn, err := d.DialContext(context.Background(), "unix", paths.Socket(id))
 	if err != nil {
 		return nil, fmt.Errorf("reach the holder of session %s: %w", id, err)
 	}
@@ -364,7 +367,7 @@ func deleteSession(id string, res *DeleteResult) error {
 		}
 	}
 	if m != nil && m.Run.Unit != "" {
-		_ = exec.Command("systemctl", "--user", "stop", m.Run.Unit).Run()
+		_ = exec.CommandContext(context.Background(), "systemctl", "--user", "stop", m.Run.Unit).Run()
 	} else if m != nil && m.Run.HolderPID > 0 && alive(id) {
 		_ = syscall.Kill(m.Run.HolderPID, syscall.SIGTERM)
 	}
