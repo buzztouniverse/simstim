@@ -39,5 +39,6 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Changed
 
 - Sessions are capped with `MemoryMax` only; `MemoryHigh` made a runaway process hang (decision 0008).
+- Commits carry no sign-off or attribution lines, and contributions are covered by Apache-2.0 section 5 (decision 0010, which replaces the DCO).
 - The home screen is now a light launcher in the style of Amp's CLI (decision 0009). It has one column and one list: the hosts, then Enter for a host's sessions. The panes and the permanent preview are gone. The look is measured from Amp: notched frames, yellow titles, blue keys, faint secondary text and a yellow selection bar, all from the terminal's palette. Ctrl+C opens a chord popup, and a second Ctrl+C quits.
 - While attached, the client draws nothing of its own. It sets no window title, and a failed upload is now a system notification instead of a line on the bottom row. The reconnect notice is the one exception. End-to-end checks prove that the agent's PTY is the terminal's size, and that the screen is the session's bytes alone.

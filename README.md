@@ -103,7 +103,7 @@ The images use a dark Ghostty theme. In your terminal, the screens use your own 
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md). Commits need a DCO sign-off. Report security issues privately, as [SECURITY.md](SECURITY.md) describes.
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Contributions are under the Apache-2.0 licence. Report security issues privately, as [SECURITY.md](SECURITY.md) describes.
 
 ## Licence
 

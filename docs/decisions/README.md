@@ -8,10 +8,11 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0002](0002-own-holder-per-session.md) | Our own holder process per session, not zmx | Accepted |
 | [0003](0003-system-openssh.md) | The system OpenSSH client as the only transport | Accepted |
 | [0004](0004-replay-by-offset.md) | Reattach by byte offset, with a full redraw as the fallback | Accepted |
-| [0005](0005-apache-2-and-dco.md) | Apache-2.0 with a DCO | Accepted |
+| [0005](0005-apache-2-and-dco.md) | Apache-2.0 with a DCO (DCO part replaced by 0010) | Accepted |
 | [0006](0006-defaults.md) | Detach key, image key and memory cap defaults | Accepted |
 | [0007](0007-name-in-one-place.md) | The product name lives in one package | Accepted |
 | [0008](0008-memory-max-only.md) | Cap sessions with MemoryMax only, not MemoryHigh (replaces part of 0006) | Accepted |
 | [0009](0009-light-launcher.md) | A light launcher, and a session that owns the whole terminal (replaces the first home-screen design) | Accepted |
+| [0010](0010-no-commit-trailers.md) | No sign-off or attribution lines in commits (replaces the DCO part of 0005) | Accepted |
 
 Write a new record from [the template](template.md).

@@ -29,7 +29,7 @@ A client and a host helper that run AI coding agents in sessions on remote hosts
 5. **Clean-room.** Never copy code, prompts or assets from closed-source tools. `docs/research/private/` is git-ignored and must stay out of history.
 6. **Decisions** go in `docs/decisions/`. Do not edit an accepted record; supersede it.
 7. **Errors** carry a message and a "Try:" hint.
-8. **Commits:** one milestone or logical change each, with a DCO sign-off (`git commit -s`), pushed to `origin`. Run `just test lint` first.
+8. **Commits:** one milestone or logical change each, pushed to `origin`. Run `just test lint` first. The message is a subject, a blank line and a body, and nothing more. Never add `Signed-off-by:`, `Co-Authored-By:`, `Claude-Session:` or any other trailer or attribution line, and never use `git commit -s` ([0010](docs/decisions/0010-no-commit-trailers.md)).
 9. **Docs:** plain English, short sentences, British spelling. Update `docs/status.md` when a finish-state item changes.
 
 ## Test hosts

@@ -28,7 +28,7 @@ just lint    # go vet, golangci-lint, and the name check
 ## Commits
 
 - One logical change per commit, with a message that says why.
-- Sign off each commit to certify the [Developer Certificate of Origin](https://developercertificate.org): `git commit -s`.
+- No sign-off or attribution lines: no `Signed-off-by:`, `Co-Authored-By:` or session links ([0010](docs/decisions/0010-no-commit-trailers.md)). By contributing you agree that your work is under the Apache-2.0 licence, as its section 5 says.
 - Run `just test lint` before you push.
 
 ## Decisions
