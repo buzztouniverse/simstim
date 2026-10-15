@@ -74,21 +74,7 @@ func (h *Holder) serve(conn net.Conn) {
 }
 
 func (h *Holder) attach(c *hclient, a proto.Attach) {
-	// A client that has none of this session's output gets a snapshot from the
-	// shadow terminal, taken before the lock so output keeps flowing.
-	var snap []byte
-	snapAt := int64(-1)
-	h.mu.Lock()
-	canReplay := a.LastOffset >= 0 && h.ring.Has(a.LastOffset)
-	vt := h.vt
-	h.mu.Unlock()
-	if !canReplay && vt != nil {
-		if s, upTo, err := vt.Snapshot(a.Cols, a.Rows, snapshotLines, 3*time.Second); err == nil {
-			snap, snapAt = s, upTo
-		} else {
-			h.log.Printf("snapshot failed, replaying the ring instead: %v", err)
-		}
-	}
+	snap, snapAt := h.snapshotFor(a)
 	h.mu.Lock()
 	mode, from := "full", h.ring.Start()
 	switch {
@@ -115,12 +101,48 @@ func (h *Holder) attach(c *hclient, a proto.Attach) {
 		c.close()
 		return
 	}
+	if !c.catchUp(mode, snap, from, data) {
+		return
+	}
+	go c.writeLoop()
+	if exited {
+		b, _ := json.Marshal(ended)
+		c.out <- outFrame{proto.TEnded, b}
+		return
+	}
+	h.resize(c, proto.Resize{Cols: a.Cols, Rows: a.Rows, XPx: a.XPx, YPx: a.YPx}, true)
+}
+
+// snapshotFor takes the snapshot an attaching client gets when it has none
+// of this session's output: from the shadow terminal, before the attach
+// takes the lock, so output keeps flowing. snapAt is the stream offset the
+// snapshot reaches, or -1 when there is no snapshot.
+func (h *Holder) snapshotFor(a proto.Attach) (snap []byte, snapAt int64) {
+	snapAt = -1
+	h.mu.Lock()
+	canReplay := a.LastOffset >= 0 && h.ring.Has(a.LastOffset)
+	vt := h.vt
+	h.mu.Unlock()
+	if !canReplay && vt != nil {
+		if s, upTo, err := vt.Snapshot(a.Cols, a.Rows, snapshotLines, 3*time.Second); err == nil {
+			snap, snapAt = s, upTo
+		} else {
+			h.log.Printf("snapshot failed, replaying the ring instead: %v", err)
+		}
+	}
+	return snap, snapAt
+}
+
+// catchUp writes what an attaching client missed: the snapshot in snapshot
+// mode, then the output from offset from on, in frames of 256 KiB at most.
+// When a write fails, it closes c and returns false.
+func (c *hclient) catchUp(mode string, snap []byte, from int64, data []byte) bool {
 	if mode == "snapshot" {
 		for len(snap) > 0 {
 			n := min(len(snap), 256<<10)
 			if err := c.w.Write(proto.TSnapshot, snap[:n]); err != nil {
 				c.close()
-				return
+				return false
 			}
 			snap = snap[n:]
 		}
@@ -132,30 +154,28 @@ func (h *Holder) attach(c *hclient, a proto.Attach) {
 		}
 		if err := c.w.Write(proto.TOutput, proto.EncodeOutput(off, data[:n])); err != nil {
 			c.close()
-			return
+			return false
 		}
 		off += int64(n)
 		data = data[n:]
 	}
-	go func() {
-		for {
-			select {
-			case f := <-c.out:
-				if err := c.w.Write(f.t, f.p); err != nil {
-					c.close()
-					return
-				}
-			case <-c.done:
+	return true
+}
+
+// writeLoop writes the frames queued for c, in order, until c is closed or a
+// write fails.
+func (c *hclient) writeLoop() {
+	for {
+		select {
+		case f := <-c.out:
+			if err := c.w.Write(f.t, f.p); err != nil {
+				c.close()
 				return
 			}
+		case <-c.done:
+			return
 		}
-	}()
-	if exited {
-		b, _ := json.Marshal(ended)
-		c.out <- outFrame{proto.TEnded, b}
-		return
 	}
-	h.resize(c, proto.Resize{Cols: a.Cols, Rows: a.Rows, XPx: a.XPx, YPx: a.YPx}, true)
 }
 
 func (h *Holder) input(c *hclient, p []byte) {

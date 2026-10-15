@@ -370,53 +370,9 @@ func (h *Holder) tick() {
 	for range t.C {
 		h.mu.Lock()
 		if !h.exited {
-			if h.scr != nil && h.scr.dirty {
-				h.scr.dirty = false
-				h.ruleState, h.ruleID, _ = agents.Detect(h.m.Agent.Kind, h.scr.screen())
-				if full := h.scr.altScreen(); full != h.m.Status.FullScreen {
-					h.m.Status.FullScreen = full
-					h.dirty = true
-				}
-			}
-			state := StateIdle
-			src := "quiet"
-			switch {
-			case h.ruleState == StateNeedsInput:
-				state, src = StateNeedsInput, "screen:"+h.ruleID
-			case h.needInput:
-				state, src = StateNeedsInput, "notify"
-			case h.ruleState == StateWorking:
-				state, src = StateWorking, "screen:"+h.ruleID
-			case h.hookBusy:
-				state, src = StateWorking, "hook"
-			case h.busy:
-				state, src = StateWorking, "progress"
-			case h.hookSeen && !h.lastTurnEnd.IsZero() && time.Since(h.lastTurnEnd) < 3*time.Second:
-				state, src = StateIdle, "hook"
-			case time.Since(h.lastOut) < 3*time.Second:
-				state, src = StateWorking, "output"
-			}
-			if state != h.m.Status.State {
-				prev := h.m.Status.State
-				oom, reason := h.m.Status.OOM, h.m.Status.Reason
-				h.m.Status = Status{State: state, Since: time.Now().UTC(), Source: src, FullScreen: h.m.Status.FullScreen}
-				if oom {
-					h.m.Status.OOM, h.m.Status.Reason = true, reason
-				} else if state == StateNeedsInput && h.notifyMsg != "" {
-					h.m.Status.Reason = h.notifyMsg
-				}
-				h.dirty = true
-				h.alertState(prev, state)
-			}
+			h.updateStatus()
 		}
-		if n := readOOMKills(); n > h.oomBase && !h.m.Status.OOM {
-			// A process in the session hit the memory cap and was stopped.
-			h.m.Status.OOM = true
-			h.m.Status.Reason = "a process in this session ran out of memory and was stopped"
-			h.needInput = true
-			h.dirty = true
-			h.alertOOM()
-		}
+		h.checkOOM()
 		dirty := h.dirty
 		h.dirty = false
 		var snapshot Manifest
@@ -429,5 +385,61 @@ func (h *Holder) tick() {
 				h.log.Printf("save manifest: %v", err)
 			}
 		}
+	}
+}
+
+// updateStatus sets the session's state from the screen rules, the agent's
+// hooks and notifications, and its output. The caller holds h.mu.
+func (h *Holder) updateStatus() {
+	if h.scr != nil && h.scr.dirty {
+		h.scr.dirty = false
+		h.ruleState, h.ruleID, _ = agents.Detect(h.m.Agent.Kind, h.scr.screen())
+		if full := h.scr.altScreen(); full != h.m.Status.FullScreen {
+			h.m.Status.FullScreen = full
+			h.dirty = true
+		}
+	}
+	state := StateIdle
+	src := "quiet"
+	switch {
+	case h.ruleState == StateNeedsInput:
+		state, src = StateNeedsInput, "screen:"+h.ruleID
+	case h.needInput:
+		state, src = StateNeedsInput, "notify"
+	case h.ruleState == StateWorking:
+		state, src = StateWorking, "screen:"+h.ruleID
+	case h.hookBusy:
+		state, src = StateWorking, "hook"
+	case h.busy:
+		state, src = StateWorking, "progress"
+	case h.hookSeen && !h.lastTurnEnd.IsZero() && time.Since(h.lastTurnEnd) < 3*time.Second:
+		state, src = StateIdle, "hook"
+	case time.Since(h.lastOut) < 3*time.Second:
+		state, src = StateWorking, "output"
+	}
+	if state != h.m.Status.State {
+		prev := h.m.Status.State
+		oom, reason := h.m.Status.OOM, h.m.Status.Reason
+		h.m.Status = Status{State: state, Since: time.Now().UTC(), Source: src, FullScreen: h.m.Status.FullScreen}
+		if oom {
+			h.m.Status.OOM, h.m.Status.Reason = true, reason
+		} else if state == StateNeedsInput && h.notifyMsg != "" {
+			h.m.Status.Reason = h.notifyMsg
+		}
+		h.dirty = true
+		h.alertState(prev, state)
+	}
+}
+
+// checkOOM marks the session when the memory cap stopped one of its
+// processes. The caller holds h.mu.
+func (h *Holder) checkOOM() {
+	if n := readOOMKills(); n > h.oomBase && !h.m.Status.OOM {
+		// A process in the session hit the memory cap and was stopped.
+		h.m.Status.OOM = true
+		h.m.Status.Reason = "a process in this session ran out of memory and was stopped"
+		h.needInput = true
+		h.dirty = true
+		h.alertOOM()
 	}
 }
