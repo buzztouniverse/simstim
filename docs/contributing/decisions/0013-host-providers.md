@@ -9,7 +9,7 @@ date: 2026-10-15
 
 ## Context
 
-Today simstim knows nothing about providers. A host is anything the system `ssh` can reach, and a user script can start and stop it ([architecture, 8](../../architecture.md#8-providers)). The project now wants `host create <provider>` and `host destroy`: one command that creates a host, installs the helper and connects, with cloud hosts that stop when idle and wake on attach.
+Today simstim knows nothing about providers. A host is anything the system `ssh` can reach, and a user script can start and stop it ([architecture, 8](../../explanation/architecture.md#8-providers)). The project now wants `host create <provider>` and `host destroy`: one command that creates a host, installs the helper and connects, with cloud hosts that stop when idle and wake on attach.
 
 The rules stand: no relay, no telemetry, no new listening port on a host without a decision record and the owner's yes, and no secrets stored by simstim.
 

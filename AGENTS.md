@@ -4,7 +4,7 @@ Instructions for any operator of this repo: a person or an AI agent.
 
 ## What this repo is
 
-A client and a host helper that run AI coding agents in sessions on remote hosts, and show the agent's real terminal UI locally, byte for byte. [The plan](docs/plan.md) has the goals, [the architecture](docs/architecture.md) the design, and [the UX spec](docs/contributing/ux-spec.md) the screens.
+A client and a host helper that run AI coding agents in sessions on remote hosts, and show the agent's real terminal UI locally, byte for byte. [The plan](docs/plan.md) has the goals, [the architecture](docs/explanation/architecture.md) the design, and [the UX spec](docs/contributing/ux-spec.md) the screens.
 
 | Path | Contents |
 | --- | --- |

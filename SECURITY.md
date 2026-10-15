@@ -31,4 +31,4 @@ The project has no release yet. Once it does, only the latest minor release gets
 - Sockets and uploaded files are private to the user (modes 0600 and 0700).
 - Ports forwarded to the laptop bind to `127.0.0.1` only.
 
-[The architecture](docs/architecture.md#7-security-model) has the full threat model.
+[The security model](docs/explanation/security.md) has the full threat model.

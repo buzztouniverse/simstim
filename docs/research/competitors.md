@@ -341,7 +341,7 @@ Each table cell links its own primary source. The link targets are defined at th
 
 [ss-readme]: ../../README.md
 [ss-changelog]: ../../CHANGELOG.md
-[ss-arch]: ../architecture.md
+[ss-arch]: ../explanation/architecture.md
 [ss-plan]: ../plan.md
 [ss-licence]: ../../LICENSE
 

@@ -31,7 +31,7 @@ simstim runs Claude Code, Codex, opencode, Antigravity CLI or any other terminal
                                       └───────────────────────────────────────────┘
 ```
 
-Read [the architecture](docs/architecture.md) for the details.
+Read [the architecture](docs/explanation/architecture.md) for the details.
 
 ## Agents
 
@@ -116,7 +116,7 @@ The images use a dark Ghostty theme and show still frames. In your terminal, the
 | Page | What it covers |
 | --- | --- |
 | [Plan](docs/plan.md) | Goals, scope by version, milestones, decisions, risks |
-| [Architecture](docs/architecture.md) | Components, flows, protocol, fidelity contract, security |
+| [Architecture](docs/explanation/architecture.md) | Components, flows, protocol, fidelity contract, security |
 | [UX](docs/contributing/ux-spec.md) | Screens, keys, visual language, CLI |
 | [Decisions](docs/contributing/decisions/) | The decision records |
 | [Research](docs/research/README.md) | The evidence behind the design |

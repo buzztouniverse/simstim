@@ -1,6 +1,6 @@
-# simstim architecture
+# Architecture
 
-**Status:** proposed, 15 October 2026. The decisions it depends on are listed in [the plan](plan.md#8-decisions-for-the-owner).
+How the client, the host helper and the shadow terminal fit together, and how a session flows from start to reboot. The decisions behind it are in [the decision records](../contributing/decisions/README.md).
 
 ## 1. The picture
 
@@ -32,7 +32,7 @@ One static binary (Go in the proposed design).
 
 | Part | Job |
 | --- | --- |
-| Screens | The launcher: the hosts, then one host's sessions, one list at a time, with search across hosts, a one-line quick start, and sheets (the palette, peek, forms, the add-host wizard) that rise over it. It remembers what it saw, to draw at once. It runs in the alternate screen and is built with Bubble Tea v2. While attached it draws nothing. See [UX](contributing/ux-spec.md), [0009](contributing/decisions/0009-light-launcher.md), [0011](contributing/decisions/0011-instant-launcher.md) and [0012](contributing/decisions/0012-own-look.md). |
+| Screens | The launcher: the hosts, then one host's sessions, one list at a time, with search across hosts, a one-line quick start, and sheets (the palette, peek, forms, the add-host wizard) that rise over it. It remembers what it saw, to draw at once. It runs in the alternate screen and is built with Bubble Tea v2. While attached it draws nothing. See [UX](../contributing/ux-spec.md), [0009](../contributing/decisions/0009-light-launcher.md), [0011](../contributing/decisions/0011-instant-launcher.md) and [0012](../contributing/decisions/0012-own-look.md). |
 | CLI | `simstim host …`, `new`, `ls`, `attach`, `kill`, `doctor`, `update`, `completion`. `--json` on every list. |
 | SSH layer | Runs the system `ssh` with a generated config. Owns a private ControlMaster per host. Opens the bridge channel. Uploads files. |
 | Attach pump | Raw mode, an output pump with a passive mode tracker, the input filter, resize forwarding, the reset list on detach. |
@@ -86,7 +86,7 @@ All agent knowledge is data, shipped with the host helper and overridable by the
 | `hooks` | Extra arguments that make the agent report status and its session ID |
 | screen rules | A TOML file per agent in `internal/agents/rules` |
 
-The full resume table for eight agents is in [the host runtime note](research/host-runtime.md#71-resume-commands).
+The full resume table for eight agents is in [the host runtime note](../research/host-runtime.md#71-resume-commands).
 
 ## 3. Flows
 
@@ -131,7 +131,7 @@ The full resume table for eight agents is in [the host runtime note](research/ho
    - **Same client, offset still in the ring:** it sends the raw bytes from `last_offset`. Local scrollback continues with no duplicates, and missed notifications arrive. Repeated ones are collapsed.
    - **New client, or offset too old:** the vt child makes a snapshot at the client's size. The client pushes what the terminal shows into its scrollback with blank lines, then the snapshot redraws the screen, including the kitty keyboard flags and other modes.
 3. The holder resizes the PTY and sends SIGWINCH to the foreground process group, even if the size is unchanged, so the agent repaints.
-4. Then it is pure pass-through, and the session owns every row and column ([0009](contributing/decisions/0009-light-launcher.md)):
+4. Then it is pure pass-through, and the session owns every row and column ([0009](../contributing/decisions/0009-light-launcher.md)):
    - Output frames go straight to stdout. The client draws nothing of its own: no frame, no status line and no window title. The one exception is the reconnect notice (3.5). Alerts about other sessions, and a failed upload, go out as OSC 777 notifications, which draw nothing on the screen.
    - Input bytes go straight to the PTY, except the two filtered keys.
    - Terminal queries from the agent go to the leader client's terminal, and only the leader's replies reach the PTY.
@@ -150,7 +150,7 @@ Triggers: the detach key, closing the tab, `simstim kill` from elsewhere, or SIG
    - leave the alternate screen if the session entered it;
    - reset SGR, and pop the title stack.
 
-   The full 19-step list is in [the client stack note](research/client-stack.md#22-what-to-reset-on-detach-in-order).
+   The full 19-step list is in [the client stack note](../research/client-stack.md#22-what-to-reset-on-detach-in-order).
 3. While no client is attached, the vt child answers the agent's terminal queries from a cached profile of the last client. If the agent turned on focus reporting, the holder sends focus-out.
 
 ### 3.5 Sleep and reconnect
@@ -222,21 +222,7 @@ Triggers: the detach key, closing the tab, `simstim kill` from elsewhere, or SIG
 
 ## 5. Terminal fidelity contract
 
-This table is the promise behind spec item 8. Every row has a test.
-
-| Feature | How simstim keeps it | Test |
-| --- | --- | --- |
-| Keys: kitty protocol, modifyOtherKeys, Shift+Enter, Option/Alt | Raw input bytes. The filter matches only two keys and never re-encodes. On reattach, the snapshot restores the kitty flags. | `simstim doctor keys`, run end to end |
-| Truecolour, styled underlines | `TERM=xterm-ghostty` with its terminfo installed on the host. `COLORTERM=truecolor`. The client's `TERM_PROGRAM` is passed through. | Fixture replay |
-| Native scrollback and Cmd+F | Output lands in the local terminal's normal screen. No RIS. Replay by offset avoids duplicates. | Manual check plus fixture |
-| OSC 52 clipboard | Passed through. Clipboard reads go to the local terminal's own prompt. | Manual |
-| OSC 8 links, OSC 9 and 777 notifications, OSC 9;4 progress | Passed through. Missed ones are collapsed into one notice on reconnect. | Fixture |
-| Synchronized output (mode 2026) | Passed through, so no flicker | Fixture |
-| Mouse, focus, bracketed paste | Passed through, and reset on detach | `x/vt` baseline after detach |
-| Terminal queries (DA, XTVERSION, OSC 10/11, kitty query) | The leader's terminal answers. With no client attached, the vt child answers from a cached profile. | Fixture with no client |
-| Resize | The leader rule, plus SIGWINCH on every attach | Manual, two devices |
-| Kitty graphics, sixel | Passed through while attached. **Not** restored on reattach. This is a known limit. | Documented |
-| Added delay per keystroke | Target: under 1 ms on the client | Performance overlay |
+The contract has its own page: [the fidelity contract](fidelity.md).
 
 ## 6. Files and paths
 
@@ -262,24 +248,11 @@ This table is the promise behind spec item 8. Every row has a test.
 
 ## 7. Security model
 
-**Rules:**
-
-- **Nothing new listens on a host.** sshd is the only door. There is no relay and no telemetry.
-- **simstim stores no secrets.** Agent logins live on the host, scoped to that host. Fine-grained GitHub tokens should be per host.
-- **SSH agent forwarding is off by default.** If a user turns it on, the stable `SSH_AUTH_SOCK` link makes it work across reconnects. The risk is written in the docs.
-- **Helpers are released signed,** and checked by SHA-256 before install.
-- **Sockets and staged files are private:** 0600 and 0700, owner checked.
-- **Forwarded ports (v2) bind to `127.0.0.1` only.** Nothing is ever public.
-- **Untrusted host mode** filters OSC 52, OSC 8 and report sequences from the host.
-
-**Threat model, in short:**
-
-- **A compromised host** can see everything its agents can see. It cannot reach the laptop beyond the escape sequences it prints, and untrusted mode filters those.
-- **A compromised laptop** can drive every host it has keys for, as it already can through `ssh`.
+The security model has its own page: [security model](security.md).
 
 ## 8. Providers
 
-simstim knows nothing about providers in v1. If OpenSSH can reach the host, simstim can. [The connectivity note](research/connectivity-and-providers.md#4-provider-recipes) has a ready `ssh_config` block for each recipe.
+simstim knows nothing about providers in v1. If OpenSSH can reach the host, simstim can. [The connectivity note](../research/connectivity-and-providers.md#4-provider-recipes) has a ready `ssh_config` block for each recipe.
 
 | Recipe | Notes |
 | --- | --- |
@@ -297,6 +270,6 @@ simstim knows nothing about providers in v1. If OpenSSH can reach the host, sims
 | Source | Licence | What |
 | --- | --- | --- |
 | zmx | MIT | One process per session. Restore rules. The leader rule. Its bug list as a checklist. Restore code adapted for `simstim-vt`. |
-| Herdr | Apache-2.0 | The managed SSH config and banner skipping. Remote install with consent. The reconnect ladder and wake detection. The image paste bridge. The resume table and hooks. The agent detection manifests. Safe file writes. The pane environment clean-up. Exact files are listed in [the Herdr note](research/herdr.md#83-modules-worth-borrowing). |
-| Amp | Proprietary | **Patterns only, clean-room.** No code, prompts or assets. See [UX](contributing/ux-spec.md). |
+| Herdr | Apache-2.0 | The managed SSH config and banner skipping. Remote install with consent. The reconnect ladder and wake detection. The image paste bridge. The resume table and hooks. The agent detection manifests. Safe file writes. The pane environment clean-up. Exact files are listed in [the Herdr note](../research/herdr.md#83-modules-worth-borrowing). |
+| Amp | Proprietary | **Patterns only, clean-room.** No code, prompts or assets. See [UX](../contributing/ux-spec.md). |
 | VS Code Remote, Zed | — | The login-shell environment resolution. Uploading a versioned server over SSH. |

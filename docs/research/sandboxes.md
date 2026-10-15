@@ -59,7 +59,7 @@ Two designs for idle stop recur below:
 
 ### 1.4 Credentials
 
-simstim stores no secrets ([architecture, 7](../architecture.md#7-security-model)). Each provider below takes a token from the user's own environment variable, from the provider CLI's own login file (read, never written), or from a command the user names, such as a keychain or password-manager read. Per-host tokens that a provider hands out (E2B's `envdAccessToken`, Daytona's SSH tokens) are fetched again on each connect and kept only in memory.
+simstim stores no secrets ([security model](../explanation/security.md)). Each provider below takes a token from the user's own environment variable, from the provider CLI's own login file (read, never written), or from a command the user names, such as a keychain or password-manager read. Per-host tokens that a provider hands out (E2B's `envdAccessToken`, Daytona's SSH tokens) are fetched again on each connect and kept only in memory.
 
 ## 2. E2B
 

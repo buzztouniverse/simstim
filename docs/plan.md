@@ -2,7 +2,7 @@
 
 **Status:** accepted and built, 15 October 2026. v1, v1.x and v2 are implemented. The plan below is kept as written, for the reasons behind the design.
 
-This page is the plan. [Architecture](architecture.md) says how it works, [UX](contributing/ux-spec.md) says how it looks and feels, and [the research notes](research/README.md) hold the evidence.
+This page is the plan. [Architecture](explanation/architecture.md) says how it works, [UX](contributing/ux-spec.md) says how it looks and feels, and [the research notes](research/README.md) hold the evidence.
 
 ## 1. In one paragraph
 
