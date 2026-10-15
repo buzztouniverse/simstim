@@ -692,8 +692,6 @@ func (h *Holder) request(c *hclient, req proto.Request) {
 }
 
 // kill stops the agent's whole process group, then the holder.
-func (h *Holder) kill(reason string) { h.stop(reason, false) }
-
 // stop ends the agent's process group, then the holder. When system is true,
 // the session is recorded as stopped with the host, not as ended, so restore
 // brings it back after a restart.
