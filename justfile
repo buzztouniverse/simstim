@@ -91,7 +91,7 @@ fmt:
 
 # End-to-end tests against a real host: E2E_HOST=<a host added with `host add`>.
 e2e: build
-    python3 e2e/run.py bin/{{name}}
+    python3 test/e2e/run.py bin/{{name}}
 
 # Make the README's screenshots (docs/images) from the demo.
 screenshots: build
