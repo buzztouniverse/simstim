@@ -224,7 +224,7 @@ No chrome at all. The agent owns the whole terminal.
 │  Helper     simstim-host 0.1.0 · linger on · terminfo xterm-ghostty           │
 │  Agents     claude 2.1.300 · codex 0.162.1 · opencode 1.19.0 · zsh            │
 │  Limits     8 GiB per session · 3 sessions · 6.4 GiB in use                   │
-╰─ t test · e edit · x remove · s open shell · esc back ────────────────────────╯
+╰─ t test · s shell · r reconnect · x remove · esc back ─────────────────────────╯
 ```
 
 ## 3. Keymap
@@ -348,7 +348,8 @@ The TUI is the home, and every action also has a command, for scripts and termin
 | `simstim host start\|stop\|status <name>` | Runs the host's provider script |
 | `simstim new <host> [--agent claude] [--dir ~/src/app] [--name x] [--worktree [--base ref]] [--detach] [-- cmd…]` | Starts a session, and attaches unless `--detach` |
 | `simstim ls [--host h] [--json]` | Lists sessions, with their state and where it came from |
-| `simstim attach <host>/<session>` (also `flip`) | Attaches directly. Good for a Ghostty keybinding. |
+| `simstim attach <host>/<session>` | Attaches directly. Good for a Ghostty keybinding. |
+| `simstim flip [<host>/<session>]` | A quick switcher: the session list of every host, then attach |
 | `simstim send <host>/<session> <text> [--no-enter]` | Types text into a session without attaching |
 | `simstim rename <host>/<session> <name>`, `kill <host>/<session>` | Renames; stops and removes (keeping a worktree that has work) |
 | `simstim ports <host>/<session>`, `forward <host>/<session> [port…]` | Lists the ports a session listens on; forwards them to localhost |
@@ -385,3 +386,13 @@ ssh = "atlas-dev"           # a Host from ~/.ssh/config, used as is
 labels = { provider = "homelab" }
 # provider = { script = "~/.config/simstim/providers/gcp.sh" }   # v2
 ```
+
+## 8. Not built yet
+
+These parts of this spec are planned, and not in the current build:
+
+- the capability probe at start-up (4.4) and a `doctor` report of it;
+- the 150 ms cross-fade of status text;
+- the ⧗ mark for hosts with a time limit (GCP IAP, AWS EICE);
+- the disk check in the add-host wizard's test step, and "d details" on its consent screen;
+- editing a host from host details.

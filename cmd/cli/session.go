@@ -14,6 +14,7 @@ import (
 
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iAmLakshya/simstim/internal/tui"
 )
 
 func isTerminal(f *os.File) bool { return term.IsTerminal(int(f.Fd())) }
@@ -153,7 +154,7 @@ func withSession(ctx context.Context, target string, fn func(context.Context, cl
 func attachCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "attach <host>/<session>",
-		Aliases: []string{"a", "flip"},
+		Aliases: []string{"a"},
 		Short:   "Attach to a session (detach with Ctrl+\\)",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -332,4 +333,18 @@ func sendCmd() *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&noEnter, "no-enter", false, "do not press Enter after the text")
 	return cmd
+}
+
+func flipCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "flip [<host>/<session>]",
+		Short: "Switch sessions quickly: the session list of every host, then attach",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 1 {
+				return attachCmd().RunE(cmd, args)
+			}
+			return tui.RunWith(cmd.Context(), tui.Options{Switcher: true})
+		},
+	}
 }

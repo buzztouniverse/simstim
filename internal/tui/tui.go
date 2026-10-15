@@ -22,12 +22,16 @@ import (
 )
 
 // Run opens the home screen.
-func Run(ctx context.Context) error {
+func Run(ctx context.Context) error { return RunWith(ctx, Options{}) }
+
+// RunWith opens the home screen with options; Motion is set from the settings.
+func RunWith(ctx context.Context, o Options) error {
 	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
 		return &client.UserError{Msg: "the home screen needs a terminal", Hint: brand.Name + " ls, or run it in a terminal"}
 	}
 	be := realBackend{}
-	m := New(ctx, be, Options{Motion: motionOn(be.Settings().UI.Motion, os.Getenv)})
+	o.Motion = motionOn(be.Settings().UI.Motion, os.Getenv)
+	m := New(ctx, be, o)
 	defer m.Close()
 	_, err := tea.NewProgram(m, tea.WithContext(ctx)).Run()
 	if err != nil && ctx.Err() != nil {

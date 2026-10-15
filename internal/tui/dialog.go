@@ -456,6 +456,8 @@ func (d *details) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		return m.reconnect(h)
 	case "x":
 		m.modal = removeHostDialog(h.host)
+	case "s":
+		return m.openShell(h)
 	}
 	return nil
 }
@@ -505,7 +507,7 @@ func (d *details) view(m *Model) string {
 	case stFailed:
 		state = "not ready"
 	}
-	hints := []hint{{"t", "test"}, {"r", "reconnect"}, {"x", "remove"}, {"esc", "back"}}
+	hints := []hint{{"t", "test"}, {"s", "shell"}, {"r", "reconnect"}, {"x", "remove"}, {"esc", "back"}}
 	return box(w, len(body)+2, h.name(), sMuted.Render(strings.TrimSuffix(state, dot)), hintsFor(hints, w), body, boxNormal)
 }
 
@@ -588,4 +590,21 @@ func (d *newSession) secondRow(label func(int, string) string, under string, w i
 		return label(4, "Command") + d.command.view(w, d.field == 4)
 	}
 	return "  " + strings.Repeat(" ", labelW) + under
+}
+
+// shellDoneMsg reports that an SSH shell on a host ended.
+type shellDoneMsg struct {
+	host string
+	err  error
+}
+
+// openShell hands the terminal to an interactive SSH shell on the host.
+func (m *Model) openShell(h *hostConn) tea.Cmd {
+	s := &client.SSH{Host: h.host, Interactive: true}
+	cmd, err := s.Shell(m.ctx)
+	if err != nil {
+		return m.toastErr(err)
+	}
+	name := h.name()
+	return tea.ExecProcess(cmd, func(err error) tea.Msg { return shellDoneMsg{host: name, err: err} })
 }

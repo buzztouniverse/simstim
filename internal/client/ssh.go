@@ -191,3 +191,13 @@ type ForwardPair struct {
 	RemoteHost string
 	Remote     int
 }
+
+// Shell builds an interactive ssh command that opens a login shell on the host.
+func (s *SSH) Shell(ctx context.Context) (*exec.Cmd, error) {
+	args, err := s.baseArgs()
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, "-t", "--", s.Host.SSH)
+	return exec.CommandContext(ctx, "ssh", args...), nil
+}

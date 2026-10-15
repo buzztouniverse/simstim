@@ -29,6 +29,8 @@ type Options struct {
 	Motion bool
 	// Now is the clock. Tests set it.
 	Now func() time.Time
+	// Switcher opens on the session list of all hosts, for a quick switch.
+	Switcher bool
 }
 
 // Model is the home screen and everything drawn over it.
@@ -126,6 +128,9 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 	}
 	if len(m.hosts) == 1 {
 		m.hostSel = 1
+	}
+	if o.Switcher && len(m.hosts) > 0 {
+		m.hostSel, m.focus = 0, paneSessions
 	}
 	return m
 }
@@ -260,6 +265,11 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 			m.rename = nil
 		}
 		return cmd
+	case shellDoneMsg:
+		if msg.err != nil {
+			return m.toastErr(&client.UserError{Msg: "the shell on " + msg.host + " ended with an error: " + msg.err.Error()})
+		}
+		return nil
 	case foldersMsg:
 		if d, ok := m.modal.(*newSession); ok && d.host == msg.host {
 			d.setSuggestions(msg.prefix, msg.res)
