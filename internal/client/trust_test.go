@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/iAmLakshya/simstim/internal/api"
@@ -33,7 +34,9 @@ func TestSetupTrustIsKeptByHostAndRepository(t *testing.T) {
 	if run := SetupTrust("other")["/home/me/src/app"]; run {
 		t.Error("an answer leaked to another host")
 	}
-	if st, err := os.Stat(trustPath()); err != nil || st.Mode().Perm() != 0o600 {
+	st, err := os.Stat(trustPath())
+	// Windows has no Unix file modes to check.
+	if err != nil || (runtime.GOOS != "windows" && st.Mode().Perm() != 0o600) {
 		t.Errorf("the answers file: %v %v", st, err)
 	}
 }

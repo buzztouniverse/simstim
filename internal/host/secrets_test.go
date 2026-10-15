@@ -18,7 +18,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/ring"
 )
 
-const secretValue = "sk-live-SECRET-0123456789"
+const secretValue = "fake-secret-for-tests-0123456789"
 
 // secretHome gives a test its own state folder, and a runtime folder short
 // enough for a socket path on macOS.

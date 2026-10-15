@@ -4,11 +4,15 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
 
 func TestLocalFixes(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the client shares no SSH connections on Windows, so it has no control sockets to fix")
+	}
 	cfg, cache := t.TempDir(), shortDir(t)
 	t.Setenv("XDG_CONFIG_HOME", cfg)
 	t.Setenv("XDG_CACHE_HOME", cache)

@@ -1,0 +1,5 @@
+# Findings gitleaks may ignore, by fingerprint (commit:file:rule:line).
+# Each is a fake value in a test that checks secrets never leak, kept in
+# history; the tests now use values that do not look like keys.
+6f6a38a7f5a70bcb1c606adf3c2dbcc68eae4155:internal/client/secrets_test.go:generic-api-key:15
+6f6a38a7f5a70bcb1c606adf3c2dbcc68eae4155:internal/host/secrets_test.go:generic-api-key:21

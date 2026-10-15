@@ -2,7 +2,8 @@
 # Fails when a tracked file holds a private detail: a personal path, a private
 # or Tailscale address, a tailnet name or an email address. Examples in the
 # docs use the documentation ranges (192.0.2.0/24, 198.51.100.0/24,
-# 203.0.113.0/24), example.com and the users "me", "you" and "dev".
+# 203.0.113.0/24), example.com (or the reserved example.invalid) and the
+# users "me", "you" and "dev".
 #
 # A maintainer can add words of their own (machine names, a homelab's name)
 # to private/deny.txt, one extended regex per line. A line that starts with
@@ -40,7 +41,7 @@ fi
 # Matches that are fine: generic users, documentation names and addresses,
 # the bots' addresses, and another project's public contact addresses that an
 # old version of a research note quoted.
-allow='/Users/(me|you|runner|shared)([/" ]|$)|/home/(me|you|u|dev|user|runner|linuxbrew|admin|ubuntu|debian|vscode|node)([/" .:;)\<&]|$)|example-tailnet\.ts\.net|@([A-Za-z0-9-]+\.)*(example|example\.(com|org|net)|openssh\.com|users\.noreply\.github\.com)([^A-Za-z0-9.-]|$)|git@github\.com|noreply@|user@UID|@v[0-9]|@sha256|@latest|[a-z]+@herdr\.dev'
+allow='/Users/(me|you|runner|shared)([/" ]|$)|/home/(me|you|u|dev|user|runner|linuxbrew|admin|ubuntu|debian|vscode|node)([/" .:;)\<&]|$)|example-tailnet\.ts\.net|@([A-Za-z0-9-]+\.)*(example|example\.(com|org|net|invalid)|openssh\.com|users\.noreply\.github\.com)([^A-Za-z0-9.-]|$)|git@github\.com|noreply@|user@UID|@v[0-9]|@sha256|@latest|[a-z]+@herdr\.dev'
 allow+="$more_allow"
 
 # --history checks every version of every file in every commit, plus the

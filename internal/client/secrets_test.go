@@ -12,7 +12,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/api"
 )
 
-const testSecret = "sk-test-SECRET-9876543210"
+const testSecret = "fake-secret-for-tests-9876543210"
 
 func TestFetchSecrets(t *testing.T) {
 	if runtime.GOOS == "windows" {
