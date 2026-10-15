@@ -21,6 +21,7 @@ import (
 	"github.com/creack/pty"
 	"golang.org/x/sys/unix"
 
+	"github.com/iAmLakshya/simstim/internal/agents"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/paths"
 	"github.com/iAmLakshya/simstim/internal/proto"
@@ -83,6 +84,10 @@ type Holder struct {
 	hookBusy    bool
 	lastTurnEnd time.Time
 	notifyMsg   string
+	// From screen rules.
+	scr       *screenModel
+	ruleState string
+	ruleID    string
 }
 
 // RunHolder runs the holder for session id until the session is killed.
@@ -187,6 +192,9 @@ func (h *Holder) start() error {
 	}
 	h.ptmx = ptmx
 	h.fd = int(ptmx.Fd())
+	if _, ok := agents.Find(m.Agent.Kind); ok {
+		h.scr = newScreenModel(cols, rows)
+	}
 	h.cmd = cmd
 	// Make the agent, not the holder, the first choice of the OOM killer.
 	_ = os.WriteFile(fmt.Sprintf("/proc/%d/oom_score_adj", cmd.Process.Pid), []byte("500"), 0)
@@ -251,8 +259,14 @@ func (h *Holder) output(data []byte) {
 	}
 	h.lastOut = time.Now()
 	h.m.LastActivityAt = time.Now().UTC()
+	h.scr.feed(data)
 	h.scan.feed(data, func(s outSignal) {
 		switch s {
+		case sigTitle:
+			if h.scr != nil {
+				h.scr.title = h.scan.title
+				h.scr.dirty = true
+			}
 		case sigBell, sigNotify:
 			h.needInput = true
 		case sigProgressBusy:
@@ -316,11 +330,19 @@ func (h *Holder) tick() {
 	for range t.C {
 		h.mu.Lock()
 		if !h.exited {
+			if h.scr != nil && h.scr.dirty {
+				h.scr.dirty = false
+				h.ruleState, h.ruleID, _ = agents.Detect(h.m.Agent.Kind, h.scr.screen())
+			}
 			state := StateIdle
 			src := "quiet"
 			switch {
+			case h.ruleState == StateNeedsInput:
+				state, src = StateNeedsInput, "screen:"+h.ruleID
 			case h.needInput:
 				state, src = StateNeedsInput, "notify"
+			case h.ruleState == StateWorking:
+				state, src = StateWorking, "screen:"+h.ruleID
 			case h.hookBusy:
 				state, src = StateWorking, "hook"
 			case h.busy:
@@ -505,6 +527,9 @@ func (h *Holder) resize(c *hclient, rz proto.Resize, force bool) {
 		return
 	}
 	_ = pty.Setsize(h.ptmx, &pty.Winsize{Cols: uint16(rz.Cols), Rows: uint16(rz.Rows), X: uint16(rz.XPx), Y: uint16(rz.YPx)})
+	h.mu.Lock()
+	h.scr.resize(rz.Cols, rz.Rows)
+	h.mu.Unlock()
 	if force {
 		// Make the agent repaint even when the size did not change.
 		if pgrp, err := unix.IoctlGetInt(h.fd, unix.TIOCGPGRP); err == nil && pgrp > 0 {

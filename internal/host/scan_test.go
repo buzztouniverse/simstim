@@ -13,7 +13,7 @@ func TestScannerSignals(t *testing.T) {
 		"\x1b]777;notify;Title;Body\x1b\\":   {sigNotify},
 		"\x1b]99;i=x:p=?;\x1b\\":             nil, // kitty: capability query
 		"\x1b]99;i=1:d=0;Hello\x1b\\":        {sigNotify},
-		"\x1b]0;title with \x07":             nil, // BEL ends the OSC, it is not a bell
+		"\x1b]0;title with \x07":             {sigTitle}, // BEL ends the OSC, it is not a bell
 		"\x1b[31mred\x1b[0m\x1b]8;;url\x07x": nil,
 	}
 	for in, want := range cases {

@@ -1,0 +1,33 @@
+# Screen rules for Claude Code. Patterns adapted from Herdr's detection
+# manifests (github.com/herdrdev/herdr, Apache-2.0); see NOTICE.
+agent = "claude"
+
+[[rules]]
+id = "permission_prompt"
+state = "needs_input"
+priority = 300
+region = "bottom:20"
+any = [
+  { contains = ["do you want to proceed?"] },
+  { contains = ["do you want to make this edit"] },
+  { contains = ["do you want to create"] },
+  { contains = ["do you want to allow this connection?"] },
+  { contains = ["waiting for permission"] },
+]
+
+[[rules]]
+id = "title_spinner"
+state = "working"
+priority = 200
+region = "title"
+regex = ['^[\x{2800}-\x{28FF}\x{25D0}-\x{25D3}] ']
+
+[[rules]]
+id = "esc_to_interrupt"
+state = "working"
+priority = 150
+region = "bottom:12"
+any = [
+  { line_regex = ['esc to interrupt(?:\s|·|\)|$)'] },
+  { line_regex = ['^\s*[\x{002A}\x{00B7}\x{2722}\x{2733}\x{2736}\x{273B}\x{273D}]\s+\S.*…(?:\s+\(\d+[smh](?:\s|·)|\s*$)'] },
+]

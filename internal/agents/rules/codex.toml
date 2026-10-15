@@ -1,0 +1,37 @@
+# Screen rules for Codex. Patterns adapted from Herdr's detection
+# manifests (github.com/herdrdev/herdr, Apache-2.0); see NOTICE.
+agent = "codex"
+
+[[rules]]
+id = "title_action_required"
+state = "needs_input"
+priority = 300
+region = "title"
+contains = ["Action Required"]
+
+[[rules]]
+id = "approval_or_trust"
+state = "needs_input"
+priority = 280
+region = "bottom:20"
+any = [
+  { regex = ['(?s)Do\s+you\s+trust\s+the\s+contents\s+of\s+this\s+directory\?'] },
+  { contains = ["Trust this folder?"] },
+  { contains = ["Allow command?"] },
+  { contains = ["Would you like to run the following command?"] },
+  { contains = ["Would you like to make the following edits?"] },
+]
+
+[[rules]]
+id = "title_spinner"
+state = "working"
+priority = 200
+region = "title"
+regex = ['(?:^| )[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏](?: |$)']
+
+[[rules]]
+id = "esc_to_interrupt"
+state = "working"
+priority = 150
+region = "bottom:12"
+line_regex = ['(?i)esc to interrupt']

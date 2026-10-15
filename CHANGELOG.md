@@ -23,6 +23,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Setup and resume hooks: an executable `.<name>/setup` in the repository (or `~/.config/<name>/hooks/setup` on the host) runs in the session's terminal before the agent; `resume` runs before a respawn.
 - `ports` and `forward`: find the ports a session listens on, and forward them to localhost through SSH.
 - Provider scripts: `host add --provider-script <path> --wake`, and `host start|stop|status`. A host that does not answer is started first. Examples for GCP and AWS.
+- Status from screen rules, kept as data (one TOML file per agent, patterns adapted from Herdr): the holder keeps a rendered copy of the screen and the rules tell working from waiting for the user. Sessions say where their state came from.
 - Alerts while attached: a desktop notification when another session on the host needs input or ends.
 - `--dir ~/…` on the command line maps the local home folder to the host's.
 - Respawn after a host restart: `restore` brings sessions back with each agent's resume or continue command, and a boot-time user unit runs it. `host restore` runs it on demand.

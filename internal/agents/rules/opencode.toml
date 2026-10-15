@@ -1,0 +1,31 @@
+# Screen rules for opencode. Patterns adapted from Herdr's detection
+# manifests (github.com/herdrdev/herdr, Apache-2.0); see NOTICE.
+agent = "opencode"
+
+[[rules]]
+id = "permission_required"
+state = "needs_input"
+priority = 300
+region = "screen"
+any = [
+  { contains = ["△ Permission required"] },
+  { contains = ["esc dismiss", "enter confirm"] },
+]
+
+[[rules]]
+id = "interrupt_hint"
+state = "working"
+priority = 110
+region = "screen"
+any = [
+  { contains = ["esc to interrupt"] },
+  { contains = ["ctrl+c to interrupt"] },
+  { line_regex = ['(?i)esc (again to )?interrupt'] },
+]
+
+[[rules]]
+id = "progress_bar"
+state = "working"
+priority = 100
+region = "screen"
+regex = ['(■|⬝){4,}']

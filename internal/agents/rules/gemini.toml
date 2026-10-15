@@ -1,0 +1,21 @@
+# Screen rules for Gemini CLI. Patterns adapted from Herdr's detection
+# manifests (github.com/herdrdev/herdr, Apache-2.0); see NOTICE.
+agent = "gemini"
+
+[[rules]]
+id = "apply_or_allow"
+state = "needs_input"
+priority = 300
+region = "screen"
+any = [
+  { contains = ["Apply this change"] },
+  { contains = ["Allow execution"] },
+  { contains = ["waiting for user confirmation"] },
+]
+
+[[rules]]
+id = "esc_to_cancel"
+state = "working"
+priority = 100
+region = "screen"
+contains = ["esc to cancel"]

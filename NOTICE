@@ -9,8 +9,11 @@ Third-party code and data
 Code or data adapted from other open-source projects is listed here, with its
 licence and the files it appears in.
 
-(none yet)
+- internal/agents/rules/*.toml: screen-rule patterns adapted from Herdr's agent
+  detection manifests (https://github.com/herdrdev/herdr, src/detect/manifests),
+  Copyright the Herdr authors, licensed under the Apache License, Version 2.0.
+  The rule format and engine are our own; the patterns were simplified.
 
 Projects whose designs informed this one, with no code copied:
 - zmx (https://github.com/neurosnap/zmx), MIT
-- Herdr (https://github.com/herdrdev/herdr), Apache-2.0
+- Herdr (https://github.com/herdrdev/herdr), Apache-2.0 (and the rule data above)

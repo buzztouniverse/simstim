@@ -1,0 +1,44 @@
+# Screen rules for Amp. Patterns adapted from Herdr's detection
+# manifests (github.com/herdrdev/herdr, Apache-2.0); see NOTICE.
+agent = "amp"
+
+[[rules]]
+id = "title_confirmation"
+state = "needs_input"
+priority = 320
+region = "title"
+contains = ["Plugin confirmation needed"]
+
+[[rules]]
+id = "approval_footer"
+state = "needs_input"
+priority = 300
+region = "screen"
+any = [
+  { contains = ["waiting for approval"] },
+  { contains = ["run this command?"] },
+  { contains = ["allow editing file:"] },
+  { contains = ["allow creating file:"] },
+  { contains = ["confirm tool call"] },
+]
+
+[[rules]]
+id = "title_spinner"
+state = "working"
+priority = 200
+region = "title"
+regex = ['^[\x{2800}-\x{28FF}] ']
+
+[[rules]]
+id = "status_footer"
+state = "working"
+priority = 150
+region = "bottom:5"
+line_regex = ['(?i)^\s*╰\s+\S+\s+(thinking|streaming|running tools|waiting)\s+─']
+
+[[rules]]
+id = "esc_to_cancel"
+state = "working"
+priority = 100
+region = "screen"
+contains = ["esc to cancel"]

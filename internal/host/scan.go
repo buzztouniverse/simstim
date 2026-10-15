@@ -8,6 +8,7 @@ import "strings"
 type scanner struct {
 	state int
 	osc   []byte
+	title string // the last window title (OSC 0 or 2)
 }
 
 const (
@@ -26,11 +27,12 @@ const (
 	sigNotify
 	sigProgressBusy
 	sigProgressDone
+	sigTitle
 )
 
 const maxOSC = 512
 
-// feed scans p and calls fn for each outSignal.
+// feed scans p and calls fn for each signal. After sigTitle, s.title holds the new title.
 func (s *scanner) feed(p []byte, fn func(outSignal)) {
 	for _, c := range p {
 		switch s.state {
@@ -84,6 +86,9 @@ func (s *scanner) endOSC(fn func(outSignal)) {
 	s.state = sNormal
 	o := s.osc
 	switch {
+	case hasPrefix(o, "0;"), hasPrefix(o, "2;"):
+		s.title = string(o[2:])
+		fn(sigTitle)
 	case hasPrefix(o, "9;4;"):
 		// OSC 9;4;state;progress. State 0 means done.
 		if len(o) > 4 && o[4] == '0' {
