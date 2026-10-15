@@ -48,6 +48,10 @@ R6 scores low: few developers ask for it, and simstim stores no secrets by desig
 | N6 | **Repo setup hooks:** a repo's own setup script runs when a session or worktree starts, with its output in the session | setup-time 12 / 389; prebuilt environments are sold by Cursor, Coder, Devin, Codex | 3 | 2 | S | 6.0 |
 | N7 | **`pull <session>`:** bring a session's branch back to the laptop over the same SSH | worktrees 10 / 216; sold as Claude `--teleport`, `codex apply`, Terragon `terry pull` | 3 | 2 | S | 6.0 |
 
+### Status
+
+On 15 October 2026 every item above is built, with docs, tests and end-to-end checks: R1 to R7, and N1 to N3 and N5 to N7. N4, the phone path, is scaffolded and hidden until its launch.
+
 ## Next
 
 | # | Feature | Need (sources / reactions) | D | I | E | Score | Issue |
