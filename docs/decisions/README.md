@@ -22,5 +22,6 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0016](0016-public-repo-layout.md) | Public repo layout: full community files at the root, GitHub config in .github/, private material out | Accepted |
 | [0017](0017-release-signatures.md) | Release signatures that any machine with OpenSSH can check | Accepted |
 | [0018](0018-feature-set.md) | The feature set: what we build now, next and later | Accepted |
+| [0019](0019-alerts-and-hooks.md) | Alerts and event hooks run on the host | Accepted |
 
 Write a new record from [the template](template.md).
