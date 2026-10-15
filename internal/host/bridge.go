@@ -270,7 +270,7 @@ func (b *bridge) attach(a proto.Attach) error {
 				return
 			}
 			switch f.Type {
-			case proto.TAttached, proto.TOutput, proto.TEnded, proto.TError:
+			case proto.TAttached, proto.TOutput, proto.TSnapshot, proto.TEnded, proto.TError:
 				if err := b.w.Write(f.Type, f.Payload); err != nil {
 					conn.Close()
 					return

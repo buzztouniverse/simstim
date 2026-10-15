@@ -219,6 +219,10 @@ func (a *attacher) begin(att proto.Attached, st *AttachState, rows int) {
 	// A full redraw. Keep what is on screen in the scrollback, then start clean.
 	a.tracker = term.NewTracker()
 	a.offset = att.From
+	if att.Mode == "snapshot" {
+		// The snapshot frame redraws the screen; live output starts at Live.
+		a.offset = att.Live
+	}
 	if a.o.Settings.Attach.Scrollback == "clear" {
 		a.write([]byte("\x1b[H\x1b[2J\x1b[3J"))
 	} else {
@@ -383,6 +387,11 @@ func (a *attacher) frame(f proto.Frame) (done bool, err error) {
 		if err == nil {
 			a.output(off, data)
 		}
+	case proto.TSnapshot:
+		// A redraw of the current screen, made by the host's terminal emulator.
+		// It contains no queries, so it goes straight to the terminal.
+		a.write(f.Payload)
+		a.tracker.Feed(f.Payload)
 	case proto.TEnded:
 		var e proto.Ended
 		_ = json.Unmarshal(f.Payload, &e)

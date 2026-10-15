@@ -42,6 +42,9 @@ const (
 	TOutput   Type = 0x24
 	TResize   Type = 0x25
 	TEnded    Type = 0x26
+	// TSnapshot carries VT bytes that redraw the session's current screen on a
+	// blank terminal. Live output from Attached.Live follows it.
+	TSnapshot Type = 0x27
 	TEvent    Type = 0x30
 
 	TUploadBegin Type = 0x40
@@ -210,7 +213,8 @@ type Attach struct {
 // Attached confirms an attach.
 type Attached struct {
 	Session string `json:"session"`
-	// Mode is "replay" (bytes from LastOffset follow) or "full" (the whole ring follows).
+	// Mode is "replay" (bytes from LastOffset follow), "snapshot" (a TSnapshot
+	// frame follows, then live output from Live) or "full" (the whole ring follows).
 	Mode string `json:"mode"`
 	// From is the offset of the first byte that follows.
 	From int64 `json:"from"`

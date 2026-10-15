@@ -197,7 +197,7 @@ func (c *Conn) readLoop(r *bufio.Reader) {
 				}
 			}
 		case proto.TPong:
-		case proto.TAttached, proto.TOutput, proto.TEnded, proto.TError:
+		case proto.TAttached, proto.TOutput, proto.TSnapshot, proto.TEnded, proto.TError:
 			select {
 			case c.stream <- f:
 			case <-c.done:
