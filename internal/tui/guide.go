@@ -249,7 +249,7 @@ func (g *guide) choose(m *Model, p onboard.Place) tea.Cmd {
 	if !p.Ready {
 		if g.pending == p.Kind {
 			g.pending = ""
-			g.err = &client.UserError{Msg: p.Title + " is not ready yet: " + p.Note, Hint: "Do the steps below, then press enter again."}
+			g.err = &client.UserError{Msg: p.Title + " is not ready yet: " + p.Note, Hint: "Do the steps above, then press enter again."}
 			return nil
 		}
 		return g.probe(m, p.Kind)
