@@ -444,7 +444,7 @@ Each table cell links its own primary source. The link targets are defined at th
 [wp-pricing]: https://www.warp.dev/pricing
 [wp-harness]: https://docs.warp.dev/platform/harnesses/
 [wp-faqs]: https://docs.warp.dev/platform/faqs/
-[wp-faq-lic]: https://github.com/warpdotdev/warp/blob/main/FAQ.md
+[wp-faq-lic]: https://github.com/warpdotdev/warp/blob/master/FAQ.md
 [wp-cli-agents]: https://docs.warp.dev/agents/cli-agents/overview/
 [wp-rc]: https://docs.warp.dev/agents/cli-agents/remote-control/
 [wp-runs]: https://docs.warp.dev/platform/viewing-cloud-agent-runs/

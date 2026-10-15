@@ -3,7 +3,8 @@ max_retries = 3
 retry_wait_time = 5
 timeout = 30
 max_concurrency = 16
-accept = [200, 203, 204, 206, 301, 302, 307, 308, 429]
+# 403 and 429: many sites refuse or slow down automated requests.
+accept = [200, 203, 204, 206, 301, 302, 307, 308, 403, 429]
 cache = true
 max_cache_age = "3d"
 # Sites that refuse automated requests, or need a login, and the repository

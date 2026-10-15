@@ -46,7 +46,8 @@ while read -r name version plat sum url; do
         dir="$tools/$name-$version"
         if [ ! -x "$dir/$name" ]; then
             say "Installing $name $version (go install)…"
-            GOBIN="$PWD/$dir" go install "$url" || die "could not go install $url"
+            # A tool may need a newer Go than this repo; let go fetch it.
+            GOTOOLCHAIN=auto GOBIN="$PWD/$dir" go install "$url" || die "could not go install $url"
         fi
         ln -sf "$PWD/$dir/$name" "$tools/bin/$name"
         continue
