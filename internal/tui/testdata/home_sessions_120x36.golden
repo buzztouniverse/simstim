@@ -1,0 +1,36 @@
+╭─ simstim ───────────────────────────────────────────────────────────────────────────────────── 3 hosts · 6 sessions ─╮
+│ HOSTS                            │ SESSIONS ─ atlas-dev                                                             │
+│   all hosts              6       │ ● auth-refactor         claude   ~/src/app                     needs input     2m │
+│ ▸ atlas-dev             4   9ms │ ⠶ api-tests             codex    ~/src/api                     working        14s │
+│ ◌ aws-gpu                offline │ ○ notes                 shell    ~                             idle            1h │
+│   gcp-dev                2  41ms │ ✓ docs-pass             opencode ~/src/docs                    exited 0        3h │
+│                                  │                                                                                   │
+│                                  │ ╭─ api-tests ───────────────────────────────────────────────────────────────────╮ │
+│                                  │ │ running 48 tests                                                              │ │
+│                                  │ │ ok  api/handlers  0.41s                                                       │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ ╰─ codex · ~/src/api ───────────────────────────────────────────────────────────╯ │
+╰─ enter attach · n new · d delete · r rename · / filter · ctrl+o commands · ? help ───────────────────────────────────╯

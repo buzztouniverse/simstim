@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
 
 func TestRunProvider(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the test scripts are POSIX shell; on Windows a provider is a .cmd or .exe")
+	}
 	dir := t.TempDir()
 	script := filepath.Join(dir, "provider.sh")
 	// The script echoes its action and the job it received on stdin.

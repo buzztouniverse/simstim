@@ -158,15 +158,22 @@ func (l *lockedWriter) Write(p []byte) (int, error) {
 }
 
 func (c *Conn) startError(err error) error {
-	_ = c.cmd.Wait()
+	waitErr := c.cmd.Wait()
 	msg := strings.TrimSpace(c.stderr.String())
 	if strings.Contains(msg, "No such file") || strings.Contains(msg, "not found") {
 		return ErrNotInstalled
 	}
-	if msg != "" {
-		return sshError(c.Host, &exec.ExitError{}, msg)
+	if msg == "" {
+		return err
 	}
-	return err
+	if lines := strings.Split(msg, "\n"); len(lines) > 3 {
+		msg = strings.Join(lines[len(lines)-3:], "\n")
+	}
+	var ee *exec.ExitError
+	if errors.As(waitErr, &ee) && ee.ExitCode() == 255 {
+		return &UserError{Msg: fmt.Sprintf("cannot reach %s: %s", c.Host.Name, msg), Hint: fmt.Sprintf("ssh %s   (check that this works first)", c.Host.SSH)}
+	}
+	return &UserError{Msg: fmt.Sprintf("the helper on %s did not start: %s", c.Host.Name, msg), Hint: brand.Name + " host doctor " + c.Host.Name}
 }
 
 func (c *Conn) readLoop(r *bufio.Reader) {

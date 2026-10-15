@@ -15,6 +15,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - The input filter for the detach and image-paste keys, in legacy, kitty and modifyOtherKeys encodings.
 - The client: system OpenSSH with a generated config and a private ControlMaster, helper install with consent and SHA-256 checks, automatic helper upgrades for saved hosts, the bridge connection, and the attach pump with heartbeat, reconnect and replay by byte offset.
 - Image paste from the clipboard and dropped-file upload, into a private per-session folder.
+- The home screen: hosts and sessions side by side with a live preview, the new-session dialog (agent, folder, name, worktree), rename, delete with a confirm, the add-host wizard, a command palette, help, toasts and a first-run screen. Colours follow the terminal's own palette. Attach and detach keep the terminal's scrollback continuous within one run.
 - CLI commands: `host add/ls/rm/test/doctor`, `new`, `ls`, `attach`, `kill`, `rename`, `doctor keys`, `version`.
 - End-to-end tests that drive the real client in a pseudo-terminal against a real host (`just e2e`).
 - Agent status hooks, as data in the agent table: Claude Code through `--settings`, Codex through `notify`. They report prompts, finished turns, notifications and the agent's own session ID (which follows `/clear`).

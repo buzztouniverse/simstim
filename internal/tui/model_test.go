@@ -1,0 +1,637 @@
+package tui
+
+import (
+	"context"
+	"errors"
+	"slices"
+	"strings"
+	"testing"
+	"time"
+
+	tea "charm.land/bubbletea/v2"
+
+	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iAmLakshya/simstim/internal/proto"
+)
+
+// toastTexts lists the toasts shown and queued.
+func toastTexts(m *Model) []string {
+	var out []string
+	for _, t := range append(append([]toast(nil), m.toasts.shown...), m.toasts.queue...) {
+		out = append(out, t.text)
+	}
+	return out
+}
+
+func hasToast(t *testing.T, m *Model, want string) {
+	t.Helper()
+	if !slices.Contains(toastTexts(m), want) {
+		t.Fatalf("no toast %q; have %q", want, toastTexts(m))
+	}
+}
+
+func hasCall(t *testing.T, be *fakeBackend, want string) {
+	t.Helper()
+	if !slices.Contains(be.callList(), want) {
+		t.Fatalf("no call %q; have %q", want, be.callList())
+	}
+}
+
+func TestSessionOrder(t *testing.T) {
+	hs := home(t, 80, 24)
+	var names []string
+	for _, r := range hs.m.rows() {
+		names = append(names, r.s.Name)
+	}
+	want := []string{"auth-refactor", "api-tests", "notes", "docs-pass"}
+	if !slices.Equal(names, want) {
+		t.Fatalf("order %q, want %q", names, want)
+	}
+}
+
+func TestConnectsAndShowsHosts(t *testing.T) {
+	hs := home(t, 80, 24)
+	dev, aws := hs.m.hostByName("atlas-dev"), hs.m.hostByName("aws-gpu")
+	if !dev.online() || dev.latency != 9*time.Millisecond || dev.info == nil {
+		t.Fatalf("atlas-dev: status %v, latency %v, info %v", dev.status, dev.latency, dev.info)
+	}
+	if aws.status != stOffline {
+		t.Fatalf("aws-gpu status %v, want offline", aws.status)
+	}
+	if hs.m.sel != (sessKey{"atlas-dev", "s4"}) {
+		t.Fatalf("selected %v, want the session that needs input", hs.m.sel)
+	}
+	if hs.m.preview.shot == nil || hs.m.preview.shot.blank {
+		t.Fatal("the preview did not load")
+	}
+}
+
+func TestQuit(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("q")
+	if !hs.quit {
+		t.Fatal("q did not quit")
+	}
+
+	hs = home(t, 80, 24)
+	hs.key("ctrl+c")
+	if hs.quit {
+		t.Fatal("one ctrl+c quit")
+	}
+	hasToast(t, hs.m, "Press ctrl+c again to quit. Sessions keep running.")
+	hs.clock = hs.clock.Add(2 * time.Second)
+	hs.key("ctrl+c")
+	if hs.quit {
+		t.Fatal("ctrl+c twice, 2 s apart, quit")
+	}
+	hs.key("ctrl+c")
+	if !hs.quit {
+		t.Fatal("ctrl+c ctrl+c did not quit")
+	}
+}
+
+func TestTabSwitchesPane(t *testing.T) {
+	hs := home(t, 80, 24)
+	if hs.m.focus != paneHosts {
+		t.Fatal("focus does not start on hosts")
+	}
+	hs.key("tab")
+	if hs.m.focus != paneSessions {
+		t.Fatal("tab did not move to sessions")
+	}
+	hs.key("down")
+	if hs.m.sel.id != "s3" {
+		t.Fatalf("down selected %v", hs.m.sel)
+	}
+	hs.key("shift+tab", "down")
+	if hs.m.focus != paneHosts || hs.m.selectedHost().name() != "aws-gpu" {
+		t.Fatal("shift+tab and down did not move to aws-gpu")
+	}
+}
+
+func TestNewSessionAttaches(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("enter")
+	d, ok := hs.m.modal.(*newSession)
+	if !ok {
+		t.Fatalf("enter on a host opened %T", hs.m.modal)
+	}
+	if d.agent() != "claude" {
+		t.Fatalf("default agent %q", d.agent())
+	}
+	hs.key("right", "tab", "ctrl+u")
+	hs.typeText("~/src/api")
+	hs.key("tab")
+	hs.typeText("api-fix")
+	hs.key("tab", "right", "enter")
+	hasCall(t, hs.be, "new atlas-dev agent=codex cwd=~/src/api name=api-fix worktree=true size=80x24")
+	if hs.m.modal != nil {
+		t.Fatal("the dialog stayed open")
+	}
+	if len(hs.be.attached) != 1 || hs.be.attached[0].Session != "n005" {
+		t.Fatalf("attached %+v", hs.be.attached)
+	}
+	o := hs.be.attached[0]
+	if o.State != hs.m.attach || !o.Interactive || o.Title != brand.DisplayName+" · atlas-dev/api-fix" {
+		t.Fatalf("attach options %+v", o)
+	}
+	hasToast(t, hs.m, "Detached. api-fix keeps running on atlas-dev.")
+	if hs.m.lastAgent["atlas-dev"] != "codex" {
+		t.Fatal("the agent was not remembered")
+	}
+	hs.key("n")
+	if d := hs.m.modal.(*newSession); d.agent() != "codex" {
+		t.Fatalf("the next dialog picked %q", d.agent())
+	}
+}
+
+func TestNewSessionDetached(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("n", "ctrl+enter")
+	if len(hs.be.attached) != 0 {
+		t.Fatal("ctrl+enter attached")
+	}
+	hasToast(t, hs.m, "Started app on atlas-dev.")
+	if hs.m.sel.id != "n005" || hs.m.focus != paneSessions {
+		t.Fatalf("the new session is not selected: %v", hs.m.sel)
+	}
+}
+
+func TestNewSessionError(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.be.state["atlas-dev"].newErr = &client.UserError{Msg: "codex is not installed on this host", Hint: "Install it on the host, then try again."}
+	hs.key("n", "enter")
+	d, ok := hs.m.modal.(*newSession)
+	if !ok || d.err == nil || d.starting {
+		t.Fatalf("the error is not in the dialog: %T %+v", hs.m.modal, d)
+	}
+	if !strings.Contains(screen(hs.m), "Try: Install it on the host") {
+		t.Fatal("no Try line")
+	}
+}
+
+func TestAttachKeepsStateAndReportsEnd(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("tab", "enter")
+	hasToast(t, hs.m, "Detached. auth-refactor keeps running on atlas-dev.")
+	hs.be.attach = client.AttachResult{Ended: &proto.Ended{ExitCode: 2}}
+	hs.key("enter")
+	if len(hs.be.attached) != 2 || hs.be.attached[0].State != hs.be.attached[1].State {
+		t.Fatal("the two attaches did not share one AttachState")
+	}
+	if st := hs.m.attach; !st.Valid || st.Key != "atlas-dev/s4" || st.Offset != 200 {
+		t.Fatalf("attach state %+v", st)
+	}
+	hasToast(t, hs.m, "auth-refactor on atlas-dev ended (exit 2).")
+
+	hs.be.attach = client.AttachResult{Reconnects: 1, Missed: 3 << 20}
+	hs.key("enter")
+	hasToast(t, hs.m, "Reconnected to atlas-dev (missed 3 MiB, replayed).")
+
+	hs.be.attach, hs.be.attachErr = client.AttachResult{}, &client.UserError{Msg: "cannot reach atlas-dev: timed out", Hint: "ssh atlas-dev"}
+	hs.key("enter")
+	hasToast(t, hs.m, "Cannot reach atlas-dev: timed out.")
+}
+
+func TestAttachEndedSession(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("tab", "end", "enter")
+	if len(hs.be.attached) != 0 {
+		t.Fatal("attached to an ended session")
+	}
+	hasToast(t, hs.m, "Not available: the session has ended.")
+}
+
+func TestDeleteConfirm(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("tab", "down", "d")
+	c, ok := hs.m.modal.(*confirm)
+	if !ok || c.title != "Delete api-tests?" || !c.danger {
+		t.Fatalf("d opened %T", hs.m.modal)
+	}
+	hs.key("esc")
+	if hs.m.modal != nil || slices.ContainsFunc(hs.be.callList(), func(s string) bool { return strings.HasPrefix(s, "delete") }) {
+		t.Fatal("esc did not keep the session")
+	}
+	hs.key("d", "enter")
+	hasCall(t, hs.be, "delete atlas-dev s3")
+	hasToast(t, hs.m, "Deleted api-tests on atlas-dev. Kept the worktree ~/src/api-tests: it has uncommitted changes.")
+	for _, r := range hs.m.rows() {
+		if r.s.ID == "s3" {
+			t.Fatal("the deleted session is still listed")
+		}
+	}
+	if hs.m.sel.id == "s3" || hs.m.sel == (sessKey{}) {
+		t.Fatalf("selection after delete: %v", hs.m.sel)
+	}
+}
+
+func TestRename(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("tab", "r")
+	if hs.m.rename == nil {
+		t.Fatal("r did not start a rename")
+	}
+	hs.key("ctrl+u")
+	hs.typeText("auth-v2")
+	hs.key("enter")
+	hasCall(t, hs.be, "rename atlas-dev s4 auth-v2")
+	hasToast(t, hs.m, "Renamed auth-refactor to auth-v2 on atlas-dev.")
+	if hs.m.rename != nil {
+		t.Fatal("the rename stayed open")
+	}
+	hs.key("r", "esc")
+	if hs.m.rename != nil {
+		t.Fatal("esc did not cancel")
+	}
+}
+
+func TestCopyAttachCommand(t *testing.T) {
+	hs := home(t, 80, 24)
+	_, cmd := hs.m.Update(keyMsg("tab"))
+	hs.do(cmd)
+	_, cmd = hs.m.Update(keyMsg("y"))
+	if cmd == nil {
+		t.Fatal("y returned no command")
+	}
+	hs.do(cmd)
+	hasToast(t, hs.m, "Copied: "+brand.Name+" attach atlas-dev/auth-refactor.")
+}
+
+func TestFilter(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("up", "tab", "/")
+	hs.typeText("bench")
+	if n := sessionRows(hs.m.rows()); n != 1 || hs.m.sel.id != "g1" {
+		t.Fatalf("filter left %d rows, selected %v", n, hs.m.sel)
+	}
+	hs.key("enter")
+	if hs.m.sessFilter.typing || hs.m.sessFilter.query() != "bench" {
+		t.Fatal("enter did not keep the filter")
+	}
+	hs.key("esc")
+	if hs.m.sessFilter.query() != "" || sessionRows(hs.m.rows()) != 6 {
+		t.Fatal("esc did not clear the filter")
+	}
+	hs.key("alt+e")
+	if n := sessionRows(hs.m.rows()); n != 4 {
+		t.Fatalf("alt+e left %d rows, want 4", n)
+	}
+}
+
+func TestPasteSessionID(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.send(tea.PasteMsg{Content: "gcp-dev/g2\n"})
+	if hs.m.sel != (sessKey{"gcp-dev", "g2"}) || hs.m.focus != paneSessions {
+		t.Fatalf("paste selected %v", hs.m.sel)
+	}
+}
+
+func TestPalette(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("down") // aws-gpu, offline
+	hs.key("ctrl+o")
+	p, ok := hs.m.modal.(*palette)
+	if !ok {
+		t.Fatalf("ctrl+o opened %T", hs.m.modal)
+	}
+	hs.typeText("session new")
+	items := p.items(hs.m)
+	if len(items) == 0 || items[0].c.name() != "session: new" || items[0].reason != "aws-gpu is offline" {
+		t.Fatalf("first item %+v", items)
+	}
+	if !strings.Contains(screen(hs.m), "not available: aws-gpu is offline") {
+		t.Fatal("the reason is not shown")
+	}
+	hs.key("enter")
+	if hs.m.modal == nil {
+		t.Fatal("a disabled command closed the palette")
+	}
+	hs.key("esc", "up", "ctrl+o")
+	hs.typeText("toggle exited")
+	hs.key("enter")
+	if hs.m.modal != nil || !hs.m.hideExited {
+		t.Fatal("the palette did not run the command")
+	}
+}
+
+func TestHelpComesFromTheRegistry(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("?")
+	if _, ok := hs.m.modal.(*helpView); !ok {
+		t.Fatalf("? opened %T", hs.m.modal)
+	}
+	for _, c := range commands {
+		if len(c.keys) > 0 && c.keys[0].key != "enter" && !strings.Contains(screen(hs.m), c.name()) {
+			t.Errorf("help is missing %s", c.name())
+		}
+	}
+}
+
+func TestReconnect(t *testing.T) {
+	hs := home(t, 80, 24)
+	h := hs.m.hostByName("atlas-dev")
+	gen := h.gen
+	hs.be.conn("atlas-dev").Close() // the link drops
+	hs.do(nil)
+	if h.status != stOffline || h.online() {
+		t.Fatalf("status %v after the connection closed", h.status)
+	}
+	if !strings.Contains(screen(hs.m), "atlas-dev") {
+		t.Fatal("the host vanished")
+	}
+	if n := hs.fire(func(m tea.Msg) bool { r, ok := m.(redialMsg); return ok && r.name == "atlas-dev" }); n != 1 {
+		t.Fatalf("%d redials scheduled, want 1", n)
+	}
+	if !h.online() || h.gen == gen || hs.be.dials["atlas-dev"] != 2 {
+		t.Fatalf("not reconnected: status %v, dials %d", h.status, hs.be.dials["atlas-dev"])
+	}
+	if h.backoff != 0 {
+		t.Fatal("the backoff was not reset")
+	}
+}
+
+func TestBackoff(t *testing.T) {
+	var got []time.Duration
+	d := time.Duration(0)
+	for range 7 {
+		d = nextBackoff(d)
+		got = append(got, d)
+	}
+	want := []time.Duration{1, 2, 4, 8, 16, 30, 30}
+	for i := range want {
+		if got[i] != want[i]*time.Second {
+			t.Fatalf("backoff %v", got)
+		}
+	}
+}
+
+func TestOfflineHostShowsTry(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("down")
+	out := screen(hs.m)
+	for _, want := range []string{"aws-gpu is offline.", "Try: ssh aws-gpu", "Retrying in the background."} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+	hs.key("enter")
+	if hs.m.modal != nil {
+		t.Fatal("a new-session dialog opened on an offline host")
+	}
+	hasToast(t, hs.m, "Not available: aws-gpu is offline.")
+}
+
+func TestWizard(t *testing.T) {
+	be := newFakeBackend()
+	be.probe = client.Platform{OS: "linux", Arch: "arm64"}
+	be.known = []string{"bastion", "raspberry"}
+	hs := newHarness(t, be, 80, 24)
+	hs.key("n")
+	if hs.m.modal != nil {
+		t.Fatal("n did something on the first-run screen")
+	}
+	hs.key("a")
+	w, ok := hs.m.modal.(*wizard)
+	if !ok {
+		t.Fatalf("a opened %T", hs.m.modal)
+	}
+	hs.key("down", "down")
+	if w.in[0].value() != "raspberry" || w.in[1].value() != "raspberry" {
+		t.Fatalf("picking from the SSH config gave %q, %q", w.in[0].value(), w.in[1].value())
+	}
+	hs.key("tab", "tab")
+	hs.typeText("~/infra/ssh/config")
+	hs.key("enter")
+	if w.step != wzTest || w.err != nil || len(w.checks) != 3 {
+		t.Fatalf("test step: %v %v %+v", w.step, w.err, w.checks)
+	}
+	hs.key("enter")
+	if w.step != wzInstall {
+		t.Fatalf("no consent screen: step %v", w.step)
+	}
+	hs.key("esc")
+	if w.step != wzTest {
+		t.Fatal("esc did not go back")
+	}
+	hs.key("enter", "enter")
+	hasCall(t, be, "install raspberry")
+	if !w.saved || w.step != wzReady {
+		t.Fatalf("not ready: step %v, err %v", w.step, w.err)
+	}
+	want := client.Host{Name: "raspberry", SSH: "raspberry", SSHConfig: "~/infra/ssh/config"}
+	if len(be.hosts) != 1 || be.hosts[0].Name != want.Name || be.hosts[0].SSHConfig != want.SSHConfig {
+		t.Fatalf("saved %+v", be.hosts)
+	}
+	h := hs.m.hostByName("raspberry")
+	if h == nil || !h.online() || be.dials["raspberry"] != 1 {
+		t.Fatal("the wizard's connection was not adopted")
+	}
+	hs.key("enter")
+	if d, ok := hs.m.modal.(*newSession); !ok || d.host != "raspberry" {
+		t.Fatalf("start a session opened %T", hs.m.modal)
+	}
+}
+
+func TestWizardSSHNeedsThePrompt(t *testing.T) {
+	be := newFakeBackend()
+	be.probeErr = &client.UserError{Msg: "cannot reach box: Permission denied (publickey).", Hint: "ssh box"}
+	hs := newHarness(t, be, 80, 24)
+	hs.key("a")
+	hs.typeText("me@box.example")
+	hs.key("tab", "ctrl+u")
+	hs.typeText("box")
+	hs.key("enter")
+	w := hs.m.modal.(*wizard)
+	_, hint := errText(w.err)
+	if want := brand.Name + " host add box me@box.example"; !strings.HasPrefix(hint, want) {
+		t.Fatalf("hint %q, want it to start with %q", hint, want)
+	}
+}
+
+func TestWizardChecksTheName(t *testing.T) {
+	hs := newHarness(t, labBackend(), 80, 24)
+	hs.key("a")
+	hs.typeText("gcp-dev")
+	hs.key("enter")
+	w := hs.m.modal.(*wizard)
+	if msg, _ := errText(w.err); msg != "there is already a host named gcp-dev" {
+		t.Fatalf("error %q", msg)
+	}
+	if w.step != wzWhere {
+		t.Fatal("it went on")
+	}
+}
+
+func TestRemoveHost(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("ctrl+o")
+	hs.typeText("host remove")
+	hs.key("enter", "enter")
+	if hs.m.hostByName("atlas-dev") != nil || len(hs.be.hosts) != 2 {
+		t.Fatal("the host was not removed")
+	}
+	hasToast(t, hs.m, "Forgot atlas-dev. Its sessions and the helper stay on the host.")
+}
+
+func TestToasts(t *testing.T) {
+	var s toastStack
+	for _, x := range []string{"a", "b", "c", "d", "e"} {
+		s.push(now, toastInfo, x, "")
+	}
+	if len(s.shown) != 3 || len(s.queue) != 2 {
+		t.Fatalf("%d shown, %d queued", len(s.shown), len(s.queue))
+	}
+	s.push(now.Add(2*time.Second), toastInfo, "a", "")
+	s.push(now, toastInfo, "d", "")
+	if len(s.queue) != 2 {
+		t.Fatal("a repeat was queued")
+	}
+	s.expire(now.Add(3 * time.Second))
+	var texts []string
+	for _, x := range s.shown {
+		texts = append(texts, x.text)
+	}
+	if !slices.Equal(texts, []string{"a", "d", "e"}) || len(s.queue) != 0 {
+		t.Fatalf("after expiry %q", texts)
+	}
+	if d, ok := s.next(now.Add(3 * time.Second)); !ok || d != 2*time.Second {
+		t.Fatalf("next %v", d)
+	}
+}
+
+func TestMotion(t *testing.T) {
+	env := func(kv ...string) func(string) string {
+		return func(k string) string {
+			for i := 0; i < len(kv); i += 2 {
+				if kv[i] == k {
+					return kv[i+1]
+				}
+			}
+			return ""
+		}
+	}
+	cases := []struct {
+		setting string
+		env     func(string) string
+		want    bool
+	}{
+		{"auto", env(), true},
+		{"auto", env("SSH_CONNECTION", "1.2.3.4 5 6.7.8.9 22"), false},
+		{"auto", env("NO_COLOR", "1"), false},
+		{"auto", env("TERM", "dumb"), false},
+		{"auto", env("TERMINAL_EMULATOR", "JetBrains-JediTerm"), false},
+		{"on", env("SSH_CONNECTION", "x"), true},
+		{"off", env(), false},
+	}
+	for _, c := range cases {
+		if got := motionOn(c.setting, c.env); got != c.want {
+			t.Errorf("motionOn(%q) = %v, want %v", c.setting, got, c.want)
+		}
+	}
+}
+
+func TestSpinnerOnlyWhenNeeded(t *testing.T) {
+	be := labBackend()
+	hs := newHarness(t, be, 80, 24)
+	hs.m.motion = true
+	hs.do(hs.m.startTimers())
+	if !hs.m.spinning {
+		t.Fatal("no spinner for working sessions")
+	}
+	for _, h := range hs.m.hosts {
+		for i := range h.sessions {
+			h.sessions[i].State = api.StateIdle
+		}
+	}
+	hs.fire(func(m tea.Msg) bool { _, ok := m.(spinTickMsg); return ok })
+	if hs.m.spinning {
+		t.Fatal("the spinner kept ticking on an idle screen")
+	}
+}
+
+func TestRenderScreen(t *testing.T) {
+	// A terminal query in the output must not block the emulator.
+	done := make(chan *screenShot, 1)
+	go func() { done <- renderScreen([]byte("\x1b[c\x1b[6n\x1b[?2048hhello\r\n\x1b[31mworld\x1b[0m"), 20, 5) }()
+	select {
+	case s := <-done:
+		got := s.view(10, 3)
+		if len(got) != 3 || !strings.Contains(got[0], "hello") || !strings.Contains(got[1], "world") {
+			t.Fatalf("view %q", got)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("the emulator blocked")
+	}
+}
+
+func TestFit(t *testing.T) {
+	if got := fit("auth-refactor", 6); got != "auth-…" {
+		t.Errorf("fit = %q", got)
+	}
+	if got := truncPath("/home/dev/src/app/internal/auth", 20); got != "/home/dev/…/auth" {
+		t.Errorf("truncPath = %q", got)
+	}
+	if got := fmtMemory(6549825126, 8<<30); got != "6.1 of 8 GiB" {
+		t.Errorf("fmtMemory = %q", got)
+	}
+	if _, ok := fuzzy("sn", "session: new"); !ok {
+		t.Error("fuzzy missed")
+	}
+}
+
+func TestRunNeedsATerminal(t *testing.T) {
+	// Under go test, stdin is not a terminal.
+	err := Run(context.Background())
+	var ue *client.UserError
+	if !errors.As(err, &ue) || ue.Hint == "" {
+		t.Fatalf("Run = %v", err)
+	}
+}
+
+func TestHostFilterKeepsTheHost(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("/")
+	hs.typeText("gcp")
+	if h := hs.m.selectedHost(); h == nil || h.name() != "gcp-dev" {
+		t.Fatalf("the filter selected %v", h)
+	}
+	hs.key("esc")
+	if h := hs.m.selectedHost(); h == nil || h.name() != "gcp-dev" {
+		t.Fatalf("clearing the filter moved to %v", h)
+	}
+}
+
+func TestStaleListIsIgnored(t *testing.T) {
+	hs := home(t, 80, 24)
+	h := hs.m.hostByName("atlas-dev")
+	before := len(h.sessions)
+	h.changes++ // a local edit after the list below was asked for
+	_, cmd := hs.m.Update(sessionsMsg{name: h.name(), gen: h.gen, changes: h.changes - 1, list: nil})
+	if len(h.sessions) != before {
+		t.Fatal("a stale list replaced the sessions")
+	}
+	hs.do(cmd)
+	if len(h.sessions) != before || h.listing {
+		t.Fatal("the list was not asked for again")
+	}
+}
+
+func TestHeroMotion(t *testing.T) {
+	hs := newHarness(t, newFakeBackend(), 80, 24)
+	still := strings.Join(hs.m.heroLines(), "\n")
+	hs.m.hero = 10
+	if strings.Join(hs.m.heroLines(), "\n") != still {
+		t.Fatal("the hero moved with motion off")
+	}
+	hs.m.motion = true
+	if strings.Join(hs.m.heroLines(), "\n") == still {
+		t.Fatal("the hero did not move with motion on")
+	}
+	hs.m.hero = heroPulse + 1
+	if strings.Join(hs.m.heroLines(), "\n") != still {
+		t.Fatal("the hero did not rest between pulses")
+	}
+}

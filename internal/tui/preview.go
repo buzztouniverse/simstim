@@ -1,0 +1,202 @@
+package tui
+
+import (
+	"context"
+	"io"
+	"strings"
+	"time"
+
+	tea "charm.land/bubbletea/v2"
+	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/vt"
+)
+
+// peekBytes is how much of a session's newest output the preview reads.
+const peekBytes = 64 << 10
+
+// previewState is the preview of the selected session.
+type previewState struct {
+	key      sessKey
+	seq      int
+	loading  bool
+	inflight bool
+	shot     *screenShot
+	err      string
+}
+
+type peekMsg struct {
+	key  sessKey
+	shot *screenShot
+	err  error
+}
+
+// schedulePreview loads the preview of the selected session after a short
+// pause, so moving quickly through the list does not flood the host.
+func (m *Model) schedulePreview() tea.Cmd {
+	m.preview.seq++
+	if m.sel == (sessKey{}) {
+		m.preview = previewState{seq: m.preview.seq}
+		return nil
+	}
+	if m.preview.key != m.sel {
+		m.preview = previewState{key: m.sel, seq: m.preview.seq, loading: true}
+	}
+	if !m.showPreview {
+		return nil
+	}
+	return m.after(previewDelay, previewTickMsg{seq: m.preview.seq})
+}
+
+// peek asks the host for the selected session's newest output.
+func (m *Model) peek() tea.Cmd {
+	if !m.showPreview || m.preview.inflight || m.preview.key == (sessKey{}) {
+		return nil
+	}
+	h := m.hostByName(m.preview.key.host)
+	if h == nil || !h.online() {
+		return nil
+	}
+	m.preview.inflight = true
+	key, c, ctx := m.preview.key, h.conn, m.ctx
+	return func() tea.Msg {
+		cctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		data, cols, rows, err := c.Peek(cctx, key.id, peekBytes)
+		if err != nil {
+			return peekMsg{key: key, err: err}
+		}
+		return peekMsg{key: key, shot: renderScreen(data, cols, rows)}
+	}
+}
+
+func (m *Model) onPeek(msg peekMsg) {
+	if msg.key != m.preview.key {
+		return // an answer for a session no longer selected
+	}
+	m.preview.inflight, m.preview.loading = false, false
+	if msg.err != nil {
+		e, _ := errText(msg.err)
+		m.preview.err = e
+		return
+	}
+	m.preview.shot, m.preview.err = msg.shot, ""
+}
+
+// screenShot is a session's screen as the terminal would show it.
+type screenShot struct {
+	lines  []uv.Line
+	bottom int // the last row worth showing: text or the cursor
+	blank  bool
+}
+
+// renderScreen runs bytes through a terminal emulator of the session's size.
+// The bytes are the tail of the session's output, so the first few may be the
+// end of a cut sequence; the emulator shrugs those off.
+func renderScreen(data []byte, cols, rows int) (shot *screenShot) {
+	// A preview is never worth a crash: odd bytes give an empty screen.
+	defer func() {
+		if recover() != nil {
+			shot = &screenShot{blank: true}
+		}
+	}()
+	if cols <= 0 || cols > 1000 {
+		cols = 80
+	}
+	if rows <= 0 || rows > 500 {
+		rows = 24
+	}
+	emu := vt.NewEmulator(cols, rows)
+	// The emulator answers terminal queries through a pipe. Drain it, so a
+	// query in the output cannot block the write.
+	done := make(chan struct{})
+	pw, _ := emu.InputPipe().(*io.PipeWriter)
+	if pw != nil {
+		go func() {
+			_, _ = io.Copy(io.Discard, emu)
+			close(done)
+		}()
+	} else {
+		data = stripQueries(data)
+		close(done)
+	}
+	_, _ = emu.Write(data)
+	if pw != nil {
+		_ = pw.Close()
+	}
+	<-done
+
+	shot = &screenShot{blank: true}
+	for y := range rows {
+		line := make(uv.Line, cols)
+		for x := range cols {
+			if c := emu.CellAt(x, y); c != nil {
+				line[x] = *c
+			} else {
+				line[x] = uv.EmptyCell
+			}
+		}
+		shot.lines = append(shot.lines, line)
+		if strings.TrimSpace(line.String()) != "" {
+			shot.bottom, shot.blank = y, false
+		}
+	}
+	if pos := emu.CursorPosition(); !emu.CursorHidden() && pos.Y > shot.bottom && pos.Y < rows {
+		shot.bottom = pos.Y
+	}
+	return shot
+}
+
+// stripQueries is the fallback when the emulator's reply pipe cannot be
+// drained: it drops escape sequences, keeping the text.
+func stripQueries(b []byte) []byte { return []byte(ansi.Strip(string(b))) }
+
+// view returns h rows of w cells: the bottom of the screen, cut to the width.
+func (s *screenShot) view(w, h int) []string {
+	top := max(0, s.bottom-h+1)
+	var out []string
+	for y := top; y < len(s.lines) && len(out) < h; y++ {
+		out = append(out, renderCells(s.lines[y], w))
+	}
+	return out
+}
+
+// renderCells draws the first w cells of a line with their styles.
+func renderCells(l uv.Line, w int) string {
+	if w <= 0 {
+		return ""
+	}
+	cut := make(uv.Line, 0, w)
+	for x := 0; x < len(l) && x < w; x++ {
+		c := l[x]
+		if c.Width > 1 && x+c.Width > w {
+			c = uv.EmptyCell
+		}
+		cut = append(cut, c)
+	}
+	return cut.Render() + ansi.ResetStyle
+}
+
+// previewLines fills the preview box.
+func (m *Model) previewLines(w, h int) []string {
+	p := m.preview
+	switch {
+	case p.key != m.sel || (p.shot == nil && p.loading):
+		return []string{sPrimary.Render(m.spinner()) + " " + sMuted.Render("Loading the last screen…")}
+	case p.shot == nil && p.err != "":
+		return wrapMuted(sentence(p.err), w)
+	case p.shot == nil:
+		return []string{sMuted.Render("No screen to show.")}
+	case p.shot.blank:
+		return []string{sMuted.Render("No output yet.")}
+	}
+	return p.shot.view(w, h)
+}
+
+func wrapMuted(s string, w int) []string {
+	var out []string
+	for _, l := range wrap(s, w) {
+		out = append(out, sMuted.Render(l))
+	}
+	return out
+}

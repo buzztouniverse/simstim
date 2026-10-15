@@ -1,0 +1,36 @@
+╭─ simstim ───────────────────────────────────────────────────────────────────────────────────── 3 hosts · 6 sessions ─╮
+│ HOSTS                            │ SESSIONS ─ atlas-dev                                                             │
+│   all hosts              6       │ ● auth-refactor         claude   ~/src/app                     needs input     2m │
+│ ▸ atlas-dev             4   9ms │ ⠶ api-tests             codex    ~/src/api                     working        14s │
+│ ◌ aws-gpu                offline │ ○ notes                 shell    ~                             idle            1h │
+│   gcp-dev                2  41ms │ ✓ docs-pass             opencode ~/src/docs                    exited 0        3h │
+│                     ╭─ Commands ───────────────────────────────────────────────────────────────╮                     │
+│                     │ > ses                                                                    │───────────────────╮ │
+│                     │  session: new                                                         n  │                   │ │
+│                     │  session: attach                                                  enter  │                   │ │
+│                     │  session: rename                                                      r  │                   │ │
+│                     │  session: delete                                                      d  │                   │ │
+│                     │  session: copy attach command                                         y  │                   │ │
+│                     │  host: test                                                              │                   │ │
+│                     │  simstim: settings                                                       │                   │ │
+│                     │  host: details                                                        i  │                   │ │
+│                     ╰─ ↑↓ choose · enter run · esc close ──────────────────────────────────────╯                   │ │
+│                                  │ │ ● Should I also migrate the old sessions table? (y/n)                         │ │
+│                                  │ │                                                                               │ │
+│                                  │ │ >                                                                             │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ ╰─ claude · ~/src/app · 6.1 of 8 GiB ───────────────────────────────────────────╯ │
+╰─ enter new session · tab sessions · a add host · ctrl+o commands · ? help ───────────────────────────────────────────╯

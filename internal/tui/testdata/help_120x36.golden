@@ -1,0 +1,36 @@
+╭─ simstim ───────────────────────────────────────────────────────────────────────────────────── 3 hosts · 6 sessions ─╮
+│ HOSTS                            │ SESSIONS ─ atlas-dev                                                             │
+│   all hosts              6       │ ● auth-refactor         claude   ~/src/app                     needs input     2m │
+│ ▸ atlas-dev             4   9ms │ ⠶ api-tests             codex    ~/src/api                     working        14s │
+│ ◌ aws-gpu                offline │ ○ notes                 shell    ~                             idle            1h │
+│   gcp-dev                2  41ms │ ✓ docs-pass             opencode ~/src/docs                    exited 0        3h │
+│                   ╭─ Shortcuts ──────────────────────────────────────────────────────────────────╮                   │
+│                   │                                                                              │─────────────────╮ │
+│                   │  ↑↓ jk move                                 i host: details                  │                 │ │
+│                   │    tab switch pane                          / view: filter                   │                 │ │
+│                   │  enter new session, or attach           space view: toggle preview           │                 │ │
+│                   │    esc back, clear filter               alt+e view: toggle exited            │                 │ │
+│                   │      n session: new                         ? view: shortcuts                │                 │ │
+│                   │   r f2 session: rename                 ctrl+o view: commands                 │                 │ │
+│                   │      d session: delete                      q simstim: quit                  │                 │ │
+│                   │      y session: copy attach command    ctrl+c twice to quit                  │                 │ │
+│                   │      a host: add                                                             │                 │ │
+│                   │                                                                              │                 │ │
+│                   ╰─ esc close ──────────────────────────────────────────────────────────────────╯                 │ │
+│                                  │ │ >                                                                             │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ │                                                                               │ │
+│                                  │ ╰─ claude · ~/src/app · 6.1 of 8 GiB ───────────────────────────────────────────╯ │
+╰─ enter new session · tab sessions · a add host · ctrl+o commands · ? help ───────────────────────────────────────────╯
