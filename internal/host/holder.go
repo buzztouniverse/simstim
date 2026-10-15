@@ -181,6 +181,9 @@ func (h *Holder) start() error {
 
 	h.mu.Lock()
 	now := time.Now().UTC()
+	if u := selfUnit(); u != "" {
+		m.Run.Unit = u
+	}
 	m.Run.HolderPID = os.Getpid()
 	m.Run.AgentPID = cmd.Process.Pid
 	m.Run.Socket = paths.Socket(h.id)
@@ -311,9 +314,20 @@ func (h *Holder) tick() {
 				state, src = StateWorking, "output"
 			}
 			if state != h.m.Status.State {
+				oom, reason := h.m.Status.OOM, h.m.Status.Reason
 				h.m.Status = Status{State: state, Since: time.Now().UTC(), Source: src}
+				if oom {
+					h.m.Status.OOM, h.m.Status.Reason = true, reason
+				}
 				h.dirty = true
 			}
+		}
+		if n := readOOMKills(); n > h.oomBase && !h.m.Status.OOM {
+			// A process in the session hit the memory cap and was stopped.
+			h.m.Status.OOM = true
+			h.m.Status.Reason = "a process in this session ran out of memory and was stopped"
+			h.needInput = true
+			h.dirty = true
 		}
 		dirty := h.dirty
 		h.dirty = false
@@ -575,6 +589,22 @@ func (h *Holder) kill(reason string) {
 	}
 	os.Remove(paths.Socket(h.id))
 	os.Exit(0)
+}
+
+// selfUnit returns the systemd unit this process runs in, if any.
+func selfUnit() string {
+	b, err := os.ReadFile("/proc/self/cgroup")
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(string(b), "\n") {
+		if rest, ok := strings.CutPrefix(line, "0::"); ok {
+			if leaf := filepath.Base(rest); strings.HasSuffix(leaf, ".service") {
+				return leaf
+			}
+		}
+	}
+	return ""
 }
 
 // readOOMKills reads the oom_kill counter of this process's cgroup.

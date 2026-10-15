@@ -18,3 +18,4 @@ coverage.*
 .idea/
 .vscode/
 *.swp
+.drop-test.txt

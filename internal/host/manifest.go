@@ -6,18 +6,19 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/paths"
 )
 
 // Session states, shown in the client's session list.
 const (
-	StateStarting   = "starting"
-	StateWorking    = "working"
-	StateIdle       = "idle"
-	StateNeedsInput = "needs_input"
-	StateExited     = "exited"
-	StateErrored    = "errored"
-	StateLost       = "lost" // the holder is gone, for example after a reboot
+	StateStarting   = api.StateStarting
+	StateWorking    = api.StateWorking
+	StateIdle       = api.StateIdle
+	StateNeedsInput = api.StateNeedsInput
+	StateExited     = api.StateExited
+	StateErrored    = api.StateErrored
+	StateLost       = api.StateLost
 )
 
 // Manifest is the record of one session, at ~/.local/state/<name>/sessions/<id>/manifest.json.

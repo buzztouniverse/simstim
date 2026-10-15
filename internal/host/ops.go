@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/iAmLakshya/simstim/internal/agents"
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/paths"
 	"github.com/iAmLakshya/simstim/internal/proto"
@@ -30,44 +31,9 @@ func UserError(code, msg, hint string) *proto.Error {
 	return &proto.Error{Code: code, Message: msg, Hint: hint}
 }
 
-// NewArgs describes a session to start.
-type NewArgs struct {
-	Name               string   `json:"name,omitempty"`
-	Agent              string   `json:"agent,omitempty"`
-	Argv               []string `json:"argv,omitempty"`
-	Cwd                string   `json:"cwd,omitempty"`
-	Cols               int      `json:"cols,omitempty"`
-	Rows               int      `json:"rows,omitempty"`
-	Term               string   `json:"term,omitempty"`
-	ColorTerm          string   `json:"colorterm,omitempty"`
-	TermProgram        string   `json:"term_program,omitempty"`
-	TermProgramVersion string   `json:"term_program_version,omitempty"`
-	MemoryMax          int64    `json:"memory_max,omitempty"`
-}
+type NewArgs = api.NewArgs
 
-// SessionInfo is one row of the session list.
-type SessionInfo struct {
-	ID             string    `json:"id"`
-	Name           string    `json:"name"`
-	Agent          string    `json:"agent"`
-	Cwd            string    `json:"cwd"`
-	State          string    `json:"state"`
-	Since          time.Time `json:"since"`
-	Reason         string    `json:"reason,omitempty"`
-	ExitCode       *int      `json:"exit_code,omitempty"`
-	Signal         string    `json:"signal,omitempty"`
-	OOM            bool      `json:"oom_killed,omitempty"`
-	CreatedAt      time.Time `json:"created_at"`
-	LastActivityAt time.Time `json:"last_activity_at,omitempty"`
-	LastAttachedAt time.Time `json:"last_attached_at,omitempty"`
-	Alive          bool      `json:"alive"`
-	Unit           string    `json:"unit,omitempty"`
-	MemoryMax      int64     `json:"memory_max,omitempty"`
-	MemoryCurrent  int64     `json:"memory_current,omitempty"`
-	HostVersion    string    `json:"host_version"`
-	Cols           int       `json:"cols"`
-	Rows           int       `json:"rows"`
-}
+type SessionInfo = api.SessionInfo
 
 const idAlphabet = "abcdefghijklmnopqrstuvwxyz234567"
 
@@ -150,6 +116,9 @@ func New(a NewArgs) (*SessionInfo, error) {
 			argv[i] = LoginShell()
 		}
 	}
+	if strings.HasPrefix(argv[0], "~/") {
+		argv[0] = expandHome(argv[0])
+	}
 	if _, err := lookPath(argv[0], envValue(env, "PATH")); err != nil {
 		return nil, UserError("agent_missing", fmt.Sprintf("%s is not installed on this host", argv[0]), "Install it on the host, then try again.")
 	}
@@ -167,7 +136,7 @@ func New(a NewArgs) (*SessionInfo, error) {
 		Agent: AgentInfo{Kind: kind, Argv: argv},
 		Cwd:   cwd, Env: env,
 		Term:    TermInfo{Term: term, Cols: a.Cols, Rows: a.Rows},
-		Limits:  Limits{MemoryMax: memMax, MemoryHigh: memMax * 85 / 100},
+		Limits:  Limits{MemoryMax: memMax},
 		Run:     Runtime{Socket: paths.Socket(id), BootID: BootID()},
 		Status:  Status{State: StateStarting, Since: now},
 		Restart: Restart{Policy: "resume", MaxAttempts: 3},
@@ -376,30 +345,9 @@ func validID(id string) bool {
 	return true
 }
 
-// Check is one line of the host doctor.
-type Check struct {
-	Name   string `json:"name"`
-	OK     bool   `json:"ok"`
-	Detail string `json:"detail,omitempty"`
-	Fix    string `json:"fix,omitempty"`
-}
+type Check = api.Check
 
-// HostInfo describes the host.
-type HostInfo struct {
-	Hostname  string            `json:"hostname"`
-	OS        string            `json:"os"`
-	Arch      string            `json:"arch"`
-	Kernel    string            `json:"kernel,omitempty"`
-	Distro    string            `json:"distro,omitempty"`
-	CPUs      int               `json:"cpus"`
-	MemTotal  int64             `json:"mem_total"`
-	DiskFree  int64             `json:"disk_free"`
-	Version   string            `json:"version"`
-	User      string            `json:"user"`
-	Agents    map[string]string `json:"agents"`
-	Checks    []Check           `json:"checks"`
-	MemoryMax int64             `json:"memory_max"`
-}
+type HostInfo = api.HostInfo
 
 // Doctor inspects the host.
 func Doctor() HostInfo {
@@ -476,16 +424,9 @@ func memoryDelegated() bool {
 	return err == nil && strings.Contains(string(b), "memory")
 }
 
-// SetupArgs asks the host to prepare itself.
-type SetupArgs struct {
-	Linger   bool              `json:"linger"`
-	Terminfo map[string]string `json:"terminfo,omitempty"`
-}
+type SetupArgs = api.SetupArgs
 
-// SetupResult reports what setup did.
-type SetupResult struct {
-	Steps []Check `json:"steps"`
-}
+type SetupResult = api.SetupResult
 
 // Setup turns on linger and installs terminfo entries.
 func Setup(a SetupArgs) SetupResult {

@@ -52,9 +52,9 @@ check-name:
 fmt:
     gofmt -w cmd internal
 
-# End-to-end tests against a real host: E2E_HOST=<ssh target> [E2E_SSH_CONFIG=<file>].
+# End-to-end tests against a real host: E2E_HOST=<a host added with `host add`>.
 e2e: build
-    go test -count=1 -tags e2e ./e2e/... -v
+    python3 e2e/run.py bin/{{name}}
 
 # A local release build, with no publishing.
 snapshot:

@@ -21,6 +21,7 @@ Usage:
   %[1]s new [--agent a] [--dir d] [--name n] [-- argv…]
   %[1]s rm <id>             stop a session and remove it
   %[1]s doctor [--json]     check this host
+  %[1]s keytest             print every key the terminal sends
   %[1]s version
 `
 
@@ -105,6 +106,8 @@ func main() {
 			}
 			fmt.Printf("  agents: %s\n", strings.Join(found, ", "))
 		}
+	case "keytest":
+		err = host.KeyTest()
 	case "version", "--version":
 		fmt.Printf("%s %s (protocol %s)\n", name, version.Version, version.Protocol)
 	case "help", "-h", "--help":

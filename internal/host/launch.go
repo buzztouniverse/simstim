@@ -76,7 +76,6 @@ func launchHolder(m *Manifest) error {
 		if m.Limits.MemoryMax > 0 {
 			args = append(args,
 				"-p", fmt.Sprintf("MemoryMax=%d", m.Limits.MemoryMax),
-				"-p", fmt.Sprintf("MemoryHigh=%d", m.Limits.MemoryHigh),
 				"-p", "MemorySwapMax=0")
 		}
 		args = append(args, exe, "holder", m.ID)

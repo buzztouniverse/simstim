@@ -34,7 +34,7 @@ A client and a host helper that run AI coding agents in sessions on remote hosts
 
 ## Test hosts
 
-End-to-end tests run against a real host. Set `E2E_HOST` to an SSH target, and `E2E_SSH_CONFIG` to an extra SSH config file if the host needs one. Then run `just e2e`.
+End-to-end tests (`e2e/run.py`) drive the real client in a pseudo-terminal against a real host. Add the host with `host add`, set `E2E_HOST` to its name, then run `just e2e`.
 
 Any change made on a test host by hand goes in [docs/sandbox-log.md](docs/sandbox-log.md). Ask the owner before rebooting a host.
 

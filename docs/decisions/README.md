@@ -11,5 +11,6 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0005](0005-apache-2-and-dco.md) | Apache-2.0 with a DCO | Accepted |
 | [0006](0006-defaults.md) | Detach key, image key and memory cap defaults | Accepted |
 | [0007](0007-name-in-one-place.md) | The product name lives in one package | Accepted |
+| [0008](0008-memory-max-only.md) | Cap sessions with MemoryMax only, not MemoryHigh (replaces part of 0006) | Accepted |
 
 Write a new record from [the template](template.md).

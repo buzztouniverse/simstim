@@ -23,7 +23,7 @@ while IFS= read -r file; do
         echo "$hits" | sed 's/^/  /'
         fail=1
     fi
-done < <(git ls-files --cached --others --exclude-standard -- '*.go' 'justfile' '.goreleaser.yaml' '.github/workflows/*.yml' 'scripts/*.sh' 'install.sh' | grep -v '^scripts/check-name.sh$' | grep -v '^scripts/rename.sh$')
+done < <(git ls-files --cached --others --exclude-standard -- '*.go' 'justfile' '.goreleaser.yaml' '.github/workflows/*.yml' 'scripts/*.sh' 'install.sh' 'e2e/*.py' | grep -v '^scripts/check-name.sh$' | grep -v '^scripts/rename.sh$')
 
 if [ "$fail" -ne 0 ]; then
     echo

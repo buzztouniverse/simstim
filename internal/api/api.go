@@ -1,0 +1,91 @@
+// Package api holds the types the client and the host helper exchange.
+// It has no dependencies, so the client stays small and portable.
+package api
+
+import "time"
+
+// Session states.
+const (
+	StateStarting   = "starting"
+	StateWorking    = "working"
+	StateIdle       = "idle"
+	StateNeedsInput = "needs_input"
+	StateExited     = "exited"
+	StateErrored    = "errored"
+	StateLost       = "lost" // the holder is gone, for example after a reboot
+)
+
+// NewArgs describes a session to start.
+type NewArgs struct {
+	Name               string   `json:"name,omitempty"`
+	Agent              string   `json:"agent,omitempty"`
+	Argv               []string `json:"argv,omitempty"`
+	Cwd                string   `json:"cwd,omitempty"`
+	Cols               int      `json:"cols,omitempty"`
+	Rows               int      `json:"rows,omitempty"`
+	Term               string   `json:"term,omitempty"`
+	ColorTerm          string   `json:"colorterm,omitempty"`
+	TermProgram        string   `json:"term_program,omitempty"`
+	TermProgramVersion string   `json:"term_program_version,omitempty"`
+	MemoryMax          int64    `json:"memory_max,omitempty"`
+}
+
+// SessionInfo is one row of the session list.
+type SessionInfo struct {
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	Agent          string    `json:"agent"`
+	Cwd            string    `json:"cwd"`
+	State          string    `json:"state"`
+	Since          time.Time `json:"since"`
+	Reason         string    `json:"reason,omitempty"`
+	ExitCode       *int      `json:"exit_code,omitempty"`
+	Signal         string    `json:"signal,omitempty"`
+	OOM            bool      `json:"oom_killed,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	LastActivityAt time.Time `json:"last_activity_at,omitempty"`
+	LastAttachedAt time.Time `json:"last_attached_at,omitempty"`
+	Alive          bool      `json:"alive"`
+	Unit           string    `json:"unit,omitempty"`
+	MemoryMax      int64     `json:"memory_max,omitempty"`
+	MemoryCurrent  int64     `json:"memory_current,omitempty"`
+	HostVersion    string    `json:"host_version"`
+	Cols           int       `json:"cols"`
+	Rows           int       `json:"rows"`
+}
+
+// Check is one line of the host doctor.
+type Check struct {
+	Name   string `json:"name"`
+	OK     bool   `json:"ok"`
+	Detail string `json:"detail,omitempty"`
+	Fix    string `json:"fix,omitempty"`
+}
+
+// HostInfo describes the host.
+type HostInfo struct {
+	Hostname  string            `json:"hostname"`
+	OS        string            `json:"os"`
+	Arch      string            `json:"arch"`
+	Kernel    string            `json:"kernel,omitempty"`
+	Distro    string            `json:"distro,omitempty"`
+	CPUs      int               `json:"cpus"`
+	MemTotal  int64             `json:"mem_total"`
+	DiskFree  int64             `json:"disk_free"`
+	Version   string            `json:"version"`
+	User      string            `json:"user"`
+	Agents    map[string]string `json:"agents"`
+	Checks    []Check           `json:"checks"`
+	MemoryMax int64             `json:"memory_max"`
+}
+
+// SetupArgs asks the host to prepare itself.
+type SetupArgs struct {
+	Linger   bool              `json:"linger"`
+	Terminfo map[string]string `json:"terminfo,omitempty"`
+}
+
+// SetupResult reports what setup did.
+type SetupResult struct {
+	Steps []Check `json:"steps"`
+}
