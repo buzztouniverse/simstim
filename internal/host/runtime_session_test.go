@@ -1,13 +1,16 @@
 package host_test
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
+	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/host"
 	"github.com/iAmLakshya/simstim/internal/host/hosttest"
 	"github.com/iAmLakshya/simstim/internal/paths"
@@ -112,6 +115,109 @@ func TestNewChecksItsArguments(t *testing.T) {
 	}
 }
 
+func TestShellIsTheDefaultAgent(t *testing.T) {
+	hosttest.New(t)
+	s, err := host.New(host.NewArgs{Cwd: "~", Term: "no-such-terminal", TermProgram: "TestTerm", TermProgramVersion: "1.0"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Agent != "shell" {
+		t.Errorf("agent = %q, want shell", s.Agent)
+	}
+	m := manifest(t, s.ID)
+	if len(m.Agent.Argv) != 2 || m.Agent.Argv[0] != "/bin/sh" || m.Agent.Argv[1] != "-l" {
+		t.Errorf("argv = %q, want the login shell", m.Agent.Argv)
+	}
+	if m.Term.Term != "xterm-256color" {
+		t.Errorf("an unknown TERM falls back to xterm-256color, got %q", m.Term.Term)
+	}
+	env := strings.Join(m.Env, "\n")
+	for _, want := range []string{"TERM=xterm-256color", "COLORTERM=truecolor", "TERM_PROGRAM=TestTerm", brand.Env("SESSION") + "=" + s.ID, brand.Env("SOCK") + "=" + paths.Socket(s.ID)} {
+		if !strings.Contains(env, want) {
+			t.Errorf("the agent's environment lacks %s", want)
+		}
+	}
+	send(t, s.ID, "echo SHELL-$((6*7)) $"+brand.Env("SESSION"))
+	waitOutput(t, s.ID, "SHELL-42 "+s.ID)
+}
+
+func TestHolderRequests(t *testing.T) {
+	hosttest.New(t)
+	s := start(t, "req", "/bin/sh")
+	send(t, s.ID, "echo ONE")
+	waitOutput(t, s.ID, "ONE")
+
+	raw, err := host.HolderRequest(s.ID, "info", nil, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m host.Manifest
+	if err := json.Unmarshal(raw, &m); err != nil || m.ID != s.ID {
+		t.Fatalf("info = %s, %v", raw, err)
+	}
+
+	raw, err = host.HolderRequest(s.ID, "send", map[string]any{"text": "echo TWO"}, 3*time.Second)
+	if err != nil || string(raw) != `{"bytes":8}` {
+		t.Fatalf("send without enter = %s, %v", raw, err)
+	}
+	send(t, s.ID, "")
+	waitOutput(t, s.ID, "TWO")
+
+	for _, c := range []struct {
+		op   string
+		args any
+		code string
+	}{
+		{"rename", map[string]string{"name": "  "}, "bad_request"},
+		{"rename", "not an object", "bad_request"},
+		{"send", "not an object", "bad_request"},
+		{"no-such-op", nil, "unknown_op"},
+	} {
+		_, err := host.HolderRequest(s.ID, c.op, c.args, 3*time.Second)
+		var pe *proto.Error
+		if !errors.As(err, &pe) || pe.Code != c.code {
+			t.Errorf("%s %v = %v, want %s", c.op, c.args, err, c.code)
+		}
+	}
+	if _, err := host.HolderRequest("nosuchid", "info", nil, time.Second); err == nil {
+		t.Error("a request to a session that does not exist worked")
+	}
+}
+
+func TestRename(t *testing.T) {
+	hosttest.New(t)
+	s := start(t, "old", "sleep", "60")
+	if err := host.Rename(s.ID, "  new name  "); err != nil {
+		t.Fatal(err)
+	}
+	hosttest.WaitFor(t, 5*time.Second, "the new name", func() bool { return live(t, s.ID).Name == "new name" })
+	if err := host.Rename(s.ID, " "); err == nil {
+		t.Error("an empty name was taken")
+	}
+	// With its holder gone, the manifest is changed directly.
+	pid := hosttest.HolderPID(t, s.ID)
+	if err := syscall.Kill(pid, syscall.SIGKILL); err != nil {
+		t.Fatal(err)
+	}
+	if err := hosttest.Reap(pid, 5*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	if err := host.Rename(s.ID, "offline"); err != nil {
+		t.Fatal(err)
+	}
+	if m := manifest(t, s.ID); m.Name != "offline" {
+		t.Errorf("name = %q", m.Name)
+	}
+	list, _ := host.List()
+	if len(list) != 1 || list[0].State != host.StateLost || list[0].Alive || list[0].Reason == "" {
+		t.Errorf("a session whose holder died: %+v", list)
+	}
+	var pe *proto.Error
+	if err := host.Rename("nosuchid", "x"); !errors.As(err, &pe) || pe.Code != "not_found" {
+		t.Errorf("rename of a missing session = %v", err)
+	}
+}
+
 func TestDeleteRefusesWhatIsNotASession(t *testing.T) {
 	hosttest.New(t)
 	for _, id := range []string{"", "../etc", "UPPER", "nosuchid"} {
@@ -120,6 +226,26 @@ func TestDeleteRefusesWhatIsNotASession(t *testing.T) {
 		if !errors.As(err, &pe) || pe.Code != "not_found" {
 			t.Errorf("delete %q = %v", id, err)
 		}
+	}
+}
+
+func TestStopWithTheHost(t *testing.T) {
+	hosttest.New(t)
+	s := start(t, "sys", "sleep", "60")
+	pid := hosttest.HolderPID(t, s.ID)
+	// SIGTERM is how the system stops a session, for example at shutdown.
+	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil {
+		t.Fatal(err)
+	}
+	if err := hosttest.Reap(pid, 10*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	m := manifest(t, s.ID)
+	if m.Status.State == host.StateExited || m.Status.State == host.StateErrored || m.Status.Source != "system" {
+		t.Fatalf("a session stopped with the host must stay restorable: %+v", m.Status)
+	}
+	if _, err := os.Stat(paths.Socket(s.ID)); !os.IsNotExist(err) {
+		t.Errorf("the socket is still there: %v", err)
 	}
 }
 

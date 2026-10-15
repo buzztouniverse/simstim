@@ -24,7 +24,7 @@ func sessionPIDs(unit bool, agentPID int) []int {
 		return descendants(agentPID)
 	}
 	var pids []int
-	b, err := os.ReadFile("/proc/self/cgroup")
+	b, err := os.ReadFile(filepath.Join(procRoot, "self", "cgroup"))
 	if err == nil {
 		for _, line := range strings.Split(string(b), "\n") {
 			if rest, ok := strings.CutPrefix(line, "0::"); ok {
@@ -46,12 +46,12 @@ func sessionPIDs(unit bool, agentPID int) []int {
 func listeningPorts(pids []int) []Port {
 	owner := map[string]int{} // socket inode -> pid
 	for _, pid := range pids {
-		fds, err := os.ReadDir(fmt.Sprintf("/proc/%d/fd", pid))
+		fds, err := os.ReadDir(fmt.Sprintf("%s/%d/fd", procRoot, pid))
 		if err != nil {
 			continue
 		}
 		for _, fd := range fds {
-			link, err := os.Readlink(fmt.Sprintf("/proc/%d/fd/%s", pid, fd.Name()))
+			link, err := os.Readlink(fmt.Sprintf("%s/%d/fd/%s", procRoot, pid, fd.Name()))
 			if err != nil {
 				continue
 			}
@@ -62,7 +62,7 @@ func listeningPorts(pids []int) []Port {
 	}
 	seen := map[int]bool{}
 	var out []Port
-	for _, file := range []string{"/proc/net/tcp", "/proc/net/tcp6"} {
+	for _, file := range []string{procRoot + "/net/tcp", procRoot + "/net/tcp6"} {
 		f, err := os.Open(file)
 		if err != nil {
 			continue
@@ -83,7 +83,7 @@ func listeningPorts(pids []int) []Port {
 				continue
 			}
 			seen[port] = true
-			comm, _ := os.ReadFile(fmt.Sprintf("/proc/%d/comm", pid))
+			comm, _ := os.ReadFile(fmt.Sprintf("%s/%d/comm", procRoot, pid))
 			out = append(out, Port{Port: port, Address: addr, PID: pid, Process: strings.TrimSpace(string(comm))})
 		}
 		f.Close()
@@ -115,13 +115,13 @@ func parseHexAddr(s string) (string, int) {
 // descendants returns pid and all its descendants.
 func descendants(pid int) []int {
 	children := map[int][]int{}
-	entries, _ := os.ReadDir("/proc")
+	entries, _ := os.ReadDir(procRoot)
 	for _, e := range entries {
 		n, err := strconv.Atoi(e.Name())
 		if err != nil {
 			continue
 		}
-		b, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", n))
+		b, err := os.ReadFile(fmt.Sprintf("%s/%d/stat", procRoot, n))
 		if err != nil {
 			continue
 		}

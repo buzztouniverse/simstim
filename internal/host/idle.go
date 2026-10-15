@@ -191,7 +191,7 @@ func anySessionWorking() bool {
 // clientsConnected counts this user's running bridges and raw attaches:
 // each is one connected client.
 func clientsConnected() int {
-	entries, err := os.ReadDir("/proc")
+	entries, err := os.ReadDir(procRoot)
 	if err != nil {
 		return 0
 	}
@@ -200,7 +200,7 @@ func clientsConnected() int {
 		if e.Name()[0] < '0' || e.Name()[0] > '9' {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join("/proc", e.Name(), "cmdline"))
+		b, err := os.ReadFile(filepath.Join(procRoot, e.Name(), "cmdline"))
 		if err != nil {
 			continue
 		}

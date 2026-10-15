@@ -30,6 +30,8 @@ Most of the host helper runs in the unit tests, on the machine that runs them, w
 - **A terminal for the client.** `NewTerminal` opens a pseudo-terminal that stands in for the user's: the test types into it, and reads what the client draws, byte for byte.
 - **Races in holders count.** The race detector writes a holder's report to a file, and the test fails.
 
+Some parts need Linux: ports and idle stop read `/proc`, and memory caps need systemd. Their tests read a fake `/proc` instead (`procRoot`). Tests that need the shadow terminal skip when it is not built; its Go side is also tested with a fake child, a shell script that echoes every frame.
+
 ## End-to-end tests
 
 `test/e2e/run.py` drives the real client in a pseudo-terminal, as a person in Ghostty would, against a real Linux host.

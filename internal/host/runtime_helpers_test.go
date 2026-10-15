@@ -3,14 +3,17 @@ package host_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/iAmLakshya/simstim/internal/client"
 	"github.com/iAmLakshya/simstim/internal/host"
 	"github.com/iAmLakshya/simstim/internal/host/hosttest"
 	"github.com/iAmLakshya/simstim/internal/proto"
@@ -49,6 +52,24 @@ func waitOutput(t *testing.T, id, want string) {
 	hosttest.WaitFor(t, 10*time.Second, "output "+want, func() bool { return strings.Contains(peek(t, id), want) })
 }
 
+// send types text into a session, with Enter.
+func send(t *testing.T, id, text string) {
+	t.Helper()
+	if _, err := host.HolderRequest(id, "send", map[string]any{"text": text, "enter": true}, 3*time.Second); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+}
+
+// manifest reads a session's manifest.
+func manifest(t *testing.T, id string) *host.Manifest {
+	t.Helper()
+	m, err := host.LoadManifest(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return m
+}
+
 // live returns the holder's own copy of a session's manifest, which is
 // current: the file is saved only once a second.
 func live(t *testing.T, id string) *host.Manifest {
@@ -74,6 +95,20 @@ func waitState(t *testing.T, id, state string) *host.Manifest {
 		return err == nil && m.Status.State == state
 	})
 	return m
+}
+
+// dial connects a client to this host, through the real bridge.
+func dial(t *testing.T, h *hosttest.Host) *client.Conn {
+	t.Helper()
+	ch, _ := h.ClientHost("box")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	c, err := client.Dial(ctx, ch, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(c.Close)
+	return c
 }
 
 // rawBridge is a client that speaks the bridge's frames itself, for what
@@ -159,6 +194,31 @@ func (b *rawBridge) sendJSON(ty proto.Type, v any) {
 	}
 }
 
+// request sends one request and returns its response.
+func (b *rawBridge) request(id uint64, op string, args any) proto.Response {
+	b.t.Helper()
+	req := proto.Request{ID: id, Op: op}
+	if args != nil {
+		req.Args, _ = json.Marshal(args)
+	}
+	b.sendJSON(proto.TRequest, req)
+	return b.response(id)
+}
+
+// response waits for the response with this ID.
+func (b *rawBridge) response(id uint64) proto.Response {
+	b.t.Helper()
+	for {
+		var r proto.Response
+		if err := json.Unmarshal(b.next(proto.TResponse).Payload, &r); err != nil {
+			b.t.Fatal(err)
+		}
+		if r.ID == id {
+			return r
+		}
+	}
+}
+
 // attach attaches and returns the Attached frame.
 func (b *rawBridge) attach(id string, last int64, cols, rows int) proto.Attached {
 	b.t.Helper()
@@ -172,6 +232,36 @@ func (b *rawBridge) attach(id string, last int64, cols, rows int) proto.Attached
 		b.t.Fatal(err)
 	}
 	return a
+}
+
+// output collects output frames until the bytes from offset from hold want,
+// and returns them.
+func (b *rawBridge) output(from int64, want string) []byte {
+	b.t.Helper()
+	var got []byte
+	for !bytes.Contains(got, []byte(want)) {
+		f := b.next(proto.TOutput)
+		off, data, err := proto.DecodeOutput(f.Payload)
+		if err != nil {
+			b.t.Fatal(err)
+		}
+		if off != from+int64(len(got)) {
+			b.t.Fatalf("output at offset %d, want %d", off, from+int64(len(got)))
+		}
+		got = append(got, data...)
+	}
+	return got
+}
+
+// git runs git in dir, as a test user, and fails the test on an error.
+func git(t *testing.T, dir string, args ...string) string {
+	t.Helper()
+	cmd := exec.Command("git", append([]string{"-C", dir, "-c", "user.name=Test", "-c", "user.email=test@example.com", "-c", "init.defaultBranch=main", "-c", "commit.gpgsign=false"}, args...)...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %v: %v\n%s", args, err, out)
+	}
+	return strings.TrimSpace(string(out))
 }
 
 // writeFile writes a file, making its folder.
