@@ -6,6 +6,10 @@ docs/images/*.svg linguist-generated=true
 go.sum linguist-generated=true
 site/go.sum linguist-generated=true
 
+# Third-party files kept unchanged (scripts/site-vendor.sh).
+site/assets/vendor/** linguist-vendored=true
+site/static/fonts/*.woff2 binary
+
 # Shell scripts must keep LF endings, also on Windows checkouts.
 *.sh text eol=lf
 install.sh text eol=lf
