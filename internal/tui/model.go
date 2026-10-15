@@ -308,18 +308,10 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 		return m.onWheel(msg)
 	case tea.PasteMsg:
 		return m.onPaste(msg.Content)
-
 	case toastTickMsg:
-		if m.toasts.expire(m.now()) {
-			if d, ok := m.toasts.next(m.now()); ok {
-				return m.after(d, toastTickMsg{})
-			}
-		}
-		return nil
-
+		return m.onToastTick()
 	case dialledMsg, connDoneMsg, redialMsg, sessionsMsg, latencyMsg, doctorMsg, refreshTickMsg, latencyTickMsg:
 		return m.onConn(msg)
-
 	case previewTickMsg:
 		if msg.seq == m.preview.seq {
 			return m.peek()
@@ -328,80 +320,119 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 	case peekMsg:
 		m.onPeek(msg)
 		return nil
-
 	case opDoneMsg:
-		var cmd tea.Cmd
-		if msg.err != nil {
-			cmd = m.toastErr(msg.err)
-		} else if msg.ok != "" {
-			cmd = m.toast(toastSuccess, msg.ok)
-		}
-		if h := m.hostByName(msg.host); h != nil {
-			h.changes++
-			if msg.err == nil && msg.drop != "" {
-				h.sessions = slices.DeleteFunc(h.sessions, func(s client.Session) bool { return s.ID == msg.drop })
-				m.syncSel()
-			}
-			cmd = tea.Batch(cmd, m.listSessions(h))
-		}
-		if m.rename != nil && m.rename.busy {
-			m.rename = nil
-		}
-		return cmd
+		return m.onOpDone(msg)
 	case shellDoneMsg:
 		if msg.err != nil {
 			return m.toastErr(&client.UserError{Msg: "the shell on " + msg.host + " ended with an error: " + msg.err.Error()})
 		}
 		return nil
 	case foldersMsg:
-		if p := m.prompt; msg.quick && p != nil && p.host == msg.host && p.asked == msg.prefix {
-			p.folders = msg.res.Matches
-		}
-		if d, ok := m.modal.(*newSession); ok && d.host == msg.host && !msg.quick {
-			d.setSuggestions(msg.prefix, msg.res)
-		}
-		return nil
+		return m.onFolders(msg)
 	case startedMsg:
 		return m.onStarted(msg)
 	case attachDoneMsg:
-		cmd := m.onAttachDone(msg)
-		if w, ok := m.modal.(*wizard); ok && w.waiting != "" && w.waiting == msg.id && w.host.Name == msg.host {
-			cmd = tea.Batch(cmd, w.afterAttach(m, msg))
-		}
-		return cmd
+		return m.onAttachEnded(msg)
 	case hostSavedMsg:
 		return m.onHostSaved(msg)
 	case setupMsg:
-		if w, ok := m.modal.(*wizard); ok {
-			return w.onMsg(m, msg)
-		}
-		if msg.conn != nil {
-			return m.dropConn(msg.conn) // the wizard closed while it ran
-		}
-		return nil
+		return m.onSetup(msg)
 	case editorDoneMsg:
-		be := m.be
-		reload := func() tea.Msg { return settingsMsg{be.Settings()} }
-		if msg.err != nil {
-			return tea.Batch(reload, m.toastErr(msg.err))
-		}
-		return reload
+		return m.onEditorDone(msg)
 	case settingsMsg:
 		m.settings = msg.s
 		commands = withKeymap(registry(), m.settings.Keymap)
 		return nil
 	case sshHostsMsg:
-		m.sshHosts = msg.hosts
-		if w, ok := m.modal.(*wizard); ok {
-			w.known = msg.hosts
-		}
-		return nil
+		return m.onSSHHosts(msg)
 	}
 	switch d := m.modal.(type) {
 	case *wizard:
 		return d.onMsg(m, msg)
 	case *guide:
 		return d.onMsg(m, msg)
+	}
+	return nil
+}
+
+// onToastTick drops expired toasts and waits for the next to expire.
+func (m *Model) onToastTick() tea.Cmd {
+	if m.toasts.expire(m.now()) {
+		if d, ok := m.toasts.next(m.now()); ok {
+			return m.after(d, toastTickMsg{})
+		}
+	}
+	return nil
+}
+
+// onOpDone reports a finished operation, and lists the host's sessions again.
+func (m *Model) onOpDone(msg opDoneMsg) tea.Cmd {
+	var cmd tea.Cmd
+	if msg.err != nil {
+		cmd = m.toastErr(msg.err)
+	} else if msg.ok != "" {
+		cmd = m.toast(toastSuccess, msg.ok)
+	}
+	if h := m.hostByName(msg.host); h != nil {
+		h.changes++
+		if msg.err == nil && msg.drop != "" {
+			h.sessions = slices.DeleteFunc(h.sessions, func(s client.Session) bool { return s.ID == msg.drop })
+			m.syncSel()
+		}
+		cmd = tea.Batch(cmd, m.listSessions(h))
+	}
+	if m.rename != nil && m.rename.busy {
+		m.rename = nil
+	}
+	return cmd
+}
+
+// onFolders takes folder completions, for the quick start or the form.
+func (m *Model) onFolders(msg foldersMsg) tea.Cmd {
+	if p := m.prompt; msg.quick && p != nil && p.host == msg.host && p.asked == msg.prefix {
+		p.folders = msg.res.Matches
+	}
+	if d, ok := m.modal.(*newSession); ok && d.host == msg.host && !msg.quick {
+		d.setSuggestions(msg.prefix, msg.res)
+	}
+	return nil
+}
+
+// onAttachEnded comes back from an attach, and tells the wizard if it waited for it.
+func (m *Model) onAttachEnded(msg attachDoneMsg) tea.Cmd {
+	cmd := m.onAttachDone(msg)
+	if w, ok := m.modal.(*wizard); ok && w.waiting != "" && w.waiting == msg.id && w.host.Name == msg.host {
+		cmd = tea.Batch(cmd, w.afterAttach(m, msg))
+	}
+	return cmd
+}
+
+// onSetup passes a setup step's result to the wizard, or drops it if the wizard closed.
+func (m *Model) onSetup(msg setupMsg) tea.Cmd {
+	if w, ok := m.modal.(*wizard); ok {
+		return w.onMsg(m, msg)
+	}
+	if msg.conn != nil {
+		return m.dropConn(msg.conn) // the wizard closed while it ran
+	}
+	return nil
+}
+
+// onEditorDone reloads the settings after the editor closes.
+func (m *Model) onEditorDone(msg editorDoneMsg) tea.Cmd {
+	be := m.be
+	reload := func() tea.Msg { return settingsMsg{be.Settings()} }
+	if msg.err != nil {
+		return tea.Batch(reload, m.toastErr(msg.err))
+	}
+	return reload
+}
+
+// onSSHHosts keeps the hosts from the SSH config, for the add-host wizard.
+func (m *Model) onSSHHosts(msg sshHostsMsg) tea.Cmd {
+	m.sshHosts = msg.hosts
+	if w, ok := m.modal.(*wizard); ok {
+		w.known = msg.hosts
 	}
 	return nil
 }

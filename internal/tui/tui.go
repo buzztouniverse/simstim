@@ -118,10 +118,10 @@ func (m *Model) render() string {
 		}
 		// Rows fade in, one after another, then the line under them.
 		for i := range g.listN {
-			m.fade(c, g.x, g.listY+i, g.w, 1, m.rowAlpha(i))
+			m.fade(c, g.x, g.listY+i, g.w, m.rowAlpha(i))
 		}
 		if g.detailY > 0 {
-			m.fade(c, g.x, g.detailY, g.w, 1, m.rowAlpha(g.listN+1))
+			m.fade(c, g.x, g.detailY, g.w, m.rowAlpha(g.listN+1))
 		}
 		if m.modal == nil && m.glowing() {
 			m.scan(c, g.x, ruleY, g.w)
@@ -135,7 +135,7 @@ func (m *Model) render() string {
 				dx = int((1 - ease(float64(m.since(n.at))/float64(noticeIn))) * 6)
 			}
 			drawAt(c, n.s, g.x+2+dx, y)
-			m.fade(c, g.x+2, y, g.w-2, 1, n.alpha)
+			m.fade(c, g.x+2, y, g.w-2, n.alpha)
 		}
 		m.sweep(c, g, g.sel)
 	}

@@ -239,43 +239,39 @@ func (m *Model) scan(c *lipgloss.Canvas, x, y, w int) {
 
 func bg(m *Model) rgb { c, _ := m.colors.resolve(nil, false); return c }
 
-// fade blends a rectangle towards the background: alpha 1 leaves it as it
+// fade blends part of a row towards the background: alpha 1 leaves it as it
 // is, 0 hides it. Without blends, a cell shows once alpha passes one half.
-func (m *Model) fade(c *lipgloss.Canvas, x, y, w, h int, alpha float64) {
+func (m *Model) fade(c *lipgloss.Canvas, x, y, w int, alpha float64) {
 	if alpha >= 1 {
 		return
 	}
 	smooth := m.smooth()
 	back := bg(m)
-	for yy := y; yy < y+h; yy++ {
-		for xx := x; xx < x+w; xx++ {
-			cell := c.CellAt(xx, yy)
-			if cell == nil {
-				continue
-			}
-			if !smooth {
-				if alpha < 0.5 {
-					*cell = uv.EmptyCell
-				}
-				continue
-			}
-			fg, ok := m.colors.resolve(cell.Style.Fg, true)
-			if !ok {
-				if alpha < 0.5 {
-					*cell = uv.EmptyCell
-				}
-				continue
-			}
-			if cell.Style.Attrs&uv.AttrFaint != 0 {
-				fg = mix(fg, back, 0.5)
-				cell.Style.Attrs &^= uv.AttrFaint
-			}
-			cell.Style.Fg = mix(back, fg, alpha).color()
-			if cell.Style.Bg != nil {
-				if b, ok := m.colors.resolve(cell.Style.Bg, false); ok {
-					cell.Style.Bg = mix(back, b, alpha).color()
-				}
-			}
+	for xx := x; xx < x+w; xx++ {
+		if cell := c.CellAt(xx, y); cell != nil {
+			m.fadeCell(cell, smooth, back, alpha)
+		}
+	}
+}
+
+// fadeCell mixes one cell's colours towards the background. Without smooth
+// colour, or with a colour it cannot read, the cell shows or goes blank.
+func (m *Model) fadeCell(cell *uv.Cell, smooth bool, back rgb, alpha float64) {
+	fg, ok := m.colors.resolve(cell.Style.Fg, true)
+	if !smooth || !ok {
+		if alpha < 0.5 {
+			*cell = uv.EmptyCell
+		}
+		return
+	}
+	if cell.Style.Attrs&uv.AttrFaint != 0 {
+		fg = mix(fg, back, 0.5)
+		cell.Style.Attrs &^= uv.AttrFaint
+	}
+	cell.Style.Fg = mix(back, fg, alpha).color()
+	if cell.Style.Bg != nil {
+		if b, ok := m.colors.resolve(cell.Style.Bg, false); ok {
+			cell.Style.Bg = mix(back, b, alpha).color()
 		}
 	}
 }

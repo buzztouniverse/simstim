@@ -35,21 +35,15 @@ var strands = []strand{
 var brailleBit = [4][2]uint{{0, 3}, {1, 4}, {2, 5}, {6, 7}}
 
 // markLines draws the mark at the current moment.
-func (m *Model) markLines() []string {
-	t := 0.0
-	if m.motion {
-		t = m.since(m.epoch).Seconds()
-	}
+// markDots draws the mark's strands at time t on a grid of braille dots,
+// opened from the middle to the share grow of its width.
+func markDots(t, grow float64) [][]bool {
 	dw, dh := markW*2, markH*4
 	dots := make([][]bool, dh)
 	for i := range dots {
 		dots[i] = make([]bool, dw)
 	}
 	mid := float64(dh-1) / 2
-	grow := 1.0
-	if m.motion {
-		grow = ease(float64(m.since(m.epoch)) / float64(markGrow))
-	}
 	for _, s := range strands {
 		prev := -1
 		for x := range dw {
@@ -70,6 +64,33 @@ func (m *Model) markLines() []string {
 			prev = y
 		}
 	}
+	return dots
+}
+
+// brailleCell is the braille pattern of the cell at cx, cy, and how many
+// of its eight dots are set.
+func brailleCell(dots [][]bool, cx, cy int) (pattern, n int) {
+	for dy := range 4 {
+		for dx := range 2 {
+			if dots[cy*4+dy][cx*2+dx] {
+				pattern |= 1 << brailleBit[dy][dx]
+				n++
+			}
+		}
+	}
+	return pattern, n
+}
+
+func (m *Model) markLines() []string {
+	t := 0.0
+	if m.motion {
+		t = m.since(m.epoch).Seconds()
+	}
+	grow := 1.0
+	if m.motion {
+		grow = ease(float64(m.since(m.epoch)) / float64(markGrow))
+	}
+	dots := markDots(t, grow)
 	cols := m.gradient(markW)
 	smooth := m.smooth()
 	back := bg(m)
@@ -78,20 +99,12 @@ func (m *Model) markLines() []string {
 	for cy := range markH {
 		var b strings.Builder
 		for cx := range markW {
-			r, n := 0, 0
-			for dy := range 4 {
-				for dx := range 2 {
-					if dots[cy*4+dy][cx*2+dx] {
-						r |= 1 << brailleBit[dy][dx]
-						n++
-					}
-				}
-			}
+			r, n := brailleCell(dots, cx, cy)
 			if r == 0 {
 				b.WriteByte(' ')
 				continue
 			}
-			glyph := string(rune(0x2800 + r))
+			glyph := string(rune(0x2800 + r)) //nolint:gosec // G115: r is an 8-dot pattern, at most 0xFF
 			st := sBrand
 			switch {
 			case cols != nil && smooth:

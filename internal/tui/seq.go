@@ -157,7 +157,7 @@ func (m *Model) sweep(c *lipgloss.Canvas, g boxGeo, row int) {
 	p := ease(float64(m.since(m.jacking.at)) / float64(jackTime))
 	for i := range g.listN {
 		if i != row {
-			m.fade(c, g.x, g.listY+i, g.w, 1, 1-p)
+			m.fade(c, g.x, g.listY+i, g.w, 1-p)
 		}
 	}
 	y := g.listY + row + int(math.Round(p*float64(max(m.height-2-g.listY-row, 1))))

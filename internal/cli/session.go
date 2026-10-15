@@ -255,6 +255,53 @@ type hostSessions struct {
 	Error    string           `json:"error,omitempty"`
 }
 
+// listAll asks every host for its sessions at once. Listing does not boot
+// stopped VMs or resume paused sandboxes.
+func listAll(ctx context.Context, hosts []client.Host) []hostSessions {
+	results := make([]hostSessions, len(hosts))
+	var wg sync.WaitGroup
+	for i, h := range hosts {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			results[i].Host = h.Name
+			ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			defer cancel()
+			conn, err := client.Dial(client.WithoutWake(ctx), h, false)
+			if err != nil {
+				results[i].Error = err.Error()
+				return
+			}
+			defer conn.Close()
+			list, err := conn.Sessions(ctx)
+			if err != nil {
+				results[i].Error = err.Error()
+			}
+			results[i].Sessions = list
+		}()
+	}
+	wg.Wait()
+	return results
+}
+
+// printSessions prints one line for each session, by host.
+func printSessions(results []hostSessions) {
+	sort.Slice(results, func(i, j int) bool { return results[i].Host < results[j].Host })
+	for _, r := range results {
+		if r.Error != "" {
+			fmt.Printf("%s  ◌ %s\n", r.Host, r.Error)
+			continue
+		}
+		if len(r.Sessions) == 0 {
+			fmt.Printf("%s  no sessions\n", r.Host)
+			continue
+		}
+		for _, s := range r.Sessions {
+			fmt.Printf("%-14s %-10s %-20s %-9s %-12s %6s  %s\n", r.Host, s.ID, trunc(s.Name, 20), s.Agent, stateLabel(s.State), age(s.CreatedAt), s.Cwd)
+		}
+	}
+}
+
 func lsCmd() *cobra.Command {
 	var hostName string
 	var asJSON bool
@@ -277,47 +324,11 @@ func lsCmd() *cobra.Command {
 			if len(hosts) == 0 {
 				return &client.UserError{Msg: "no hosts yet", Hint: brand.Name + " host add <name>"}
 			}
-			results := make([]hostSessions, len(hosts))
-			var wg sync.WaitGroup
-			for i, h := range hosts {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					results[i].Host = h.Name
-					ctx, cancel := context.WithTimeout(cmd.Context(), 30*time.Second)
-					defer cancel()
-					// Listing does not boot stopped VMs or resume paused sandboxes.
-					conn, err := client.Dial(client.WithoutWake(ctx), h, false)
-					if err != nil {
-						results[i].Error = err.Error()
-						return
-					}
-					defer conn.Close()
-					list, err := conn.Sessions(ctx)
-					if err != nil {
-						results[i].Error = err.Error()
-					}
-					results[i].Sessions = list
-				}()
-			}
-			wg.Wait()
+			results := listAll(cmd.Context(), hosts)
 			if asJSON {
 				return printJSON(results)
 			}
-			sort.Slice(results, func(i, j int) bool { return results[i].Host < results[j].Host })
-			for _, r := range results {
-				if r.Error != "" {
-					fmt.Printf("%s  ◌ %s\n", r.Host, r.Error)
-					continue
-				}
-				if len(r.Sessions) == 0 {
-					fmt.Printf("%s  no sessions\n", r.Host)
-					continue
-				}
-				for _, s := range r.Sessions {
-					fmt.Printf("%-14s %-10s %-20s %-9s %-12s %6s  %s\n", r.Host, s.ID, trunc(s.Name, 20), s.Agent, stateLabel(s.State), age(s.CreatedAt), s.Cwd)
-				}
-			}
+			printSessions(results)
 			return nil
 		},
 	}

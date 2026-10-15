@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -180,51 +181,19 @@ func (c *Condition) holds(text string, lines []string) bool {
 			return false
 		}
 	}
-	if len(c.re) > 0 {
-		hit := false
-		for _, re := range c.re {
-			if re.MatchString(text) {
-				hit = true
-				break
-			}
-		}
-		if !hit {
-			return false
-		}
+	if len(c.re) > 0 && !anyMatch(c.re, text) {
+		return false
 	}
-	if len(c.lineRe) > 0 {
-		hit := false
-		for _, re := range c.lineRe {
-			for _, l := range lines {
-				if re.MatchString(l) {
-					hit = true
-					break
-				}
-			}
-			if hit {
-				break
-			}
-		}
-		if !hit {
-			return false
-		}
+	if len(c.lineRe) > 0 && !slices.ContainsFunc(lines, func(l string) bool { return anyMatch(c.lineRe, l) }) {
+		return false
 	}
-	if len(c.Any) > 0 {
-		hit := false
-		for i := range c.Any {
-			if c.Any[i].holds(text, lines) {
-				hit = true
-				break
-			}
-		}
-		if !hit {
-			return false
-		}
+	if len(c.Any) > 0 && !slices.ContainsFunc(c.Any, func(a Condition) bool { return a.holds(text, lines) }) {
+		return false
 	}
-	for i := range c.Not {
-		if c.Not[i].holds(text, lines) {
-			return false
-		}
-	}
-	return true
+	return !slices.ContainsFunc(c.Not, func(n Condition) bool { return n.holds(text, lines) })
+}
+
+// anyMatch reports whether one of res matches s.
+func anyMatch(res []*regexp.Regexp, s string) bool {
+	return slices.ContainsFunc(res, func(re *regexp.Regexp) bool { return re.MatchString(s) })
 }

@@ -195,47 +195,11 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		d.step(-1)
 		return nil
 	case "enter", "ctrl+enter", "alt+enter", "ctrl+j":
-		h := m.hostByName(d.host)
-		if h == nil {
-			m.modal = nil
-			return nil
-		}
-		folder := strings.TrimSpace(d.folder.value())
-		if folder == "" {
-			folder = "~"
-		}
-		a := client.NewArgs{Agent: d.agent(), Cwd: client.RemotePath(folder), Name: strings.TrimSpace(d.name.value()), Worktree: d.worktree}
-		if d.agent() == otherAgent {
-			c := strings.TrimSpace(d.command.value())
-			if c == "" {
-				d.field, d.err = 4, &client.UserError{Msg: "type the command to run", Hint: "For example: aider --model sonnet"}
-				return nil
-			}
-			// exec replaces the shell, so the command is the session's process.
-			a.Agent, a.Argv = "", []string{"/bin/sh", "-c", "exec " + c}
-		}
-		d.starting, d.err = true, nil
-		return m.startSession(h, a, ks == "enter")
+		return d.submit(m, ks == "enter")
 	}
 	switch d.field {
 	case 0:
-		switch ks {
-		case "left", "h":
-			d.moveAgent(-1)
-		case "right", "l", "space":
-			d.moveAgent(1)
-		default:
-			// A letter jumps to the next agent that starts with it.
-			if len(k.Text) == 1 {
-				for i := 1; i <= len(d.choices); i++ {
-					j := (d.ai + i) % len(d.choices)
-					if c := d.choices[j]; c.installed && strings.HasPrefix(c.kind, k.Text) {
-						d.ai = j
-						break
-					}
-				}
-			}
-		}
+		d.agentKey(ks, k.Text)
 	case 1:
 		if d.folder.key(k) {
 			return m.fetchFolders(d)
@@ -255,6 +219,54 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		}
 	}
 	return nil
+}
+
+// submit starts the session the form describes; attach is false for a
+// start in the background.
+func (d *newSession) submit(m *Model, attach bool) tea.Cmd {
+	h := m.hostByName(d.host)
+	if h == nil {
+		m.modal = nil
+		return nil
+	}
+	folder := strings.TrimSpace(d.folder.value())
+	if folder == "" {
+		folder = "~"
+	}
+	a := client.NewArgs{Agent: d.agent(), Cwd: client.RemotePath(folder), Name: strings.TrimSpace(d.name.value()), Worktree: d.worktree}
+	if d.agent() == otherAgent {
+		c := strings.TrimSpace(d.command.value())
+		if c == "" {
+			d.field, d.err = 4, &client.UserError{Msg: "type the command to run", Hint: "For example: aider --model sonnet"}
+			return nil
+		}
+		// exec replaces the shell, so the command is the session's process.
+		a.Agent, a.Argv = "", []string{"/bin/sh", "-c", "exec " + c}
+	}
+	d.starting, d.err = true, nil
+	return m.startSession(h, a, attach)
+}
+
+// agentKey moves through the agents: arrows and h l, space, or a letter,
+// which jumps to the next installed agent that starts with it.
+func (d *newSession) agentKey(ks, text string) {
+	switch ks {
+	case "left", "h":
+		d.moveAgent(-1)
+	case "right", "l", "space":
+		d.moveAgent(1)
+	default:
+		if len(text) != 1 {
+			return
+		}
+		for i := 1; i <= len(d.choices); i++ {
+			j := (d.ai + i) % len(d.choices)
+			if c := d.choices[j]; c.installed && strings.HasPrefix(c.kind, text) {
+				d.ai = j
+				return
+			}
+		}
+	}
 }
 
 func (d *newSession) view(m *Model) string {
