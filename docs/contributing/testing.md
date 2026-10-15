@@ -20,6 +20,16 @@ Every change keeps the tests green, and every bug fix adds the test that would h
 - **Model tests** (`internal/tui/model_test.go`) drive the launcher with keys against a fake backend, and check what it asks the backend to do.
 - **The attach path** is byte-exact: any change to it needs a test that proves the bytes are unchanged.
 
+## The host in unit tests
+
+Most of the host helper runs in the unit tests, on the machine that runs them, with no SSH and no systemd. The package `internal/host/hosttest` sets it up, and it works on macOS and Linux:
+
+- `hosttest.New(t)` points `$HOME`, the XDG folders and `$SHELL` at a new temporary folder for the rest of the test, and leaves only the system's programs on `$PATH`, so no agent you installed runs in a test. At the end, it deletes every session and waits for each holder to exit.
+- **Holders are real child processes.** They are the test binary itself, started again with the helper's own arguments (`holder <id>`, `hook <event>`), so a package whose tests start sessions calls `hosttest.Main` from its `TestMain`. They start detached, as they do in a container.
+- **The bridge is real too.** `ClientHost` returns a client host whose transport runs `host.RunBridge` in the test's process, over pipes. `client.Dial`, `client.Attach` and the commands in `internal/cli` run against it. `Transport.Drop` ends every connection at once, as a dropped network would, and `SetDown` makes the host unreachable.
+- **A terminal for the client.** `NewTerminal` opens a pseudo-terminal that stands in for the user's: the test types into it, and reads what the client draws, byte for byte.
+- **Races in holders count.** The race detector writes a holder's report to a file, and the test fails.
+
 ## End-to-end tests
 
 `test/e2e/run.py` drives the real client in a pseudo-terminal, as a person in Ghostty would, against a real Linux host.

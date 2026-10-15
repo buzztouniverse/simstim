@@ -60,9 +60,14 @@ func DefaultMemoryMax() int64 {
 // UnitName is the systemd unit of a session.
 func UnitName(id string) string { return brand.UnitPrefix + id + ".service" }
 
+// holderExecutable is the helper binary that holders are started from.
+// Tests point it at a copy of the test binary with a shadow terminal next
+// to it.
+var holderExecutable = os.Executable
+
 // launchHolder starts the holder for m and waits until its socket answers.
 func launchHolder(m *Manifest) error {
-	exe, err := os.Executable()
+	exe, err := holderExecutable()
 	if err != nil {
 		return err
 	}
