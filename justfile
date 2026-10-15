@@ -82,6 +82,7 @@ fuzz time="30s":
 
 # Static checks.
 lint: check-name check-private check-scripts check-size
+    go mod tidy -diff
     go vet ./...
     golangci-lint run
 

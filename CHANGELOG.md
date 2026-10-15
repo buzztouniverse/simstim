@@ -132,6 +132,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- `go.mod` lists `pflag` as a direct dependency again, so the release build's `go mod tidy -diff` passes; `just lint` now runs the same check.
 - The reference showed "detach with Ctrl+)" for `attach`: Markdown read the backslash in `Ctrl+\` as an escape. The generator now escapes backslashes, angle brackets and stars in help text outside code.
 - `scripts/setup.sh` threw away the test output, so a failed check said nothing about which test failed; it now prints the failures.
 - A session's out-of-memory count came from whatever cgroup its holder ran in; without a systemd user manager that could be another program's service, so its kills counted for the session. Only the session's own unit counts now.
