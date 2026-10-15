@@ -11,6 +11,8 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	uv "github.com/charmbracelet/ultraviolet"
 
 	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/client"
@@ -49,6 +51,8 @@ type fakeBackend struct {
 	attachErr error
 	attached  []client.AttachOptions
 	blocked   *atomic.Int64 // goroutines waiting in Done
+	mem       memory        // what the launcher remembers between runs
+	saves     int
 }
 
 func newFakeBackend() *fakeBackend {
@@ -144,6 +148,19 @@ func (b *fakeBackend) HelperSize(p client.Platform) (int, bool) {
 }
 
 func (b *fakeBackend) SSHConfigHosts() []string { return b.known }
+
+func (b *fakeBackend) Memory() memory {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.mem
+}
+
+func (b *fakeBackend) Remember(mem memory) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.mem = mem
+	b.saves++
+}
 
 func (b *fakeBackend) Attach(_ context.Context, o client.AttachOptions) (client.AttachResult, error) {
 	b.mu.Lock()
@@ -311,6 +328,7 @@ type harness struct {
 	running atomic.Int64
 	timers  []timerMsg
 	quit    bool
+	raw     []string // what the model wrote to the terminal itself
 }
 
 func newHarness(t *testing.T, be *fakeBackend, w, h int) *harness {
@@ -381,6 +399,8 @@ func (hs *harness) deliver(msg tea.Msg) {
 		hs.timers = append(hs.timers, msg)
 	case tea.QuitMsg:
 		hs.quit = true
+	case tea.RawMsg:
+		hs.raw = append(hs.raw, fmt.Sprint(msg.Msg))
 	default:
 		_, cmd := hs.m.Update(msg)
 		hs.start(cmd)
@@ -506,3 +526,5 @@ func labBackend() *fakeBackend {
 	}}
 	return be
 }
+
+func uvDraw(c *lipgloss.Canvas, s string) { uv.NewStyledString(s).Draw(c, c.Bounds()) }

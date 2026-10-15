@@ -48,17 +48,6 @@ func fitRight(s string, w int) string {
 	return s
 }
 
-// center places s in the middle of w cells.
-func center(s string, w int) string {
-	s = trunc(s, w)
-	n := cells(s)
-	if n >= w {
-		return s
-	}
-	left := (w - n) / 2
-	return strings.Repeat(" ", left) + s + strings.Repeat(" ", w-n-left)
-}
-
 // truncPath shortens a path in the middle, keeping its start and its end:
 // "~/src/…/auth".
 func truncPath(p string, w int) string {
@@ -204,6 +193,28 @@ func fuzzy(q, s string) (int, bool) {
 		return 0, false
 	}
 	return score*8 - len(sr), true
+}
+
+// fuzzyPos marks the letters of s that the filter q matches, in the order
+// fuzzy finds them. It is nil when q is empty or does not match.
+func fuzzyPos(q, s string) []bool {
+	q = strings.ToLower(strings.Join(strings.Fields(q), ""))
+	if q == "" {
+		return nil
+	}
+	qr, sr := []rune(q), []rune(strings.ToLower(s))
+	hit := make([]bool, len(sr))
+	qi := 0
+	for i, r := range sr {
+		if qi < len(qr) && r == qr[qi] {
+			hit[i] = true
+			qi++
+		}
+	}
+	if qi < len(qr) {
+		return nil
+	}
+	return hit
 }
 
 // errText splits an error into its message and its "Try:" hint.

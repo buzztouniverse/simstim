@@ -4,13 +4,13 @@
 
   ╭─ Hosts ──────────────────────────────────────────────────────── 3 hosts ─╮
   │                                                                          │
-  │  ● atlas-dev  4 sessions · 1 needs you                             9ms  │
-  │  ◌ aws-gpu     offline                                                   │
-  │  ● gcp-dev     2 sessions                                          41ms  │
+  │ 1 ● atlas-dev  4 sessions · 1 needs you                            9ms  │
+  │ 2 ◌ aws-gpu     offline                                                  │
+  │ 3 ● gcp-dev     2 sessions                                         41ms  │
+  │                                                                          │
+  │ ssh atlas-dev · Debian 13 · 4 CPUs · claude, codex, opencode, shell     │
   │                                                                          │
   ╰────────────────── Enter open · n new session · a add host · ? shortcuts ─╯
-
-
 
 
 

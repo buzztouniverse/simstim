@@ -22,7 +22,8 @@ The look and the key flow follow Amp's CLI, measured cell by cell in [Amp's TUI,
 4. **The terminal's own colours.** Every colour is a palette slot or the terminal's default, so simstim matches your theme. Fixed RGB is kept for the brand only.
 5. **Few keys.** Enter goes forward, Esc goes back, `n` starts a session, `?` shows the keys, and Ctrl+O shows everything else.
 6. **Plain words.** Short labels, sentence case, no exclamation marks. Every error says what to try next.
-7. **Calm motion.** One small spinner and one welcome animation, and one switch turns them off.
+7. **Motion with a purpose.** Things move when they change, are busy or need you, smoothly and in the terminal's own colours, and never in the way of a key. One switch turns all motion off.
+8. **Fast paths.** The launcher draws at once from what it saw last time and opens where you left off, so `simstim` then Enter takes you back in. Numbers, the mouse and `attach -` shorten the common path further.
 
 ## 2. Screens
 
@@ -30,16 +31,19 @@ The mockups are 80 columns wide and come from the golden tests in `internal/tui/
 
 ### 2.1 First run
 
-With no hosts, the screen looks like Amp's welcome. Our own mark sits on the left, and three lines sit beside it. In a narrow terminal the mark moves above the text.
+With no hosts, the screen looks like Amp's welcome. Our own mark sits on the left, and a few lines sit beside it. In a narrow terminal the mark moves above the text.
 
 ```
-               ·  ·  ·                 Welcome to simstim
-         ·  ·  ∿∿∿∿∿∿∿  ·  ·           a to add a host
-    ·  ─────────╯     ╰─────────  ·    ctrl+o for commands · ? for shortcuts
-         ·  ·  ·  ·  ·  ·  ·
+          ⢀⡠⠤⣀  ⣀⣀⡀  ⢀⠔⠊⠉⠉⠒⢄⡀         Welcome to simstim
+        ⢀⠔⠁   ⢑⡜  ⠘⢄⠔⠁    ⢀⢤⣚⣢⣄⡀
+    ⠶⠶⣶⠪⢅    ⢠⠊⠈⢆ ⢠⠊⢆    ⣔⠕⠁  ⠈⠙⠳⠶    a to add a host (5 hosts in your SSH config)
+       ⠉⠢⡑⠢⠤⠒⠁  ⢀⢷⠁  ⠣⡀⢀⡮⠊            ctrl+o for commands · ? for shortcuts
+         ⠈⠑⠤⣀⣀⡠⠔⠁ ⠑⢄ ⣀⠜⠉
 ```
 
-The title is bold, in the brand gradient. In the hints, the keys are bold and the words are faint.
+- **The mark** is three strands of a signal, woven into a ribbon that pinches at both ends. It is drawn in braille, so the curves are smooth, and coloured in the brand gradient. With motion on, the strands flow, a pulse runs along the ribbon, and the strands are brighter where they cross.
+- **The title** is bold, in the brand gradient, and types itself in behind a cursor.
+- **The hints:** the keys are bold and the words are faint. The first hint says how many hosts your SSH config already has.
 
 ### 2.2 Hosts
 
@@ -48,21 +52,24 @@ The first screen once hosts exist. With exactly one host, simstim skips it and o
 ```
   ╭─ Hosts ──────────────────────────────────────────────────────── 3 hosts ─╮
   │                                                                          │
-  │  ● atlas-dev  4 sessions · 1 needs you                             9ms  │
-  │  ◌ aws-gpu     offline                                                   │
-  │  ● gcp-dev     2 sessions                                          41ms  │
+  │ 1 ● atlas-dev  4 sessions · 1 needs you                            9ms  │
+  │ 2 ◌ aws-gpu     offline                                                  │
+  │ 3 ● gcp-dev     2 sessions                                         41ms  │
+  │                                                                          │
+  │ ssh atlas-dev · Debian 13 · 4 CPUs · claude, codex, opencode, shell     │
   │                                                                          │
   ╰────────────────── Enter open · n new session · a add host · ? shortcuts ─╯
 ```
 
 - **Each row:**
+  - Its number, faint: 1–9 open the row at once.
   - A state glyph: `●` green for online, the spinner while connecting, `◌` faint for offline, `✕` red for not ready.
   - The name, in bold.
   - A faint summary, in which the count that needs you is yellow.
   - The round trip, faint, on the right.
-- **The selected row** is the selection bar.
+- **The selected row** is the selection bar. One faint line under the list says how the host is reached and what it runs.
 - **Keys:**
-  - Enter (or `l`, `→`) opens the host's sessions.
+  - Enter (or `l`, `→`, or its number) opens the host's sessions.
   - `n` starts a session on the selected host.
   - `a` adds a host, `i` shows its details, and `/` filters.
 
@@ -73,22 +80,26 @@ One host's sessions. The host's name is the title, and its round trip (or "offli
 ```
   ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
   │                                                                          │
-  │  ● auth-refactor    claude    ~/src/app             needs input      2m  │
-  │  ≈ api-tests        codex     ~/src/api             working         14s  │
-  │  ○ notes            shell     ~                     idle             1h  │
-  │  ✓ docs-pass        opencode  ~/src/docs            exited 0         3h  │
+  │ 1 ● auth-refactor    claude    ~/src/app            needs input      2m  │
+  │ 2 ⢼ api-tests        codex     ~/src/api            working         14s  │
+  │ 3 ○ notes            shell     ~                    idle             1h  │
+  │ 4 ✓ docs-pass        opencode  ~/src/docs           exited 0         3h  │
+  │                                                                          │
+  │ Do you want to proceed? · ~/src/app · 6.1 of 8 GiB · s4                  │
   │                                                                          │
   ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
 ```
 
 - **Each row:**
-  - The state glyph, then the name in bold.
+  - Its number, faint: 1–9 attach at once.
+  - The state glyph, then the name in bold. A working session's glyph is a tiny Game of Life in one braille cell; the dot of a session that needs you breathes.
   - The agent and the folder, both faint.
   - The state in its colour: needs input yellow, working blue, failed red, others faint.
   - The time in that state, faint.
 - **Order:** needs input, working, idle, then ended.
+- **The detail line** under the list is about the selected session: what it waits for (in yellow), its folder, its memory and its ID.
 - **Keys:**
-  - Enter attaches. On an empty list, Enter starts a new session instead.
+  - Enter (or its number) attaches. On an empty list, Enter starts a new session instead.
   - `n` starts a session here.
   - `r` renames in place: the name becomes a text field and the hints change to `Enter rename · Esc cancel`.
   - `d` deletes, after a confirm.
@@ -119,6 +130,8 @@ One host's sessions. The host's name is the title, and its round trip (or "offli
 ```
 
 **Every host.** `simstim flip`, or "view: all sessions" in the palette, shows one list of every host's sessions. Each host's name is a bold line above its sessions.
+
+**Before the host answers.** The launcher remembers each host's sessions from the last run, and shows them at once, quiet (glyph and state faint), while SSH connects: the frame's border glows and the top right says "connecting". Enter attaches straight away. The detail line says "last seen before this run" until the live list arrives ([decision 0011](decisions/0011-instant-launcher.md)).
 
 ### 2.4 New session
 
@@ -257,7 +270,17 @@ The agent owns the whole terminal: every row and every column. There is no borde
   ╰─────────────────── t test · s shell · r reconnect · x remove · Esc back ─╯
 ```
 
-### 2.11 Add a host
+### 2.11 Fast paths
+
+- **Where you left off.** The launcher opens on the sessions of the host you last attached to, with that session selected. `simstim` then Enter takes you back in. Esc goes to the hosts.
+- **At once.** It draws the sessions it remembers before any host answers, and replaces them when the host does.
+- **Numbers.** 1–9 open the row with that number.
+- **The mouse.** A click selects a row; a click on the selected row opens it. The wheel moves the selection. In the palette a click runs a command. A click outside the palette, the preview, the host details or a confirm closes it.
+- **The tab title** counts the sessions that need you: `● 1 · simstim · homelab`. You can see it from another tab.
+- **When nobody is looking.** If a session starts to need you while the terminal is in the background, the launcher sends a desktop notification (OSC 777).
+- **From the shell.** `simstim attach -` attaches to the last session.
+
+### 2.12 Add a host
 
 `a`, from any screen. It is a dialog with one step per screen; the step count sits at the top right, and Esc goes back one step.
 
@@ -288,6 +311,8 @@ These keys work in the launcher. You can rebind any key in `config.toml`, and `s
 | Key | Where | Action |
 | --- | --- | --- |
 | `↑` `↓` or `j` `k` | Lists | Move |
+| `1`–`9` | Lists | Open the row with that number: a host's sessions, or attach |
+| Click, wheel | Lists, palette | Select, open the selected row, move; run a palette command |
 | `Enter`, `l`, `→` | Hosts | Open the host's sessions |
 | `Esc`, `h`, `←` | Sessions | Back to the hosts |
 | `Enter` | Sessions | Attach, or start a session on an empty list |
@@ -359,8 +384,9 @@ One fixed gradient, from deep teal to electric cyan, colours the welcome mark an
 
 | Glyph | Meaning |
 | --- | --- |
-| `●` green / yellow | An online host / a session that needs input |
-| `∼ ≈ ≋` | The spinner: connecting, working, starting |
+| `●` green / yellow | An online host / a session that needs input (it breathes) |
+| `∼ ≈ ≋` | The spinner: connecting, starting |
+| `⢼` braille | A working session: a tiny Game of Life on the cell's eight dots |
 | `○` | Idle |
 | `✓` green | Done, exited 0, a check passed |
 | `✕` red | Failed, exited with an error, a host that is not ready |
@@ -371,10 +397,26 @@ One fixed gradient, from deep teal to electric cyan, colours the welcome mark an
 
 ### 4.5 Motion
 
-- The spinner is a small wave that ticks every 200 ms, and only while something is connecting, starting or working.
-- The welcome mark ripples once every 6 s, at up to 15 fps.
-- Idle screens never repaint.
-- One setting, `ui.motion = auto | on | off`, controls all of it. `auto` turns motion off inside SSH sessions, in Emacs and JetBrains terminals, and when `NO_COLOR` or `TERM=dumb` is set. With motion off the spinner shows `≈`.
+Motion is there to show change, work in progress and things that need you. It is never decoration that a key has to wait for: keys act at once, whatever is moving.
+
+| What moves | When | How |
+| --- | --- | --- |
+| The welcome mark | On the first-run screen | The strands flow and a pulse runs along the ribbon, at 30 fps |
+| The welcome title | When the first-run screen opens | Types in, one letter every 38 ms, behind a cursor |
+| List rows | When a list appears (start, hosts to sessions and back) | Fade in one after another: 22 ms apart, 140 ms each |
+| A frame's border | While it is busy: a host connecting, a session starting, the wizard's checks | A soft glow travels round it, once every 1.6 s; the rest of the border dims |
+| A dialog's border | When it opens, and the quit chord's popup | One lap of the glow in 0.5 s, fading as it goes |
+| Notices | When they come and go | Fade in over 150 ms, and out over the last 300 ms |
+| "Connecting…", "Starting…" | While they are true | A brighter band sweeps across the faint text |
+| A session that needs you | While it waits | Its dot breathes, one breath every 1.6 s |
+| A working session | While it works | Its braille glyph runs a tiny Game of Life |
+| The spinner | Connecting, starting | A small wave, `∼ ≈ ≋`, every 200 ms |
+
+**Colour.** To blend smoothly, the launcher asks the terminal for its real colours: the default foreground and background (OSC 10 and 11) and the 16 palette slots (OSC 4), as Amp does. Fades and glows then mix those colours in truecolour, so they match your theme. Without truecolour, or before the terminal answers, the same motion uses steps of faint, normal and bold instead.
+
+**Cost.** One frame tick runs only while something moves: 30 fps for the welcome mark, glows and fades, 10 fps for breathing dots and working glyphs. When nothing moves, nothing repaints.
+
+**One switch.** `ui.motion = auto | on | off`. `auto` turns motion off inside SSH sessions, in Emacs and JetBrains terminals, and when `NO_COLOR` or `TERM=dumb` is set. With motion off every animation draws one still frame: the spinner shows `≈` and a working session shows `≈`.
 
 ### 4.6 Capability probe
 
@@ -429,7 +471,7 @@ The launcher is the home, and every action also has a command, for scripts and t
 | `simstim host start\|stop\|status <name>` | Runs the host's provider script |
 | `simstim new <host> [--agent claude] [--dir ~/src/app] [--name x] [--worktree [--base ref]] [--detach] [-- cmd…]` | Starts a session, and attaches unless `--detach` |
 | `simstim ls [--host h] [--json]` | Lists sessions, with their state and where the state came from |
-| `simstim attach <host>/<session>` | Attaches directly. Good for a Ghostty keybinding. |
+| `simstim attach <host>/<session>` | Attaches directly. Good for a Ghostty keybinding. `simstim attach -` attaches to the last session. |
 | `simstim flip [<host>/<session>]` | A quick switch: the sessions of every host in one list, then attach |
 | `simstim send <host>/<session> <text> [--no-enter]` | Types text into a session without attaching |
 | `simstim rename <host>/<session> <name>`, `kill <host>/<session>` | Renames; stops and removes (keeping a worktree that has work) |

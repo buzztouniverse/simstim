@@ -2,18 +2,31 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"charm.land/lipgloss/v2"
+
 	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iAmLakshya/simstim/internal/client"
 )
 
 // The launcher (docs/ux.md 2.2 and 2.3) is one framed list in one column:
 // the hosts, or the sessions on one host. Its title sits in the top border,
-// its keys in the bottom border, and short notices appear under it.
+// its keys in the bottom border, one line about the selected row sits under
+// the list, and short notices appear under the box.
 
 // noticeRows are kept free under the box for notices, so the box never
 // moves when one appears.
 const noticeRows = 4
+
+// boxGeo is where the launcher's box was last drawn: for the motion effects
+// and for the mouse.
+type boxGeo struct {
+	x, y, w, h   int
+	listY, listN int // the first list row on screen, and how many are drawn
+	top          int // the list index of the first row drawn
+}
 
 // boxW is the width of the launcher's box.
 func (m *Model) boxW() int { return max(min(m.width-4, 96), min(m.width, 32)) }
@@ -27,7 +40,7 @@ func (m *Model) cw() int { return m.boxW() - 4 }
 
 // listRoom is how many rows the list may take.
 func (m *Model) listRoom() int {
-	room := m.height - m.boxTop() - noticeRows - 4 // borders and a blank row at each end
+	room := m.height - m.boxTop() - noticeRows - 6 // borders, the blank rows, the detail line
 	if m.activeFilter().shown() {
 		room -= 2
 	}
@@ -44,73 +57,124 @@ func (m *Model) activeFilter() *filter {
 	return &m.sessFilter
 }
 
-// viewLauncher draws the box, and the notices to go under it.
-func (m *Model) viewLauncher() (string, layer) {
+// listView is what one screen puts in the box.
+type listView struct {
+	title, right string
+	rows         []string // the list, or an empty state
+	listed       bool     // rows are list rows, not an empty state
+	top          int
+	detail       string
+	hints        []hint
+}
+
+// viewLauncher draws the box. It records where, in m.geo.
+func (m *Model) viewLauncher() string {
 	w, cw := m.boxW(), m.cw()
-	var title, right string
-	var body []string
-	var hints []hint
+	var v listView
 	if m.screen == scrHosts {
-		title, right, body, hints = m.hostsView(cw)
+		v = m.hostsView(cw)
 	} else {
-		title, right, body, hints = m.sessionsView(cw)
+		v = m.sessionsView(cw)
 	}
 	switch {
 	case m.rename != nil:
-		hints = []hint{{"Enter", "rename"}, {"Esc", "cancel"}}
+		v.hints = []hint{{"Enter", "rename"}, {"Esc", "cancel"}}
 	case m.activeFilter().typing:
-		hints = []hint{{"Enter", "keep filter"}, {"↑↓", "move"}, {"Esc", "clear"}}
+		v.hints = []hint{{"Enter", "keep filter"}, {"↑↓", "move"}, {"Esc", "clear"}}
 	}
-	var all []string
+	all := []string{""}
 	if f := m.activeFilter(); f.shown() {
 		all = append(all, "> "+f.in.view(cw-2, f.typing), "")
 	}
-	all = append(all, body...)
+	listAt := len(all)
+	all = append(all, v.rows...)
+	if v.detail != "" {
+		all = append(all, "", v.detail)
+	}
 	if m.showHelp {
 		all = append(all, "", strings.Repeat("─", cw))
 		all = append(all, m.helpLines(cw)...)
 	}
-	all = append([]string{""}, append(all, "")...)
-	b := strings.Split(box(w, len(all)+2, title, right, hintsFor(hints, w), all, toneNormal), "\n")
+	all = append(all, "")
+	b := strings.Split(box(w, len(all)+2, v.title, v.right, hintsFor(v.hints, w), all, toneNormal), "\n")
 
 	x, top := max((m.width-w)/2, 0), m.boxTop()
+	m.geo = boxGeo{x: x, y: top, w: w, h: len(b), listY: top + 1 + listAt, top: v.top}
+	if v.listed {
+		m.geo.listN = len(v.rows)
+	}
 	lines := make([]string, m.height)
 	for i, l := range b {
 		if top+i < m.height {
 			lines[top+i] = strings.Repeat(" ", x) + l
 		}
 	}
-	var notices layer
-	if n := m.noticeLines(cw); len(n) > 0 && top+len(b)+1 < m.height {
-		notices = layer{s: strings.Join(n, "\n"), x: x + 2, y: top + len(b) + 1}
+	return strings.Join(lines, "\n")
+}
+
+// gutter is the row's number, faint, for the first nine rows: 1–9 open them.
+func gutter(n int) seg {
+	if n >= 1 && n <= 9 {
+		return seg{fmt.Sprint(n), sFaint}
 	}
-	return strings.Join(lines, "\n"), notices
+	return seg{" ", sPlain}
+}
+
+// nameSegs is a name w cells wide, with the letters that match the filter
+// in the key colour.
+func nameSegs(name string, w int, st lipgloss.Style, q string) []seg {
+	name = trunc(name, w)
+	pad := seg{strings.Repeat(" ", max(w-cells(name), 0)), sPlain}
+	hit := fuzzyPos(q, name)
+	if len(hit) == 0 {
+		return []seg{{name, st}, pad}
+	}
+	var out []seg
+	for i, r := range []rune(name) {
+		s := st
+		if hit[i] {
+			s = sKeyBold
+		}
+		if n := len(out); n > 0 && out[n-1].st.GetForeground() == s.GetForeground() {
+			out[n-1].s += string(r)
+			continue
+		}
+		out = append(out, seg{string(r), s})
+	}
+	return append(out, pad)
 }
 
 // Hosts.
 
-func (m *Model) hostsView(cw int) (title, right string, body []string, hints []hint) {
-	title, right = "Hosts", sFaint.Render(plural(len(m.hosts), "host", "hosts"))
-	hints = []hint{{"Enter", "open"}, {"n", "new session"}, {"a", "add host"}, {"Ctrl+O", "commands"}, {"?", "shortcuts"}}
+func (m *Model) hostsView(cw int) listView {
+	v := listView{
+		title: "Hosts", right: sFaint.Render(plural(len(m.hosts), "host", "hosts")),
+		hints: []hint{{"Enter", "open"}, {"n", "new session"}, {"a", "add host"}, {"Ctrl+O", "commands"}, {"?", "shortcuts"}},
+	}
 	vh := m.visibleHosts()
 	if len(vh) == 0 {
-		return title, right, []string{sFaint.Render(trunc(fmt.Sprintf("Nothing matches '%s'.", m.hostFilter.query()), cw))}, hints
+		v.rows = []string{sFaint.Render(trunc(fmt.Sprintf("Nothing matches '%s'.", m.hostFilter.query()), cw))}
+		return v
 	}
 	nameW := 8
 	for _, h := range vh {
 		nameW = max(nameW, cells(h.name()))
 	}
 	nameW = min(nameW, max(cw/3, 8))
+	v.listed, v.top = true, m.hostTop
 	for i := m.hostTop; i < len(vh) && i < m.hostTop+m.listRoom(); i++ {
-		body = append(body, m.hostRow(vh[i], i == m.hostSel, cw, nameW))
+		v.rows = append(v.rows, m.hostRow(vh[i], i+1, i == m.hostSel, cw, nameW))
 	}
-	return title, right, body, hints
+	if h := m.selectedHost(); h != nil {
+		v.detail = m.hostDetail(h, cw)
+	}
+	return v
 }
 
 const hostRight = 8 // latency, or nothing
 
-func (m *Model) hostRow(h *hostConn, selected bool, cw, nameW int) string {
-	detailW := cw - 3 - nameW - 2 - 2 - hostRight - 1
+func (m *Model) hostRow(h *hostConn, n int, selected bool, cw, nameW int) string {
+	detailW := cw - 4 - nameW - 2 - 2 - hostRight - 1
 	glyph := seg{glyphOnline, sSuccess}
 	nameSt := sBold
 	var detail []seg
@@ -119,7 +183,15 @@ func (m *Model) hostRow(h *hostConn, selected bool, cw, nameW int) string {
 	switch h.status {
 	case stConnecting:
 		glyph, right = seg{m.spinner(), sKey}, blank
-		detail = []seg{{"connecting…", sFaint}}
+		text := "connecting…"
+		if len(h.sessions) > 0 {
+			text = m.summaryText(h) + " · connecting…"
+		}
+		if selected {
+			detail = []seg{{text, sFaint}}
+		} else {
+			detail = []seg{{m.shimmer(text), sPlain}}
+		}
 	case stOffline:
 		glyph, nameSt, right = seg{glyphOffline, sFaint}, sFaint, blank
 		detail = []seg{{"offline", sFaint}}
@@ -134,22 +206,29 @@ func (m *Model) hostRow(h *hostConn, selected bool, cw, nameW int) string {
 		detail[i].s = trunc(detail[i].s, detailW-used)
 		used += cells(detail[i].s)
 	}
-	segs := []seg{{" ", sPlain}, glyph, {" ", sPlain}, {fit(h.name(), nameW), nameSt}, {"  ", sPlain}}
+	segs := []seg{gutter(n), {" ", sPlain}, glyph, {" ", sPlain}}
+	segs = append(segs, nameSegs(h.name(), nameW, nameSt, m.hostFilter.query())...)
+	segs = append(segs, seg{"  ", sPlain})
 	segs = append(segs, detail...)
 	segs = append(segs, seg{strings.Repeat(" ", max(detailW-used, 0)), sPlain}, seg{"  ", sPlain}, right, seg{" ", sPlain})
 	return listRow(selected, segs...)
 }
 
+// summaryText is a host's sessions in a few words: "4 sessions".
+func (m *Model) summaryText(h *hostConn) string {
+	if len(h.sessions) == 0 {
+		return "no sessions"
+	}
+	return plural(len(h.sessions), "session", "sessions")
+}
+
 // hostSummary is the faint line about a host's sessions; the count that
 // needs the user stands out.
 func (m *Model) hostSummary(h *hostConn) []seg {
-	if !h.loaded {
+	if !h.loaded && len(h.sessions) == 0 {
 		return []seg{{"…", sFaint}}
 	}
-	if len(h.sessions) == 0 {
-		return []seg{{"no sessions", sFaint}}
-	}
-	out := []seg{{plural(len(h.sessions), "session", "sessions"), sFaint}}
+	out := []seg{{m.summaryText(h), sFaint}}
 	need := 0
 	for _, s := range h.sessions {
 		if s.State == "needs_input" {
@@ -162,32 +241,67 @@ func (m *Model) hostSummary(h *hostConn) []seg {
 	return out
 }
 
+// hostDetail is the line under the hosts: how it is reached, and what it is.
+func (m *Model) hostDetail(h *hostConn, cw int) string {
+	parts := []string{"ssh " + h.host.SSH}
+	if i := h.info; i != nil {
+		for _, s := range []string{i.Distro, plural(i.CPUs, "CPU", "CPUs")} {
+			if s != "" && !strings.HasPrefix(s, "0 ") {
+				parts = append(parts, s)
+			}
+		}
+		var names []string
+		for k := range i.Agents {
+			names = append(names, k)
+		}
+		sort.Strings(names)
+		if len(names) > 0 {
+			parts = append(parts, strings.Join(names, ", "))
+		}
+	}
+	return sFaint.Render(trunc(strings.Join(parts, dot), cw))
+}
+
 // Sessions.
 
-func (m *Model) sessionsView(cw int) (title, right string, body []string, hints []hint) {
-	hints = []hint{{"Enter", "attach"}, {"n", "new"}, {"Space", "preview"}, {"Esc", "hosts"}, {"?", "shortcuts"}}
+func (m *Model) sessionsView(cw int) listView {
+	v := listView{hints: []hint{{"Enter", "attach"}, {"n", "new"}, {"Space", "preview"}, {"Esc", "hosts"}, {"?", "shortcuts"}}}
 	h := m.selectedHost()
 	if h == nil {
-		title, right = "All sessions", sFaint.Render(plural(len(m.hosts), "host", "hosts"))
+		v.title, v.right = "All sessions", sFaint.Render(plural(len(m.hosts), "host", "hosts"))
 	} else {
-		title, right = h.name(), m.hostState(h)
+		v.title, v.right = h.name(), m.hostState(h)
 	}
 	rows := m.rows()
 	if sessionRows(rows) == 0 {
-		return title, right, m.emptyState(cw), hints
+		v.rows = m.emptyState(cw)
+		return v
 	}
 	cols := sessCols(cw)
-	for i := m.sessTop; i < len(rows) && i < m.sessTop+m.listRoom(); i++ {
-		body = append(body, m.sessRowView(rows[i], cols, i == m.selIdx))
+	n := 0
+	for i := range m.sessTop {
+		if rows[i].kind == rowSession {
+			n++
+		}
 	}
-	return title, right, body, hints
+	v.listed, v.top = true, m.sessTop
+	for i := m.sessTop; i < len(rows) && i < m.sessTop+m.listRoom(); i++ {
+		if rows[i].kind == rowSession {
+			n++
+		}
+		v.rows = append(v.rows, m.sessRowView(rows[i], n, cols, i == m.selIdx))
+	}
+	if hc, s := m.selectedPair(); s != nil {
+		v.detail = m.sessionDetail(hc, *s, cw)
+	}
+	return v
 }
 
 // hostState is the fact at the top right of a host's sessions.
 func (m *Model) hostState(h *hostConn) string {
 	switch h.status {
 	case stConnecting:
-		return sKey.Render(m.spinner()) + sFaint.Render(" connecting")
+		return sKey.Render(m.spinner()) + " " + m.shimmer("connecting")
 	case stOffline:
 		return sFaint.Render("offline")
 	case stFailed:
@@ -209,14 +323,14 @@ type sessColumns struct {
 }
 
 func sessCols(cw int) sessColumns {
-	fixed := 3 + 2 + colAgent + 2 + 2 + colState + 2 + colAge + 1
+	fixed := 4 + 2 + colAgent + 2 + 2 + colState + 2 + colAge + 1
 	rest := max(cw-fixed, 12)
 	c := sessColumns{name: min(max(rest*45/100, 10), 28)}
 	c.folder = rest - c.name
 	return c
 }
 
-func (m *Model) sessRowView(r sessRow, c sessColumns, selected bool) string {
+func (m *Model) sessRowView(r sessRow, n int, c sessColumns, selected bool) string {
 	switch r.kind {
 	case rowHeader:
 		return " " + sBold.Render(r.h.name()) + "  " + m.hostState(r.h)
@@ -229,17 +343,43 @@ func (m *Model) sessRowView(r sessRow, c sessColumns, selected bool) string {
 	}
 	s := r.s
 	glyph, label := m.look(s)
-	name := seg{fit(s.Name, c.name), sBold}
+	if !r.h.loaded {
+		// Remembered from the last run: shown at once, quiet until the host
+		// answers.
+		glyph.st, label.st = sFaint, sFaint
+	}
+	name := nameSegs(s.Name, c.name, sBold, m.sessFilter.query())
 	if m.rename != nil && m.rename.key == r.key() {
-		name = seg{fit(m.rename.in.view(c.name, true), c.name), sPlain}
+		name = []seg{{fit(m.rename.in.view(c.name, true), c.name), sPlain}}
 		selected = false
 	}
-	return listRow(selected,
-		seg{" ", sPlain}, glyph, seg{" ", sPlain}, name, seg{"  ", sPlain},
+	segs := []seg{gutter(n), {" ", sPlain}, glyph, {" ", sPlain}}
+	segs = append(segs, name...)
+	segs = append(segs,
+		seg{"  ", sPlain},
 		seg{fit(s.Agent, colAgent), sFaint}, seg{"  ", sPlain},
 		seg{fit(truncPath(homePath(r.h, s.Cwd), c.folder), c.folder), sFaint}, seg{"  ", sPlain},
 		seg{fit(label.s, colState), label.st}, seg{"  ", sPlain},
 		seg{fitRight(fmtAge(m.now().Sub(since(s))), colAge), sFaint}, seg{" ", sPlain})
+	return listRow(selected, segs...)
+}
+
+// sessionDetail is the line under the sessions: what the selected one is
+// waiting for, where it runs, and its memory.
+func (m *Model) sessionDetail(h *hostConn, s client.Session, cw int) string {
+	var parts []string
+	if s.State == "needs_input" && s.Reason != "" {
+		parts = append(parts, sWarning.Render(trunc(s.Reason, cw/2)))
+	}
+	for _, p := range []string{homePath(h, s.Cwd), fmtMemory(s.MemoryCurrent, s.MemoryMax), s.ID} {
+		if p != "" {
+			parts = append(parts, sFaint.Render(p))
+		}
+	}
+	if !h.loaded {
+		parts = append(parts, sFaint.Render("last seen before this run"))
+	}
+	return trunc(strings.Join(parts, sFaint.Render(dot)), cw)
 }
 
 // emptyState explains an empty sessions list, and what to do next.
@@ -261,7 +401,7 @@ func (m *Model) emptyState(cw int) []string {
 		case loaded:
 			out = append(out, sFaint.Render("No sessions yet."), "", keyHint("Esc", "pick a host, then n for a new session"))
 		case connecting:
-			out = append(out, sKey.Render(m.spinner())+" "+sFaint.Render("Connecting…"))
+			out = append(out, sKey.Render(m.spinner())+" "+m.shimmer("Connecting…"))
 		}
 		for _, x := range m.hosts {
 			if x.status == stOffline || x.status == stFailed {
@@ -274,7 +414,7 @@ func (m *Model) emptyState(cw int) []string {
 	case h.status == stOffline || h.status == stFailed:
 		return m.hostError(h, cw)
 	case !h.loaded:
-		return []string{sKey.Render(m.spinner()) + " " + sFaint.Render(trunc("Connecting to "+h.name()+"…", cw-2))}
+		return []string{sKey.Render(m.spinner()) + " " + m.shimmer(trunc("Connecting to "+h.name()+"…", cw-2))}
 	case len(h.sessions) > 0 && m.hideExited:
 		return []string{sFaint.Render("No running sessions."), "", keyHint(optKey+"+E", "show ended sessions")}
 	default:

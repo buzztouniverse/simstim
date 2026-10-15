@@ -14,5 +14,6 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0008](0008-memory-max-only.md) | Cap sessions with MemoryMax only, not MemoryHigh (replaces part of 0006) | Accepted |
 | [0009](0009-light-launcher.md) | A light launcher, and a session that owns the whole terminal (replaces the first home-screen design) | Accepted |
 | [0010](0010-no-commit-trailers.md) | No sign-off or attribution lines in commits (replaces the DCO part of 0005) | Accepted |
+| [0011](0011-instant-launcher.md) | The launcher remembers: it draws at once and opens where you left off | Accepted |
 
 Write a new record from [the template](template.md).

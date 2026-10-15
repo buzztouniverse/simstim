@@ -13,9 +13,11 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	uv "github.com/charmbracelet/ultraviolet"
 	"golang.org/x/term"
 
 	"github.com/iAmLakshya/simstim/internal/brand"
@@ -61,46 +63,95 @@ func motionOn(setting string, getenv func(string) string) bool {
 	return true
 }
 
-// View draws the screen.
+// View draws the screen. The tab title counts the sessions that need you,
+// so another tab can see it.
 func (m *Model) View() tea.View {
 	v := tea.NewView(m.render())
 	v.AltScreen = true
+	v.MouseMode = tea.MouseModeCellMotion
+	v.ReportFocus = true
 	v.WindowTitle = brand.DisplayName
 	if h := m.selectedHost(); h != nil && m.screen == scrSessions {
 		v.WindowTitle += " · " + h.name()
 	}
+	if n := m.needYou(); n > 0 {
+		v.WindowTitle = fmt.Sprintf("● %d · %s", n, v.WindowTitle)
+	}
 	return v
 }
 
-// render draws the whole screen as a string: the launcher or the first-run
-// screen, a dialog over a dimmed backdrop, the notices and the quit popup.
+// needYou counts the sessions that wait for the user, on every host.
+func (m *Model) needYou() int {
+	n := 0
+	for _, h := range m.hosts {
+		for _, s := range h.sessions {
+			if s.State == "needs_input" {
+				n++
+			}
+		}
+	}
+	return n
+}
+
+// render draws the whole screen: the launcher or the first-run screen with
+// their motion, a dialog over a dimmed backdrop, the notices and the quit
+// popup.
 func (m *Model) render() string {
 	if m.width <= 0 || m.height <= 0 {
 		return ""
 	}
-	var layers []layer
-	base := m.viewFirstRun()
+	c := lipgloss.NewCanvas(m.width, m.height)
+	if len(m.hosts) == 0 {
+		uv.NewStyledString(m.viewFirstRun()).Draw(c, c.Bounds())
+	} else {
+		uv.NewStyledString(m.viewLauncher()).Draw(c, c.Bounds())
+		g := m.geo
+		for i := range g.listN { // rows fade in, one after another
+			m.fade(c, g.x+2, g.listY+i, g.w-4, 1, m.rowAlpha(i))
+		}
+		if gl, ok := m.glowAt(g.x, g.y, g.w, g.h, m.modal == nil && m.glowing(), time.Time{}); ok {
+			m.applyGlow(c, gl)
+		}
+	}
+	if m.modal != nil {
+		dim(c)
+	}
 	if len(m.hosts) > 0 {
-		var notices layer
-		base, notices = m.viewLauncher()
-		if notices.s != "" {
-			layers = append(layers, notices) // sharp, even over a dimmed backdrop
+		for i, n := range m.noticeLines(m.cw()) {
+			x, y := m.geo.x+2, m.geo.y+m.geo.h+1+i
+			if y >= m.height {
+				break
+			}
+			uv.NewStyledString(n.s).Draw(c, uv.Rect(x, y, m.width-x, 1))
+			m.fade(c, x, y, cells(n.s), 1, n.alpha)
 		}
 	}
 	if m.modal != nil {
 		// A dialog sits in the launcher's column, from the box's top row.
 		b := m.modal.view(m)
 		bw, bh := lipgloss.Size(b)
-		y := m.boxTop()
+		x, y := max((m.width-bw)/2, 0), m.boxTop()
 		if len(m.hosts) == 0 || y+bh > m.height {
-			y = (m.height - bh) / 2
+			y = max((m.height-bh)/2, 0)
 		}
-		layers = append(layers, layer{s: b, x: max((m.width-bw)/2, 0), y: max(y, 0)})
+		uv.NewStyledString(b).Draw(c, uv.Rect(x, y, bw, bh))
+		busy := false
+		if b, ok := m.modal.(interface{ busy() bool }); ok {
+			busy = b.busy()
+		}
+		if gl, ok := m.glowAt(x, y, bw, bh, busy, m.modalAt); ok {
+			m.applyGlow(c, gl)
+		}
+		m.modalGeo = boxGeo{x: x, y: y, w: bw, h: bh}
 	}
 	if q, ok := m.quitLayer(); ok {
-		layers = append(layers, q)
+		qw, qh := lipgloss.Size(q.s)
+		uv.NewStyledString(q.s).Draw(c, uv.Rect(q.x, q.y, qw, qh))
+		if gl, ok := m.glowAt(q.x, q.y, qw, qh, false, m.quitAt); ok {
+			m.applyGlow(c, gl)
+		}
 	}
-	return compose(base, m.width, m.height, m.modal != nil, layers...)
+	return c.Render()
 }
 
 // Attach.
@@ -143,6 +194,8 @@ func (m *Model) attachTo(h *hostConn, id, name string) tea.Cmd {
 		// The launcher has let go of the terminal, so SSH may prompt.
 		Interactive: true,
 	}
+	m.mem.Last = &lastSession{Host: h.name(), ID: id, Name: name, At: m.now()}
+	save := m.remember()
 	var res client.AttachResult
 	var aerr error
 	be, ctx, host := m.be, m.ctx, h.name()
@@ -151,12 +204,12 @@ func (m *Model) attachTo(h *hostConn, id, name string) tea.Cmd {
 		res, aerr = be.Attach(ctx, o)
 		return nil
 	}}
-	return m.exec(x, func(err error) tea.Msg {
+	return tea.Batch(func() tea.Msg { save(); return nil }, m.exec(x, func(err error) tea.Msg {
 		if aerr != nil {
 			err = aerr
 		}
 		return attachDoneMsg{host: host, id: id, name: name, res: res, err: err}
-	})
+	}))
 }
 
 func (m *Model) onAttachDone(msg attachDoneMsg) tea.Cmd {

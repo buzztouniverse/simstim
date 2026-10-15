@@ -32,6 +32,9 @@ type Backend interface {
 	SSHConfigHosts() []string
 	// Attach runs a session in this terminal until the user detaches.
 	Attach(ctx context.Context, o client.AttachOptions) (client.AttachResult, error)
+	// Memory and Remember read and write the launcher's memory.
+	Memory() memory
+	Remember(memory)
 }
 
 // Conn is one connection to a host. *client.Conn satisfies it.
@@ -58,6 +61,8 @@ func (realBackend) LoadHosts() ([]client.Host, error) { return client.LoadHosts(
 func (realBackend) SaveHosts(h []client.Host) error   { return client.SaveHosts(h) }
 func (realBackend) Settings() client.Settings         { return client.LoadSettings() }
 func (realBackend) HelperVersion() string             { return client.HelperVersion() }
+func (realBackend) Memory() memory                    { return loadMemory() }
+func (realBackend) Remember(mem memory)               { _ = saveMemory(mem) }
 
 func (realBackend) Dial(ctx context.Context, h client.Host) (Conn, error) {
 	c, err := client.Dial(ctx, h, false)

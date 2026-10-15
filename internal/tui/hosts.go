@@ -253,9 +253,13 @@ func (m *Model) onConn(msg tea.Msg) tea.Cmd {
 			return nil
 		}
 		h.err = nil
+		cmd := m.alertNew(h, msg.list)
 		h.sessions, h.loaded = msg.list, true
 		m.syncSel()
-		return nil
+		if m.want.host == h.name() {
+			m.want = sessKey{} // it is gone: the first live list did not have it
+		}
+		return cmd
 
 	case latencyMsg:
 		h := m.hostByName(msg.name)
@@ -387,19 +391,16 @@ func sortSessions(list []client.Session) {
 
 func ended(s client.Session) bool { return rank(s) == 3 }
 
-// look is how a session's state is drawn: its glyph and its label.
+// look is how a session's state is drawn: its glyph and its label. A
+// working session's glyph is alive; one that needs the user breathes.
 func (m *Model) look(s client.Session) (glyph, label seg) {
-	spin := glyphSpinStill
-	if m.motion {
-		spin = spinFrames[m.spin%len(spinFrames)]
-	}
 	switch s.State {
 	case api.StateNeedsInput:
-		return seg{glyphNeedsInput, sWarning}, seg{"needs input", sWarning}
+		return seg{glyphNeedsInput, m.breath(sWarning)}, seg{"needs input", sWarning}
 	case api.StateWorking:
-		return seg{spin, sKey}, seg{"working", sKey}
+		return seg{m.working(s.ID), sKey}, seg{"working", sKey}
 	case api.StateStarting:
-		return seg{spin, sKey}, seg{"starting", sFaint}
+		return seg{m.spinner(), sKey}, seg{"starting", sFaint}
 	case api.StateIdle:
 		return seg{glyphIdle, sFaint}, seg{"idle", sFaint}
 	case api.StateExited:
@@ -446,4 +447,42 @@ func since(s client.Session) time.Time {
 		return s.Since
 	}
 	return s.CreatedAt
+}
+
+// alertNew raises a desktop notification (OSC 777) when a session starts to
+// need the user while the terminal is in the background. The launcher draws
+// the same news in its list; this is for when nobody is looking.
+func (m *Model) alertNew(h *hostConn, list []client.Session) tea.Cmd {
+	if m.focused || !h.loaded {
+		return nil
+	}
+	before := map[string]string{}
+	for _, s := range h.sessions {
+		before[s.ID] = s.State
+	}
+	var b strings.Builder
+	for _, s := range list {
+		if s.State != api.StateNeedsInput || before[s.ID] == api.StateNeedsInput {
+			continue
+		}
+		body := s.Name + " needs you"
+		if s.Reason != "" {
+			body += ": " + s.Reason
+		}
+		b.WriteString("\x1b]777;notify;" + oscText(brand.DisplayName+" · "+h.name()) + ";" + oscText(body) + "\x1b\\")
+	}
+	if b.Len() == 0 {
+		return nil
+	}
+	return tea.Raw(b.String())
+}
+
+// oscText keeps text safe inside an OSC string.
+func oscText(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f || r == ';' {
+			return ' '
+		}
+		return r
+	}, s)
 }

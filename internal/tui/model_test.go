@@ -9,6 +9,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/brand"
@@ -581,22 +582,28 @@ func TestMotion(t *testing.T) {
 	}
 }
 
-func TestSpinnerOnlyWhenNeeded(t *testing.T) {
+func TestFramesOnlyWhenSomethingMoves(t *testing.T) {
 	be := labBackend()
 	hs := newHarness(t, be, 80, 24)
+	if hs.m.frameNeed() != 0 {
+		t.Fatal("motion off, yet frames tick")
+	}
 	hs.m.motion = true
-	hs.do(hs.m.startTimers())
-	if !hs.m.spinning {
-		t.Fatal("no spinner for working sessions")
+	hs.clock = hs.clock.Add(time.Minute) // the list has long since appeared
+	if d := hs.m.frameNeed(); d != slowFrame {
+		t.Fatalf("working and waiting sessions tick at %v, want %v", d, slowFrame)
 	}
 	for _, h := range hs.m.hosts {
 		for i := range h.sessions {
 			h.sessions[i].State = api.StateIdle
 		}
 	}
-	hs.fire(func(m tea.Msg) bool { _, ok := m.(spinTickMsg); return ok })
-	if hs.m.spinning {
-		t.Fatal("the spinner kept ticking on an idle screen")
+	if d := hs.m.frameNeed(); d != 0 {
+		t.Fatalf("an idle screen ticks every %v", d)
+	}
+	hs.key("n") // a dialog opens: its border glows once round
+	if d := hs.m.frameNeed(); d != fastFrame {
+		t.Fatalf("a dialog opening ticks at %v", d)
 	}
 }
 
@@ -667,20 +674,28 @@ func TestStaleListIsIgnored(t *testing.T) {
 	}
 }
 
-func TestHeroMotion(t *testing.T) {
+func TestMarkMotion(t *testing.T) {
 	hs := newHarness(t, newFakeBackend(), 80, 24)
-	still := strings.Join(hs.m.heroLines(), "\n")
-	hs.m.hero = 10
-	if strings.Join(hs.m.heroLines(), "\n") != still {
-		t.Fatal("the hero moved with motion off")
+	still := strings.Join(hs.m.markLines(), "\n")
+	hs.clock = hs.clock.Add(700 * time.Millisecond)
+	if strings.Join(hs.m.markLines(), "\n") != still {
+		t.Fatal("the mark moved with motion off")
+	}
+	if got := ansi.Strip(hs.m.welcomeTitle()); got != "Welcome to "+brand.DisplayName {
+		t.Fatalf("with motion off the title is whole at once, got %q", got)
 	}
 	hs.m.motion = true
-	if strings.Join(hs.m.heroLines(), "\n") == still {
-		t.Fatal("the hero did not move with motion on")
+	hs.m.epoch = hs.clock
+	if got := ansi.Strip(hs.m.welcomeTitle()); strings.Contains(got, "Welcome") {
+		t.Fatalf("with motion on the title types in, got %q at once", got)
 	}
-	hs.m.hero = heroPulse + 1
-	if strings.Join(hs.m.heroLines(), "\n") != still {
-		t.Fatal("the hero did not rest between pulses")
+	a := strings.Join(hs.m.markLines(), "\n")
+	hs.clock = hs.clock.Add(800 * time.Millisecond)
+	if strings.Join(hs.m.markLines(), "\n") == a {
+		t.Fatal("the mark did not move with motion on")
+	}
+	if got := ansi.Strip(hs.m.welcomeTitle()); got != "Welcome to "+brand.DisplayName {
+		t.Fatalf("the title did not finish typing in 800 ms: %q", got)
 	}
 }
 

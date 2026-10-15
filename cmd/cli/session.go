@@ -79,6 +79,7 @@ func attach(ctx context.Context, h client.Host, id, name string) error {
 	if !isTerminal(os.Stdin) || !isTerminal(os.Stdout) {
 		return &client.UserError{Msg: "attach needs a terminal", Hint: "Run it from a terminal, not a pipe."}
 	}
+	tui.RememberLast(h.Name, id, name)
 	res, err := client.Attach(ctx, client.AttachOptions{
 		Host: h, Session: id, Settings: client.LoadSettings(), Interactive: true,
 	})
@@ -152,14 +153,22 @@ func withSession(ctx context.Context, target string, fn func(context.Context, cl
 
 func attachCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "attach <host>/<session>",
+		Use:     "attach <host>/<session> | -",
 		Aliases: []string{"a"},
-		Short:   "Attach to a session (detach with Ctrl+\\)",
+		Short:   "Attach to a session (detach with Ctrl+\\); - is the last one",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			target := args[0]
+			if target == "-" {
+				host, id, ok := tui.LastSession()
+				if !ok {
+					return &client.UserError{Msg: "no session has been attached yet", Hint: brand.Name + " attach <host>/<session>, or pick one in " + brand.Name}
+				}
+				target = host + "/" + id
+			}
 			var h client.Host
 			var s *client.Session
-			err := withSession(cmd.Context(), args[0], func(_ context.Context, hh client.Host, _ *client.Conn, ss *client.Session) error {
+			err := withSession(cmd.Context(), target, func(_ context.Context, hh client.Host, _ *client.Conn, ss *client.Session) error {
 				h, s = hh, ss
 				return nil
 			})

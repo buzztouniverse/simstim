@@ -9,6 +9,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
+	uv "github.com/charmbracelet/ultraviolet"
 
 	"github.com/iAmLakshya/simstim/internal/client"
 )
@@ -46,15 +47,21 @@ type Model struct {
 	width, height int
 	dark          bool
 	richColor     bool // 256 colours or more: the brand gradient shows
+	truecolor     bool
+	colors        termColors // the terminal's own colours, for smooth blends
+	focused       bool       // the terminal window has focus
 
-	hosts   []*hostConn
-	loadErr error
+	hosts    []*hostConn
+	loadErr  error
+	mem      memory   // what the last run saw (memory.go)
+	sshHosts []string // the Host aliases in the user's SSH config
 
 	screen     screen
 	cur        string // the host the sessions screen shows; "" for every host
 	hostSel    int    // index into visibleHosts()
 	hostTop    int
 	sel        sessKey
+	want       sessKey // a session to select as soon as it is listed
 	selIdx     int
 	autoSel    bool // the selection was not picked by the user, so it stays on top
 	sessTop    int
@@ -70,10 +77,15 @@ type Model struct {
 	toasts    toastStack
 	quitArmed bool
 
-	spin     int
-	spinning bool
-	hero     int
-	heroOn   bool
+	// Motion: when it all began, when the list last appeared, when the
+	// dialog on top opened; ticking is true while a frame tick is pending.
+	epoch    time.Time
+	revealAt time.Time
+	modalAt  time.Time
+	quitAt   time.Time
+	ticking  bool
+	geo      boxGeo // where the launcher's box was last drawn
+	modalGeo boxGeo // and the dialog on top
 
 	// attach is kept for the whole run, so attaching to the same session
 	// again continues from the byte the terminal already shows.
@@ -110,7 +122,7 @@ type renameState struct {
 func New(ctx context.Context, be Backend, o Options) *Model {
 	m := &Model{
 		ctx: ctx, be: be, now: o.Now, motion: o.Motion,
-		width: 80, height: 24, dark: true,
+		width: 80, height: 24, dark: true, focused: true,
 		autoSel:   true,
 		attach:    &client.AttachState{},
 		lastAgent: map[string]string{},
@@ -123,6 +135,7 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 	if m.now == nil {
 		m.now = time.Now
 	}
+	m.epoch, m.revealAt = m.now(), m.now()
 	m.settings = be.Settings()
 	commands = withKeymap(registry(), m.settings.Keymap)
 	hosts, err := be.LoadHosts()
@@ -131,23 +144,35 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 	for _, h := range hosts {
 		m.hosts = append(m.hosts, &hostConn{host: h})
 	}
+	m.restore(o.Switcher)
 	switch {
 	case o.Switcher && len(m.hosts) > 0:
 		m.screen, m.cur = scrSessions, ""
+	case m.want != (sessKey{}):
+		// Where the last run left off.
 	case len(m.hosts) == 1:
 		// One host: its sessions are the only useful list.
 		m.screen, m.cur = scrSessions, m.hosts[0].name()
 	}
+	m.syncSel()
 	return m
 }
 
-// Close closes every connection. Run calls it after the program ends.
-func (m *Model) Close() { m.conns.closeAll() }
+// Close closes every connection and saves what the launcher saw. Run calls
+// it after the program ends.
+func (m *Model) Close() {
+	m.remember()()
+	m.conns.closeAll()
+}
 
 // Init starts the connections and the timers.
 func (m *Model) Init() tea.Cmd {
+	be := m.be
 	cmds := []tea.Cmd{
+		func() tea.Msg { return sshHostsMsg{be.SSHConfigHosts()} },
 		tea.RequestBackgroundColor,
+		tea.RequestForegroundColor,
+		queryPalette(),
 		m.after(refreshEvery, refreshTickMsg{}),
 		m.after(latencyEvery, latencyTickMsg{}),
 	}
@@ -164,8 +189,6 @@ func (m *Model) Init() tea.Cmd {
 
 // Timer and result messages.
 type (
-	spinTickMsg    struct{}
-	heroTickMsg    struct{}
 	previewTickMsg struct{ seq int }
 	opDoneMsg      struct {
 		host string
@@ -199,10 +222,21 @@ type (
 
 // Update handles one message. It never blocks: everything slow is a command.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	before := m.sel
+	before, modal, scr, cur, armed := m.sel, m.modal, m.screen, m.cur, m.quitArmed
 	cmd := m.update(msg)
 	if m.sel != before {
 		cmd = tea.Batch(cmd, m.schedulePreview())
+	}
+	// Moments that start an animation: a dialog opens, a list appears, the
+	// quit chord arms.
+	if m.modal != nil && m.modal != modal {
+		m.modalAt = m.now()
+	}
+	if m.screen != scr || m.cur != cur {
+		m.revealAt = m.now()
+	}
+	if m.quitArmed && !armed {
+		m.quitAt = m.now()
 	}
 	return m, tea.Batch(cmd, m.startTimers())
 }
@@ -215,23 +249,36 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 		return nil
 	case tea.BackgroundColorMsg:
 		m.dark = msg.IsDark()
+		m.colors.bg = msg.Color
+		return nil
+	case tea.ForegroundColorMsg:
+		m.colors.fg = msg.Color
+		return nil
+	case uv.UnknownOscEvent:
+		m.colors.onOSC(string(msg))
 		return nil
 	case tea.ColorProfileMsg:
-		m.richColor = msg.Profile == colorprofile.TrueColor || msg.Profile == colorprofile.ANSI256
+		m.truecolor = msg.Profile == colorprofile.TrueColor
+		m.richColor = m.truecolor || msg.Profile == colorprofile.ANSI256
+		return nil
+	case tea.FocusMsg:
+		m.focused = true
+		return nil
+	case tea.BlurMsg:
+		m.focused = false
+		return nil
+	case animTickMsg:
+		m.ticking = false
 		return nil
 	case tea.KeyPressMsg:
 		return m.onKey(msg)
+	case tea.MouseClickMsg:
+		return m.onClick(msg)
+	case tea.MouseWheelMsg:
+		return m.onWheel(msg)
 	case tea.PasteMsg:
 		return m.onPaste(msg.Content)
 
-	case spinTickMsg:
-		m.spin++
-		m.spinning = false
-		return nil
-	case heroTickMsg:
-		m.hero++
-		m.heroOn = false
-		return nil
 	case toastTickMsg:
 		if m.toasts.expire(m.now()) {
 			if d, ok := m.toasts.next(m.now()); ok {
@@ -307,6 +354,7 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 		commands = withKeymap(registry(), m.settings.Keymap)
 		return nil
 	case sshHostsMsg:
+		m.sshHosts = msg.hosts
 		if w, ok := m.modal.(*wizard); ok {
 			w.known = msg.hosts
 		}
@@ -318,30 +366,8 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
-// startTimers starts the spinner and hero ticks when something needs them.
-// Idle screens never repaint.
-func (m *Model) startTimers() tea.Cmd {
-	if !m.motion {
-		return nil
-	}
-	var cmds []tea.Cmd
-	if !m.spinning && m.needSpin() {
-		m.spinning = true
-		cmds = append(cmds, m.after(spinEvery, spinTickMsg{}))
-	}
-	if !m.heroOn && len(m.hosts) == 0 && m.modal == nil {
-		m.heroOn = true
-		d := heroEvery
-		if m.hero%heroCycle >= heroPulse {
-			// Rest between pulses: one repaint, then nothing for a while.
-			d = heroEvery * time.Duration(heroCycle-m.hero%heroCycle)
-			m.hero += heroCycle - m.hero%heroCycle - 1
-		}
-		cmds = append(cmds, m.after(d, heroTickMsg{}))
-	}
-	return tea.Batch(cmds...)
-}
-
+// needSpin reports whether something on screen moves slowly: a spinner, a
+// working glyph or a breathing dot.
 func (m *Model) needSpin() bool {
 	if b, ok := m.modal.(interface{ busy() bool }); ok && b.busy() {
 		return true
@@ -351,20 +377,12 @@ func (m *Model) needSpin() bool {
 			return true
 		}
 		for _, s := range h.sessions {
-			if s.State == "working" || s.State == "starting" {
+			if s.State == "working" || s.State == "starting" || s.State == "needs_input" {
 				return true
 			}
 		}
 	}
 	return false
-}
-
-// spinner is the current spinner frame, or a still one with motion off.
-func (m *Model) spinner() string {
-	if !m.motion {
-		return glyphSpinStill
-	}
-	return spinFrames[m.spin%len(spinFrames)]
 }
 
 // Hosts and sessions as shown.
@@ -504,22 +522,33 @@ func (m *Model) selectedPair() (*hostConn, *client.Session) {
 }
 
 // syncSel keeps the selection on the same session after the list changes,
-// or on the nearest one if it went away.
+// or on the nearest one if it went away. A wanted session (the one last
+// attached to) is taken as soon as it is listed.
 func (m *Model) syncSel() {
 	m.hostSel = max(min(m.hostSel, len(m.visibleHosts())-1), 0)
 	rows := m.rows()
+	find := func(k sessKey) int {
+		for i, r := range rows {
+			if r.kind == rowSession && r.key() == k {
+				return i
+			}
+		}
+		return -1
+	}
 	idx := -1
-	for i, r := range rows {
-		if r.kind == rowSession && r.key() == m.sel {
-			idx = i
-			break
+	if m.want != (sessKey{}) {
+		if idx = find(m.want); idx >= 0 {
+			m.want, m.autoSel = sessKey{}, false
 		}
 	}
-	switch {
-	case m.autoSel:
-		idx = nearestSession(rows, 0)
-	case idx < 0:
-		idx = nearestSession(rows, m.selIdx)
+	if idx < 0 {
+		idx = find(m.sel)
+		switch {
+		case m.autoSel:
+			idx = nearestSession(rows, 0)
+		case idx < 0:
+			idx = nearestSession(rows, m.selIdx)
+		}
 	}
 	m.selIdx = max(idx, 0)
 	if idx >= 0 {
@@ -592,7 +621,7 @@ func (m *Model) moveSel(d int) {
 			break
 		}
 	}
-	m.selIdx, m.sel, m.autoSel = i, rows[i].key(), false
+	m.selIdx, m.sel, m.autoSel, m.want = i, rows[i].key(), false, sessKey{}
 	m.scrollTo()
 }
 

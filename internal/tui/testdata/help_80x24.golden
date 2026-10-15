@@ -4,8 +4,9 @@
 
   ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
   │                                                                          │
-  │  ● auth-refactor    claude    ~/src/app             needs input      2m  │
-  │  ≈ api-tests        codex     ~/src/api             working         14s  │
+  │ 1 ● auth-refactor    claude    ~/src/app            needs input      2m  │
+  │                                                                          │
+  │ ~/src/app · 6.1 of 8 GiB · s4                                            │
   │                                                                          │
   │ ──────────────────────────────────────────────────────────────────────── │
   │ ↑↓ move                             a add host                           │
@@ -18,7 +19,6 @@
   │ y copy attach command               Ctrl+C Ctrl+C quit                   │
   │                                                                          │
   ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
-
 
 
 

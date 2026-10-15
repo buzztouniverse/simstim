@@ -23,7 +23,7 @@ type toast struct {
 	kind       toastKind
 	text, hint string
 	life       time.Duration
-	until      time.Time
+	at, until  time.Time // shown at, gone at
 }
 
 type toastTickMsg struct{}
@@ -55,7 +55,7 @@ func (t *toastStack) push(now time.Time, kind toastKind, text, hint string) {
 			return
 		}
 	}
-	nt := toast{kind: kind, text: text, hint: hint, life: life, until: now.Add(life)}
+	nt := toast{kind: kind, text: text, hint: hint, life: life, at: now, until: now.Add(life)}
 	if len(t.shown) < maxToasts {
 		t.shown = append(t.shown, nt)
 	} else {
@@ -76,7 +76,7 @@ func (t *toastStack) expire(now time.Time) bool {
 	for len(t.shown) < maxToasts && len(t.queue) > 0 {
 		q := t.queue[0]
 		t.queue = t.queue[1:]
-		q.until = now.Add(q.life)
+		q.at, q.until = now, now.Add(q.life)
 		t.shown = append(t.shown, q)
 	}
 	return len(t.shown) > 0
@@ -108,11 +108,17 @@ func (m *Model) toastErr(err error) tea.Cmd {
 	return m.after(toastErrorLife, toastTickMsg{})
 }
 
+// noticeLine is one line of a notice, and how visible it is as it fades.
+type noticeLine struct {
+	s     string
+	alpha float64
+}
+
 // noticeLines draws the toasts as short lines under the launcher's box, the
 // newest last: a glyph and the text, or for an error a bold red "Error:" and
 // the step to try next (docs/ux.md 2.8). They fit in noticeRows.
-func (m *Model) noticeLines(w int) []string {
-	var out []string
+func (m *Model) noticeLines(w int) []noticeLine {
+	var out []noticeLine
 	for _, t := range m.toasts.shown {
 		var lines []string
 		switch t.kind {
@@ -137,7 +143,10 @@ func (m *Model) noticeLines(w int) []string {
 				lines = append(lines, lead+text.Render(l))
 			}
 		}
-		out = append(out, lines...)
+		a := m.noticeAlpha(t)
+		for _, l := range lines {
+			out = append(out, noticeLine{l, a})
+		}
 	}
 	if len(out) > noticeRows {
 		out = out[len(out)-noticeRows:]

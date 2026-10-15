@@ -35,6 +35,9 @@ func (m *Model) onKey(k tea.KeyPressMsg) tea.Cmd {
 	if f := m.typingFilter(); f != nil {
 		return m.filterKey(f, k)
 	}
+	if len(m.hosts) > 0 && len(ks) == 1 && ks >= "1" && ks <= "9" {
+		return m.quickOpen(int(ks[0] - '0'))
+	}
 	if len(m.hosts) > 0 && m.navKey(ks) {
 		return nil
 	}

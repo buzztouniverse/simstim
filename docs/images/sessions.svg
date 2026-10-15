@@ -12,50 +12,64 @@
 <text x="864.0" y="142.0" textLength="84.0" fill="#BFBDB6"> ─╮       </text>
 <text x="24.0" y="159.0" textLength="924.0" fill="#BFBDB6">       │                                                                                              │       </text>
 <text x="24.0" y="176.0" textLength="75.6" fill="#BFBDB6">       │ </text>
-<text x="108.0" y="176.0" textLength="8.4" fill="#1E232B">●</text>
-<text x="124.8" y="176.0" textLength="201.6" fill="#1E232B" font-weight="bold">auth-refactor           </text>
-<text x="326.4" y="176.0" textLength="176.4" fill="#1E232B">  claude    ~/src/app</text>
+<text x="99.6" y="176.0" textLength="16.8" fill="#1E232B">1 </text>
+<text x="116.4" y="176.0" textLength="8.4" fill="#1E232B">●</text>
+<text x="133.2" y="176.0" textLength="109.2" fill="#1E232B" font-weight="bold">auth-refactor</text>
+<text x="351.6" y="176.0" textLength="159.6" fill="#1E232B">claude    ~/src/app</text>
 <text x="704.4" y="176.0" textLength="168.0" fill="#1E232B">needs input     42s </text>
 <text x="872.4" y="176.0" textLength="75.6" fill="#BFBDB6"> │       </text>
-<text x="24.0" y="193.0" textLength="84.0" fill="#BFBDB6">       │  </text>
-<text x="108.0" y="193.0" textLength="8.4" fill="#53BDFA">≈</text>
-<text x="124.8" y="193.0" textLength="75.6" fill="#BFBDB6" font-weight="bold">api-tests</text>
-<text x="343.2" y="193.0" textLength="67.2" fill="#656565">codex   </text>
-<text x="427.2" y="193.0" textLength="75.6" fill="#656565">~/src/api</text>
+<text x="24.0" y="193.0" textLength="75.6" fill="#BFBDB6">       │ </text>
+<text x="99.6" y="193.0" textLength="8.4" fill="#656565">2</text>
+<text x="116.4" y="193.0" textLength="8.4" fill="#53BDFA">≈</text>
+<text x="133.2" y="193.0" textLength="75.6" fill="#BFBDB6" font-weight="bold">api-tests</text>
+<text x="351.6" y="193.0" textLength="67.2" fill="#656565">codex   </text>
+<text x="435.6" y="193.0" textLength="75.6" fill="#656565">~/src/api</text>
 <text x="704.4" y="193.0" textLength="109.2" fill="#53BDFA">working      </text>
 <text x="830.4" y="193.0" textLength="33.6" fill="#656565">  7s</text>
 <text x="864.0" y="193.0" textLength="84.0" fill="#BFBDB6">  │       </text>
-<text x="24.0" y="210.0" textLength="84.0" fill="#BFBDB6">       │  </text>
-<text x="108.0" y="210.0" textLength="8.4" fill="#656565">○</text>
-<text x="124.8" y="210.0" textLength="75.6" fill="#BFBDB6" font-weight="bold">docs-site</text>
-<text x="343.2" y="210.0" textLength="67.2" fill="#656565">opencode</text>
-<text x="427.2" y="210.0" textLength="84.0" fill="#656565">~/src/docs</text>
+<text x="24.0" y="210.0" textLength="75.6" fill="#BFBDB6">       │ </text>
+<text x="99.6" y="210.0" textLength="8.4" fill="#656565">3</text>
+<text x="116.4" y="210.0" textLength="8.4" fill="#656565">○</text>
+<text x="133.2" y="210.0" textLength="75.6" fill="#BFBDB6" font-weight="bold">docs-site</text>
+<text x="351.6" y="210.0" textLength="67.2" fill="#656565">opencode</text>
+<text x="435.6" y="210.0" textLength="84.0" fill="#656565">~/src/docs</text>
 <text x="704.4" y="210.0" textLength="109.2" fill="#656565">idle         </text>
 <text x="830.4" y="210.0" textLength="33.6" fill="#656565"> 20m</text>
 <text x="864.0" y="210.0" textLength="84.0" fill="#BFBDB6">  │       </text>
-<text x="24.0" y="227.0" textLength="84.0" fill="#BFBDB6">       │  </text>
-<text x="108.0" y="227.0" textLength="8.4" fill="#7FD962">✓</text>
-<text x="124.8" y="227.0" textLength="42.0" fill="#BFBDB6" font-weight="bold">notes</text>
-<text x="343.2" y="227.0" textLength="67.2" fill="#656565">shell   </text>
-<text x="427.2" y="227.0" textLength="8.4" fill="#656565">~</text>
+<text x="24.0" y="227.0" textLength="75.6" fill="#BFBDB6">       │ </text>
+<text x="99.6" y="227.0" textLength="8.4" fill="#656565">4</text>
+<text x="116.4" y="227.0" textLength="8.4" fill="#7FD962">✓</text>
+<text x="133.2" y="227.0" textLength="42.0" fill="#BFBDB6" font-weight="bold">notes</text>
+<text x="351.6" y="227.0" textLength="67.2" fill="#656565">shell   </text>
+<text x="435.6" y="227.0" textLength="8.4" fill="#656565">~</text>
 <text x="704.4" y="227.0" textLength="109.2" fill="#656565">exited 0     </text>
 <text x="830.4" y="227.0" textLength="33.6" fill="#656565">  2h</text>
 <text x="864.0" y="227.0" textLength="84.0" fill="#BFBDB6">  │       </text>
 <text x="24.0" y="244.0" textLength="924.0" fill="#BFBDB6">       │                                                                                              │       </text>
-<text x="24.0" y="261.0" textLength="319.2" fill="#BFBDB6">       ╰───────────────────────────── </text>
-<text x="343.2" y="261.0" textLength="42.0" fill="#53BDFA">Enter</text>
-<text x="385.2" y="261.0" textLength="67.2" fill="#656565"> attach </text>
-<text x="452.4" y="261.0" textLength="8.4" fill="#656565">·</text>
-<text x="469.2" y="261.0" textLength="8.4" fill="#53BDFA">n</text>
-<text x="477.6" y="261.0" textLength="42.0" fill="#656565"> new </text>
-<text x="519.6" y="261.0" textLength="8.4" fill="#656565">·</text>
-<text x="536.4" y="261.0" textLength="42.0" fill="#53BDFA">Space</text>
-<text x="578.4" y="261.0" textLength="75.6" fill="#656565"> preview </text>
-<text x="654.0" y="261.0" textLength="8.4" fill="#656565">·</text>
-<text x="670.8" y="261.0" textLength="25.2" fill="#53BDFA">Esc</text>
-<text x="696.0" y="261.0" textLength="58.8" fill="#656565"> hosts </text>
-<text x="754.8" y="261.0" textLength="8.4" fill="#656565">·</text>
-<text x="771.6" y="261.0" textLength="8.4" fill="#53BDFA">?</text>
-<text x="780.0" y="261.0" textLength="84.0" fill="#656565"> shortcuts</text>
-<text x="864.0" y="261.0" textLength="84.0" fill="#BFBDB6"> ─╯       </text>
+<text x="24.0" y="261.0" textLength="75.6" fill="#BFBDB6">       │ </text>
+<text x="99.6" y="261.0" textLength="193.2" fill="#F9AF4F">Do you want to proceed?</text>
+<text x="301.2" y="261.0" textLength="8.4" fill="#656565">·</text>
+<text x="309.6" y="261.0" textLength="92.4" fill="#656565"> ~/src/app </text>
+<text x="402.0" y="261.0" textLength="8.4" fill="#656565">·</text>
+<text x="410.4" y="261.0" textLength="151.2" fill="#656565"> 612 MiB of 8 GiB </text>
+<text x="561.6" y="261.0" textLength="8.4" fill="#656565">·</text>
+<text x="570.0" y="261.0" textLength="75.6" fill="#656565"> k2v7m4qa</text>
+<text x="645.6" y="261.0" textLength="302.4" fill="#BFBDB6">                            │       </text>
+<text x="24.0" y="278.0" textLength="924.0" fill="#BFBDB6">       │                                                                                              │       </text>
+<text x="24.0" y="295.0" textLength="319.2" fill="#BFBDB6">       ╰───────────────────────────── </text>
+<text x="343.2" y="295.0" textLength="42.0" fill="#53BDFA">Enter</text>
+<text x="385.2" y="295.0" textLength="67.2" fill="#656565"> attach </text>
+<text x="452.4" y="295.0" textLength="8.4" fill="#656565">·</text>
+<text x="469.2" y="295.0" textLength="8.4" fill="#53BDFA">n</text>
+<text x="477.6" y="295.0" textLength="42.0" fill="#656565"> new </text>
+<text x="519.6" y="295.0" textLength="8.4" fill="#656565">·</text>
+<text x="536.4" y="295.0" textLength="42.0" fill="#53BDFA">Space</text>
+<text x="578.4" y="295.0" textLength="75.6" fill="#656565"> preview </text>
+<text x="654.0" y="295.0" textLength="8.4" fill="#656565">·</text>
+<text x="670.8" y="295.0" textLength="25.2" fill="#53BDFA">Esc</text>
+<text x="696.0" y="295.0" textLength="58.8" fill="#656565"> hosts </text>
+<text x="754.8" y="295.0" textLength="8.4" fill="#656565">·</text>
+<text x="771.6" y="295.0" textLength="8.4" fill="#53BDFA">?</text>
+<text x="780.0" y="295.0" textLength="84.0" fill="#656565"> shortcuts</text>
+<text x="864.0" y="295.0" textLength="84.0" fill="#BFBDB6"> ─╯       </text>
 </svg>

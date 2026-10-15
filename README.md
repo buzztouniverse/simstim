@@ -67,7 +67,7 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 
 ## Screens
 
-The launcher does one thing: it starts or joins a session in a few keys, then gets out of the way. Each screen is one list in one column. Enter goes forward, Esc goes back, and each box lists its keys on its bottom edge. The look follows Amp's CLI ([UX](docs/ux.md)). `simstim demo` opens these screens with sample data, so you can try them before you add a host.
+The launcher does one thing: it starts or joins a session in a few keys, then gets out of the way. Each screen is one list in one column. Enter goes forward, Esc goes back, 1–9 open a row, and each box lists its keys on its bottom edge. It opens where you left off and draws at once, so `simstim` then Enter takes you back into your last session. The look starts from Amp's CLI, with smooth motion in your terminal's own colours ([UX](docs/ux.md)). `simstim demo` opens these screens with sample data, so you can try them before you add a host.
 
 **Hosts.** Each host with its state, its sessions, and how many need you. Enter opens one.
 

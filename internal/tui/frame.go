@@ -160,29 +160,20 @@ type layer struct {
 	x, y int
 }
 
-// compose draws the layers over base on a w×h canvas. With dim set, the
-// backdrop is dimmed by setting the faint attribute on its cells, so it works
-// with any theme, and backgrounds are dropped.
-func compose(base string, w, h int, dim bool, layers ...layer) string {
-	c := lipgloss.NewCanvas(w, h)
-	uv.NewStyledString(base).Draw(c, c.Bounds())
-	if dim {
-		for y := range h {
-			for x := range w {
-				if cell := c.CellAt(x, y); cell != nil && (cell.Content != " " || !cell.Style.IsZero()) {
-					cell.Style.Attrs |= uv.AttrFaint
-					cell.Style.Attrs &^= uv.AttrBold
-					if cell.Style.Bg != nil {
-						// A selection bar goes quiet too: faint text, no bar.
-						cell.Style.Bg, cell.Style.Fg = nil, nil
-					}
+// dim quiets everything drawn so far, behind a dialog: the faint attribute
+// on every cell, so it works with any theme, bold removed, and backgrounds
+// dropped, so an old selection bar goes quiet too.
+func dim(c *lipgloss.Canvas) {
+	b := c.Bounds()
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if cell := c.CellAt(x, y); cell != nil && (cell.Content != " " || !cell.Style.IsZero()) {
+				cell.Style.Attrs |= uv.AttrFaint
+				cell.Style.Attrs &^= uv.AttrBold
+				if cell.Style.Bg != nil {
+					cell.Style.Bg, cell.Style.Fg = nil, nil
 				}
 			}
 		}
 	}
-	for _, l := range layers {
-		lw, lh := lipgloss.Size(l.s)
-		uv.NewStyledString(l.s).Draw(c, uv.Rect(l.x, l.y, lw, lh))
-	}
-	return c.Render()
 }
