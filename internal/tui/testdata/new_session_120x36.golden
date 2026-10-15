@@ -13,7 +13,7 @@
 │                                  │ │ ● I'll start by reading the current implementation.                           │ │
 │                     ╭─ New session on atlas-dev ──────────────────────────────────────────────╮                   │ │
 │                     │                                                                          │                   │ │
-│                     │  Agent      claude   codex   opencode   shell   not installed: gemini,…  │                   │ │
+│                     │  Agent      claude   codex   opencode   shell   other…                   │                   │ │
 │                     │             ▔▔▔▔▔▔                                                       │                   │ │
 │                     │  Folder     ~/src/app                                                    │                   │ │
 │                     │                                                                          │                   │ │

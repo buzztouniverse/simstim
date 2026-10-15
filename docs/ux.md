@@ -153,8 +153,8 @@ A notched dialog over the home screen. Enter starts the session and attaches at 
 ╰─ enter start · tab next field · ctrl+enter start detached · esc cancel ──────╯
 ```
 
-- **Agent:** only agents found on the host can be chosen; a missing one shows "not installed". The last choice is remembered per host.
-- **Folder:** completes from recent folders and from git repos found on the host.
+- **Agent:** only agents found on the host can be chosen; missing ones are listed as "not installed". The last choice is remembered per host. **other…** opens a Command field: any command runs as the session's process (`sh -c 'exec <command>'`), for agents not in the table.
+- **Folder:** an empty field shows recent session folders and git repositories found on the host; Tab completes a typed path from the host's folders.
 - **Name:** the folder name by default. It can be changed later with `r`.
 
 ### 2.5 Confirm a delete

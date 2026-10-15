@@ -5,7 +5,7 @@
 │ ◌ aws-gpu     offline │ ○ notes                  shell    idle            1h │
 │ ╭─ New session on atlas-dev ──────────────────────────────────────────────╮ │
 │ │                                                                          │ │
-│ │  Agent      claude   codex   opencode   shell   not installed: gemini,…  │ │
+│ │  Agent      claude   codex   opencode   shell   other…                   │ │
 │ │             ▔▔▔▔▔▔                                                       │ │
 │ │  Folder     ~                                                            │ │
 │ │                                                                          │ │

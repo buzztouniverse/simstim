@@ -191,7 +191,11 @@ func (c *fakeConn) Sessions(context.Context) ([]client.Session, error) {
 }
 
 func (c *fakeConn) NewSession(_ context.Context, a client.NewArgs) (*client.Session, error) {
-	c.be.record("new %s agent=%s cwd=%s name=%s worktree=%v size=%dx%d", c.name, a.Agent, a.Cwd, a.Name, a.Worktree, a.Cols, a.Rows)
+	if len(a.Argv) > 0 {
+		c.be.record("new %s agent=%s argv=%v cwd=%s name=%s worktree=%v size=%dx%d", c.name, a.Agent, a.Argv, a.Cwd, a.Name, a.Worktree, a.Cols, a.Rows)
+	} else {
+		c.be.record("new %s agent=%s cwd=%s name=%s worktree=%v size=%dx%d", c.name, a.Agent, a.Cwd, a.Name, a.Worktree, a.Cols, a.Rows)
+	}
 	c.be.mu.Lock()
 	defer c.be.mu.Unlock()
 	h := c.host()

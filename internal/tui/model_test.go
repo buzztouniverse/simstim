@@ -660,3 +660,23 @@ func TestFolderCompletion(t *testing.T) {
 		t.Fatal("a completion should stay in the folder field")
 	}
 }
+
+func TestOtherCommand(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("enter")
+	d := hs.m.modal.(*newSession)
+	for d.agent() != otherAgent {
+		hs.key("right")
+	}
+	hs.key("enter") // no command yet: an error, and focus on the command field
+	if d.err == nil || d.field != 4 {
+		t.Fatalf("starting without a command should ask for one (err %v, field %d)", d.err, d.field)
+	}
+	hs.typeText("aider --model sonnet")
+	hs.key("tab") // command -> folder
+	if d.field != 1 {
+		t.Fatalf("tab from the command should go to the folder, field %d", d.field)
+	}
+	hs.key("enter")
+	hasCall(t, hs.be, "new atlas-dev agent= argv=[/bin/sh -c exec aider --model sonnet] cwd=~ name= worktree=false size=80x24")
+}

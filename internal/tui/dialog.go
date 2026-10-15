@@ -57,7 +57,8 @@ type newSession struct {
 	host     string
 	choices  []agentChoice
 	ai       int
-	field    int // 0 agent, 1 folder, 2 name, 3 worktree
+	field    int // 0 agent, 1 folder, 2 name, 3 worktree, 4 command (only for "other")
+	command  input
 	folder   input
 	name     input
 	worktree bool
@@ -89,13 +90,19 @@ func agentChoices(info *client.HostInfo) []agentChoice {
 			off = append(off, agentChoice{a.Kind, false})
 		}
 	}
+	// "other" runs any command the user types, for agents not in the table.
+	on = append(on, agentChoice{otherAgent, true})
 	return append(on, off...)
 }
+
+// otherAgent is the choice that runs a command the user types.
+const otherAgent = "other…"
 
 func newSessionDialog(m *Model, h *hostConn) *newSession {
 	d := &newSession{
 		host:    h.name(),
 		choices: agentChoices(h.info),
+		command: newInput("", "a command, for example aider --model sonnet"),
 		folder:  newInput("~", "~"),
 		name:    newInput("", "the folder name"),
 		finding: h.info == nil,
@@ -125,7 +132,28 @@ func (d *newSession) paste(s string) {
 		d.folder.insert(s)
 	case 2:
 		d.name.insert(s)
+	case 4:
+		d.command.insert(s)
 	}
+}
+
+// order is the sequence Tab moves through; the command field exists only for "other".
+func (d *newSession) order() []int {
+	if d.agent() == otherAgent {
+		return []int{0, 4, 1, 2, 3}
+	}
+	return []int{0, 1, 2, 3}
+}
+
+func (d *newSession) step(n int) {
+	o := d.order()
+	i := 0
+	for j, f := range o {
+		if f == d.field {
+			i = j
+		}
+	}
+	d.field = o[(i+n+len(o))%len(o)]
 }
 
 func (d *newSession) top() bool { return false }
@@ -178,13 +206,13 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		m.modal = nil
 		return nil
 	case "tab", "down":
-		d.field = (d.field + 1) % 4
+		d.step(1)
 		if d.field == 1 {
 			return m.fetchFolders(d)
 		}
 		return nil
 	case "shift+tab", "up":
-		d.field = (d.field + 3) % 4
+		d.step(-1)
 		return nil
 	case "enter", "ctrl+enter", "alt+enter", "ctrl+j":
 		h := m.hostByName(d.host)
@@ -197,6 +225,15 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 			folder = "~"
 		}
 		a := client.NewArgs{Agent: d.agent(), Cwd: client.RemotePath(folder), Name: strings.TrimSpace(d.name.value()), Worktree: d.worktree}
+		if d.agent() == otherAgent {
+			c := strings.TrimSpace(d.command.value())
+			if c == "" {
+				d.field, d.err = 4, &client.UserError{Msg: "type the command to run", Hint: "For example: aider --model sonnet"}
+				return nil
+			}
+			// exec replaces the shell, so the command is the session's process.
+			a.Agent, a.Argv = "", []string{"/bin/sh", "-c", "exec " + c}
+		}
 		d.starting, d.err = true, nil
 		return m.startSession(h, a, ks == "enter")
 	}
@@ -225,6 +262,8 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		}
 	case 2:
 		d.name.key(k)
+	case 4:
+		d.command.key(k)
 	case 3:
 		switch ks {
 		case "left", "h":
@@ -251,7 +290,7 @@ func (d *newSession) view(m *Model) string {
 	body := []string{
 		"",
 		label(0, "Agent") + agentsLine,
-		"  " + strings.Repeat(" ", labelW) + under,
+		d.secondRow(label, under, inner-4-labelW),
 		label(1, "Folder") + d.folder.view(inner-4-labelW, d.field == 1),
 		"  " + strings.Repeat(" ", labelW) + d.suggestLine(inner-4-labelW),
 		label(2, "Name") + d.name.view(inner-4-labelW, d.field == 2),
@@ -541,4 +580,12 @@ func (d *newSession) completion() (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// secondRow is the mark under the chosen agent, or, for "other", the command field.
+func (d *newSession) secondRow(label func(int, string) string, under string, w int) string {
+	if d.agent() == otherAgent {
+		return label(4, "Command") + d.command.view(w, d.field == 4)
+	}
+	return "  " + strings.Repeat(" ", labelW) + under
 }
