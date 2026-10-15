@@ -16,7 +16,6 @@
 
 
 
-
   ── Commands ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
     ❯ ses
@@ -27,6 +26,7 @@
       Delete session                                                                                               d
       Peek at the screen                                                                                       space
       All sessions
+      Go to the next session that needs you                                                                        w
       New session, with the form
       Copy the attach command                                                                                      y
       Test host

@@ -276,6 +276,7 @@ These keys work in the launcher. You can rebind any key in `config.toml`, and `s
 | `r`, `f2` | Sessions | Rename |
 | `d` | Sessions | Delete, with a confirm |
 | `y` | Sessions | Copy the attach command |
+| `w` | Anywhere | Go to the next session that needs you, on any host; press again for the one after |
 | `alt+e` (`opt+e`) | Sessions | Hide or show ended sessions |
 | `a` | Anywhere | Add a host |
 | `i` | Anywhere | Host details |

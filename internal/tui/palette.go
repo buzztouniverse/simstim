@@ -163,6 +163,7 @@ func registry() []*command {
 		{noun: "session", verb: "rename", keys: []binding{{"r", onSessions}, {"f2", onSessions}}, why: needSession, run: (*Model).startRename},
 		{noun: "session", verb: "delete", keys: []binding{{"d", onSessions}}, why: needSession, run: (*Model).confirmDelete},
 		{noun: "session", verb: "copy attach command", short: "copy the attach command", keys: []binding{{"y", onSessions}}, why: needSession, run: (*Model).copyAttach},
+		{noun: "session", verb: "next waiting", short: "go to the next session that needs you", keys: []binding{{"w", anywhere}}, run: (*Model).nextWaiting},
 
 		{noun: "host", verb: "open", short: "open host", keys: []binding{{"enter", onHosts}},
 			why: func(m *Model) string {

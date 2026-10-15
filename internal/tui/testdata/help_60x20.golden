@@ -9,6 +9,7 @@
     r f2           rename
     d              delete
     y              copy the attach command
+    w              go to the next session that needs you
     a              add host
     i              host details
     /              search every host
@@ -17,4 +18,3 @@
     q              quit
     ctrl+o         commands
     ctrl+c ctrl+c  quit
-

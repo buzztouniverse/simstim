@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `w` in the launcher goes to the next session that needs you, on any host, and says what it waits for; pressing it again goes to the one after (roadmap N3).
 - `go install github.com/iAmLakshya/simstim@latest` gives a working client: with no helpers inside it, it fetches its release's helper bundle (a new release asset, `helpers_<version>.tar.gz`), checks the release's SSH signature and the bundle's SHA-256, and caches it. Its version comes from Go's build information.
 - Recorded demos from tapes: `docs/demos/*.tape` drive the demo in `test/ttyshot`, which now records an animated SVG and an asciicast (`record start`, `record save`, and a `type` key that types like a person). `just screenshots` makes them with the stills. The README opens with the launcher demo and shows a session being joined and left.
 - User docs in the Diátaxis shape: a getting-started tutorial, and how-to guides to install, add a host, use worktrees, open ports, paste images, restore after a reboot, change keys, troubleshoot and uninstall. Every command in them is tested (`just test-docs`, and in the docs checks).
