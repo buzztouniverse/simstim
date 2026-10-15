@@ -73,6 +73,10 @@ lint: check-name check-private
     go vet ./...
     golangci-lint run
 
+# Lint the GitHub workflows and Dependabot config with zizmor (needs uv).
+lint-workflows:
+    uvx zizmor --offline .github
+
 # Fail if the product name is spelled outside the allowed places.
 check-name:
     scripts/check-name.sh

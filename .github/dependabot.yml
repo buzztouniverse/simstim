@@ -1,9 +1,13 @@
 version: 2
+# Each update waits a week after its release, so a bad release is usually
+# pulled before it reaches us.
 updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       charm:
         patterns: ["charm.land/*", "github.com/charmbracelet/*"]
@@ -11,7 +15,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
   - package-ecosystem: devcontainers
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
