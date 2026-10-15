@@ -14,6 +14,7 @@ coverage.*
 /vt/zig-out/
 /vt/.zig-cache/
 /vt/zig-pkg/
+/.zig-cache/
 
 # Notes that must never reach git history (clean-room material, private notes,
 # the owner's goals, status and logs)

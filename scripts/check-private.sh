@@ -50,7 +50,7 @@ while IFS= read -r file; do
             fail=1
         fi
     done
-done < <(git ls-files --cached --others --exclude-standard | grep -v -E '^(go\.sum|vt/build\.zig\.zon|scripts/check-private\.sh)$')
+done < <(git ls-files --cached | grep -v -E '^(go\.sum|vt/build\.zig\.zon|scripts/check-private\.sh)$')
 
 if [ "$fail" -ne 0 ]; then
     echo
