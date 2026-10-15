@@ -57,6 +57,7 @@ const (
 	bannerAfter = 3 * time.Second
 	doubleTap   = 400 * time.Millisecond
 	watchEvery  = 5 * time.Second
+	wakeGap     = 4 * time.Second
 	escFlush    = 15 * time.Millisecond
 )
 
@@ -259,10 +260,22 @@ func (a *attacher) loop(ctx context.Context) error {
 	defer heart.Stop()
 	watch := time.NewTicker(watchEvery)
 	defer watch.Stop()
+	// A gap in this ticker means the process was frozen, as by laptop sleep:
+	// the connection is almost surely dead, so reconnect at once rather than
+	// wait for the heartbeat to time out.
+	wake := time.NewTicker(time.Second)
+	defer wake.Stop()
+	lastTick := time.Now()
 	others := make(chan []Session, 1)
 	var detachTimer, flushTimer <-chan time.Time
 	for {
 		select {
+		case now := <-wake.C:
+			gap := now.Sub(lastTick)
+			lastTick = now
+			if gap > wakeGap {
+				a.conn.kill()
+			}
 		case <-watch.C:
 			conn := a.conn
 			go func() {

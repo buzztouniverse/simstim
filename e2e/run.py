@@ -146,6 +146,31 @@ print("oom session:", {k: r5.get(k) for k in ("state", "reason", "memory_current
 ok(r5.get("oom_killed") is True, "the over-the-cap process was stopped and the session marked (reason: %s)" % r5.get("reason"))
 created += [sid, sid2, sid3, sid4, sid5]
 
+# G. Laptop sleep: freeze the client and cut its network path; on wake it must
+#    be back to live output within 5 s, with what it missed replayed.
+import signal
+sid6 = start("e2e-wake", "/bin/bash", "-c", "while :; do date +T%s.%N; sleep 0.1; done")
+created.append(sid6)
+t = Term([cli, "attach", HOST + "/" + sid6], env=env)
+t.wait_for(rb"T\d+", 20); time.sleep(1)
+os.kill(t.pid, signal.SIGSTOP)
+subprocess.run(["pkill", "-f", NAME + "-host bridge"], check=False)
+subprocess.run(["pkill", "-f", "ControlPath=.*" + NAME + "/cm"], check=False)
+time.sleep(15)
+t.buf = b""
+woke = time.time()
+os.kill(t.pid, signal.SIGCONT)
+live = False
+while time.time() - woke < 30:
+    t.read(0.1)
+    stamps = [float(x) for x in re.findall(rb"T(\d+\.\d+)", t.buf)]
+    if stamps and max(stamps) > woke - 1:
+        live = True
+        break
+took = time.time() - woke
+ok(live and took < 5, "after a simulated sleep, live output resumed %.1f s after wake (%d missed lines replayed)" % (took, len(re.findall(rb"T(\d+\.\d+)", t.buf))))
+t.send(b"\x1c"); t.exit_code(10)
+
 # Clean up.
 for s in created:
     subprocess.run([cli, "kill", HOST + "/" + s], capture_output=True)
