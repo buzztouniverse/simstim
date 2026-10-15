@@ -111,6 +111,10 @@ func New(a NewArgs) (*SessionInfo, error) {
 		}
 		cwd = gi.Worktree
 	}
+	sessHooks, err := setupHooks(a, cwd, gi)
+	if err != nil {
+		return nil, err
+	}
 	term := a.Term
 	if !HasTerminfo(term) {
 		term = "xterm-256color"
@@ -173,7 +177,7 @@ func New(a NewArgs) (*SessionInfo, error) {
 	}
 	m.Git = gi
 	m.Secrets = secrets
-	m.SetupHook, m.ResumeHook = findHook(cwd, "setup"), findHook(cwd, "resume")
+	m.SetupHook, m.ResumeHook = sessHooks.setup, sessHooks.resume
 	m.RunHook = m.SetupHook
 	if known {
 		m.Agent.ResumeArgv = agent.Resume
@@ -330,21 +334,6 @@ func HolderRequest(id, op string, args any, timeout time.Duration) (json.RawMess
 		}
 		return resp.Result, nil
 	}
-}
-
-// findHook returns an executable hook: the repository's .<name>/<kind>, else the
-// host's ~/.config/<name>/hooks/<kind>.
-func findHook(cwd, kind string) string {
-	home, _ := os.UserHomeDir()
-	for _, p := range []string{
-		filepath.Join(cwd, "."+brand.Name, kind),
-		filepath.Join(home, ".config", brand.Name, "hooks", kind),
-	} {
-		if st, err := os.Stat(p); err == nil && st.Mode().IsRegular() && st.Mode()&0o111 != 0 {
-			return p
-		}
-	}
-	return ""
 }
 
 // Delete stops a session and removes its files, and its worktree when that loses nothing.

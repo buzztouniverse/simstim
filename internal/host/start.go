@@ -8,10 +8,11 @@ import (
 )
 
 // startArgv wraps an agent's argv in a short sh script when something must
-// show in the session's terminal before the agent: notes, then a hook, whose
-// output is part of the session. A failing hook is reported, not fatal. The
-// script then execs the agent, so the agent is still the session's process.
-func startArgv(argv []string, hook string, notes []string) []string {
+// show in the session's terminal before the agent: notes, then a hook, which
+// gets vars in its environment and whose output is part of the session. A
+// failing hook is reported with its exit code, and the agent starts anyway.
+// The script then execs the agent, so the agent is the session's process.
+func startArgv(argv []string, hook string, vars, notes []string) []string {
 	if hook == "" && len(notes) == 0 {
 		return argv
 	}
@@ -21,7 +22,12 @@ func startArgv(argv []string, hook string, notes []string) []string {
 	}
 	label := brand.Name
 	if hook != "" {
-		b.WriteString(`"$0"; s=$?; [ $s -eq 0 ] || printf '\n[hook %s exited with %s]\n\n' "$0" $s; `)
+		name := shellQuote(brand.Name)
+		fmt.Fprintf(&b, `printf '[%%s: running %%s]\n' %s "$0"; `, name)
+		if len(vars) > 0 {
+			b.WriteString(quoteVars(vars) + " ")
+		}
+		fmt.Fprintf(&b, `"$0"; s=$?; [ $s -eq 0 ] || printf '\n[%%s: %%s exited with %%s; the agent starts anyway]\n\n' %s "$0" $s; `, name)
 		label = hook
 	}
 	b.WriteString(`exec "$@"`)

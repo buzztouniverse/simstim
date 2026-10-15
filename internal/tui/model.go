@@ -211,6 +211,7 @@ type (
 		s      *client.Session
 		err    error
 		attach bool
+		args   client.NewArgs // what started, without secrets, to start again
 	}
 	attachDoneMsg struct {
 		host, id, name string

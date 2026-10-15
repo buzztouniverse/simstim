@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/host"
 	"github.com/iAmLakshya/simstim/internal/version"
@@ -18,7 +19,7 @@ const usage = `%[1]s keeps agent sessions alive on this host. The client runs it
 Usage:
   %[1]s bridge              serve one client on stdin and stdout
   %[1]s ls [--json]         list sessions
-  %[1]s new [--agent a] [--dir d] [--name n] [-- argv…]
+  %[1]s new [--agent a] [--dir d] [--name n] [--setup|--no-setup] [-- argv…]
   %[1]s rm <id>             stop a session and remove it
   %[1]s doctor [--json]     check this host
   %[1]s keytest             print every key the terminal sends
@@ -76,6 +77,10 @@ func main() {
 			case "--name":
 				i++
 				a.Name = arg(args, i)
+			case "--setup":
+				a.Setup = api.SetupRun
+			case "--no-setup":
+				a.Setup = api.SetupSkip
 			case "--":
 				a.Argv = args[i+1:]
 				i = len(args)

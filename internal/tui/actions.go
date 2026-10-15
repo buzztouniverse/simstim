@@ -78,17 +78,24 @@ func (m *Model) startSession(h *hostConn, a client.NewArgs, attach bool) tea.Cmd
 	return func() tea.Msg {
 		cctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 		defer cancel()
+		if a.Setup == "" {
+			a.SetupTrust = be.SetupTrust(name)
+		}
 		secrets, err := be.Secrets(cctx, host)
 		if err != nil {
-			return startedMsg{host: name, err: err, attach: attach}
+			return startedMsg{host: name, err: err, attach: attach, args: a}
 		}
 		a.Secrets = secrets
 		s, err := c.NewSession(cctx, a)
-		return startedMsg{host: name, s: s, err: err, attach: attach}
+		a.Secrets = nil // fetched again for a new start; never kept
+		return startedMsg{host: name, s: s, err: err, attach: attach, args: a}
 	}
 }
 
 func (m *Model) onStarted(msg startedMsg) tea.Cmd {
+	if q, ok := client.SetupQuestionOf(msg.err); ok {
+		return m.askSetup(msg, q)
+	}
 	d, _ := m.modal.(*newSession)
 	if msg.err != nil {
 		if d != nil {

@@ -139,7 +139,7 @@ func TestSecretsMissingAfterARestart(t *testing.T) {
 	if row := infoFrom(h.m, true); strings.Join(row.MissingSecrets, ",") != "OPENAI_API_KEY" {
 		t.Fatalf("the session row does not list the missing secret: %+v", row)
 	}
-	argv := startArgv([]string{"claude"}, "", h.notes)
+	argv := startArgv([]string{"claude"}, "", nil, h.notes)
 	if len(argv) != 5 || argv[0] != "/bin/sh" || !strings.Contains(argv[2], "OPENAI_API_KEY") || argv[4] != "claude" {
 		t.Fatalf("the note does not show before the agent: %q", argv)
 	}

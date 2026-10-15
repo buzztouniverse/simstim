@@ -28,7 +28,9 @@ simstim new <host> [-- command…] [flags]
   -h, --help                 help for new
       --inline               start the agent in its inline mode, so your terminal keeps its scrollback (see agents.inline in config.toml)
   -n, --name string          a name for the session (default: the folder name)
+      --no-setup             do not run the repository's setup script this time
       --secret stringArray   pass a secret from config.toml's [secrets] into the session's environment (repeatable)
+      --setup                run the repository's setup script this time, whatever your answer for it
   -w, --worktree             give the session its own git worktree and branch
 ```
 

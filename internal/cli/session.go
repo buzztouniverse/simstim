@@ -30,7 +30,7 @@ func termSize() (int, int) {
 
 func newCmd() *cobra.Command {
 	var agent, dir, name, base string
-	var detach, worktree, inline bool
+	var detach, worktree, inline, setup, noSetup bool
 	var secrets []string
 	cmd := &cobra.Command{
 		Use:   "new <host> [-- command…]",
@@ -43,6 +43,9 @@ func newCmd() *cobra.Command {
 			h, err := client.FindHost(args[0])
 			if err != nil {
 				return err
+			}
+			if setup && noSetup {
+				return &client.UserError{Msg: "--setup and --no-setup cannot go together", Hint: "Pass one of them."}
 			}
 			// Fetch the secrets first: a password manager may want a touch,
 			// and a failing command should not cost a connection.
@@ -61,9 +64,12 @@ func newCmd() *cobra.Command {
 			if dash := cmd.ArgsLenAtDash(); dash >= 0 {
 				a.Argv = args[dash:]
 			}
-			s, err := conn.NewSession(ctx, a)
-			conn.Close()
+			if setup || noSetup {
+				a.Setup = setupValue(setup)
+			}
 			cancel()
+			s, err := startSession(cmd.Context(), conn, h, a)
+			conn.Close()
 			if err != nil {
 				return err
 			}
@@ -82,6 +88,8 @@ func newCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&inline, "inline", false, "start the agent in its inline mode, so your terminal keeps its scrollback (see agents.inline in config.toml)")
 	cmd.Flags().StringVar(&base, "base", "", "the commit or branch the worktree starts from (default: HEAD)")
 	cmd.Flags().StringArrayVar(&secrets, "secret", nil, "pass a secret from config.toml's [secrets] into the session's environment (repeatable)")
+	cmd.Flags().BoolVar(&setup, "setup", false, "run the repository's setup script this time, whatever your answer for it")
+	cmd.Flags().BoolVar(&noSetup, "no-setup", false, "do not run the repository's setup script this time")
 	return cmd
 }
 

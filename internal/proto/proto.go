@@ -178,6 +178,8 @@ type Error struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Hint    string `json:"hint,omitempty"`
+	// Data carries details a client acts on, by Code.
+	Data json.RawMessage `json:"data,omitempty"`
 }
 
 func (e *Error) Error() string { return e.Message }

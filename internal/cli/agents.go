@@ -119,7 +119,7 @@ func installAgent(ctx context.Context, h client.Host, a agents.Agent, force bool
 	fmt.Printf("Installing %s on %s with its vendor's installer:\n\n    %s\n\n", a.Title, h.Name, a.Setup.Install)
 	fmt.Printf("It comes from %s.\nIt runs in a session, so you see its output and can answer its questions.\n\n", a.Setup.Source)
 	cols, rows := termSize()
-	args := client.TerminalArgs(client.NewArgs{Name: "install-" + a.Kind, Cwd: "~", Argv: []string{"/bin/sh", "-c", a.Setup.Install}}, cols, rows)
+	args := client.TerminalArgs(client.NewArgs{Name: "install-" + a.Kind, Cwd: "~", Argv: []string{"/bin/sh", "-c", a.Setup.Install}, Setup: api.SetupSkip}, cols, rows)
 	s, err := conn.NewSession(cctx, args)
 	conn.Close()
 	if err != nil {

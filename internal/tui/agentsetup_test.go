@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -56,4 +57,31 @@ func TestMissingSecretsShow(t *testing.T) {
 	if out := plainScreen(hs.m); !strings.Contains(out, "started without its secrets: OPENAI_API_KEY") {
 		t.Fatalf("the launcher does not say the session has no secrets:\n%s", out)
 	}
+}
+
+func (b *fakeBackend) SetupTrust(host string) map[string]bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.trust[host]
+}
+
+func (b *fakeBackend) RememberSetup(host, repo string, run bool) error {
+	b.record("remember %s %s run=%v", host, repo, run)
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.trust == nil {
+		b.trust = map[string]map[string]bool{}
+	}
+	if b.trust[host] == nil {
+		b.trust[host] = map[string]bool{}
+	}
+	b.trust[host][repo] = run
+	return nil
+}
+
+func (b *fakeBackend) Secrets(_ context.Context, h client.Host) (map[string]api.Secret, error) {
+	b.record("secrets %s", h.Name)
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.secrets, b.secretErr
 }

@@ -199,7 +199,7 @@ Triggers: the detach key, closing the tab, `simstim kill` from elsewhere, or SIG
 ### 3.10 Worktrees, hooks, ports and providers
 
 - **Worktree:** `new --worktree` runs `git worktree add -b <name>/<slug>-<id>` from the base (default `HEAD`) into `~/.local/share/<name>/worktrees/<repo>/`, locks it, and copies the files listed in `.worktreeinclude`. Delete removes it and its branch only when it has no changes and no new commits; otherwise it keeps it and says so.
-- **Setup and resume hooks:** an executable `.<name>/setup` in the folder (or `~/.config/<name>/hooks/setup` on the host) runs in the session's terminal before the agent; `resume` runs before a respawn. A failing hook is reported, not fatal.
+- **Setup and resume hooks:** an executable `.<name>/setup` in the repository (or `~/.config/<name>/hooks/setup` on the host) runs in the session's terminal before the agent; `resume` runs before a respawn. A repository's hooks run only after the user trusts that repository on that host: the client asks once and keeps the answer. A failing hook is reported, not fatal ([setup hooks](../how-to/setup-hooks.md)).
 - **Ports:** the holder lists TCP listening sockets owned by the session's processes (its cgroup, or the agent's descendants). `forward` runs `ssh -N -L 127.0.0.1:…` for them.
 - **Providers:** a host may name a script that starts, stops and reports on it (JSON on stdin). With `--wake`, a host that does not answer is started first. See `examples/providers`.
 

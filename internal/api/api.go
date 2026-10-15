@@ -36,6 +36,11 @@ type NewArgs struct {
 	// Secrets go into the agent's environment only. The client fetches them
 	// for this start; the host never writes them down (host/secrets.go).
 	Secrets map[string]Secret `json:"secrets,omitempty"`
+	// Setup says whether the repository's setup script runs: SetupRun,
+	// SetupSkip, or "" to follow SetupTrust, the user's answers for this
+	// host by repository (host/setup.go).
+	Setup      string          `json:"setup,omitempty"`
+	SetupTrust map[string]bool `json:"setup_trust,omitempty"`
 }
 
 // SessionInfo is one row of the session list.

@@ -3,6 +3,7 @@
 package client
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -209,6 +210,10 @@ func LoadSettings() Settings {
 type UserError struct {
 	Msg  string
 	Hint string
+	// Code and Data come from the host, for errors a client acts on, such
+	// as a repository's setup script that needs the user's answer.
+	Code string
+	Data json.RawMessage
 }
 
 func (e *UserError) Error() string { return e.Msg }

@@ -179,7 +179,7 @@ func (h *Holder) start() error {
 	}
 	// The setup (or resume) hook and any notes show in the session's
 	// terminal before the agent (start.go).
-	argv := startArgv(m.Agent.Argv, m.RunHook, h.notes)
+	argv := startArgv(m.Agent.Argv, m.RunHook, hookVars(m, wasRestored(m)), h.notes)
 	m.RunHook = ""
 	bin, err := lookPath(argv[0], envValue(m.Env, "PATH"))
 	if err != nil {

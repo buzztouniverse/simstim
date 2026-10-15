@@ -1,0 +1,146 @@
+package host
+
+import (
+	"encoding/json"
+	"errors"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/iAmLakshya/simstim/internal/api"
+	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iAmLakshya/simstim/internal/paths"
+	"github.com/iAmLakshya/simstim/internal/proto"
+)
+
+// setupRepo makes a git repository with a committed, executable setup
+// script, and returns its folder.
+func setupRepo(t *testing.T) string {
+	t.Helper()
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("no git")
+	}
+	alertHome(t)
+	data, _ := filepath.EvalSymlinks(t.TempDir())
+	t.Setenv("XDG_DATA_HOME", data)
+	for k, v := range map[string]string{"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com", "GIT_CONFIG_GLOBAL": os.DevNull} {
+		t.Setenv(k, v)
+	}
+	dir, _ := filepath.EvalSymlinks(t.TempDir())
+	repo := filepath.Join(dir, "app")
+	hook := filepath.Join(repo, "."+brand.Name, "setup")
+	_ = os.MkdirAll(filepath.Dir(hook), 0o755)
+	if err := os.WriteFile(hook, []byte("#!/bin/sh\necho setting up\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"init", "-q", "-b", "main"}, {"add", "-A"}, {"commit", "-q", "-m", "init"}} {
+		if out, err := git(repo, args...); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	return repo
+}
+
+func question(t *testing.T, err error) api.SetupQuestion {
+	t.Helper()
+	var pe *proto.Error
+	if !errors.As(err, &pe) || pe.Code != api.CodeSetupTrust {
+		t.Fatalf("want a setup_trust question, got %v", err)
+	}
+	var q api.SetupQuestion
+	if json.Unmarshal(pe.Data, &q) != nil {
+		t.Fatalf("data %s", pe.Data)
+	}
+	return q
+}
+
+func TestSetupHooksNeedTrust(t *testing.T) {
+	repo := setupRepo(t)
+	script := filepath.Join(repo, "."+brand.Name, "setup")
+	sub := filepath.Join(repo, "src")
+	_ = os.MkdirAll(sub, 0o755)
+
+	// Unknown: ask, from the repository's root, even in a subfolder.
+	_, err := setupHooks(NewArgs{}, sub, nil)
+	if q := question(t, err); q.Repo != repo || q.Script != script {
+		t.Fatalf("question %+v", q)
+	}
+	// Trusted, refused, and the two overrides.
+	for _, c := range []struct {
+		a    NewArgs
+		want string
+	}{
+		{NewArgs{SetupTrust: map[string]bool{repo: true}}, script},
+		{NewArgs{SetupTrust: map[string]bool{repo: false}}, ""},
+		{NewArgs{Setup: api.SetupRun, SetupTrust: map[string]bool{repo: false}}, script},
+		{NewArgs{Setup: api.SetupSkip, SetupTrust: map[string]bool{repo: true}}, ""},
+	} {
+		h, err := setupHooks(c.a, sub, nil)
+		if err != nil || h.setup != c.want {
+			t.Errorf("%+v: setup %q, %v; want %q", c.a, h.setup, err, c.want)
+		}
+	}
+	// A refused repository falls back to the host's own hook.
+	own := filepath.Join(paths.ConfigDir(), "hooks", "setup")
+	_ = os.MkdirAll(filepath.Dir(own), 0o755)
+	_ = os.WriteFile(own, []byte("#!/bin/sh\n"), 0o755)
+	if h, _ := setupHooks(NewArgs{Setup: api.SetupSkip}, repo, nil); h.setup != own {
+		t.Errorf("refused repository: setup %q, want the host's %q", h.setup, own)
+	}
+	// A folder without hooks asks nothing.
+	if h, err := setupHooks(NewArgs{}, t.TempDir(), nil); err != nil || h.setup != own {
+		t.Errorf("plain folder: %+v %v", h, err)
+	}
+}
+
+func TestSetupHooksInANewWorktree(t *testing.T) {
+	repo := setupRepo(t)
+	gi, err := makeWorktree(repo, "fix", "abcd2345", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The worktree shares the repository's answer.
+	if key, top := repoOf(gi.Worktree); key != repo || top != gi.Worktree {
+		t.Fatalf("repoOf(worktree) = %s, %s", key, top)
+	}
+	h, err := setupHooks(NewArgs{SetupTrust: map[string]bool{repo: true}}, gi.Worktree, gi)
+	if err != nil || h.setup != filepath.Join(gi.Worktree, "."+brand.Name, "setup") {
+		t.Fatalf("trusted worktree: %+v %v", h, err)
+	}
+	// Asking about a worktree removes the one this start made, and its branch.
+	question(t, func() error { _, err := setupHooks(NewArgs{}, gi.Worktree, gi); return err }())
+	if _, err := os.Stat(gi.Worktree); !os.IsNotExist(err) {
+		t.Error("the worktree is still there")
+	}
+	if out, _ := git(repo, "branch", "--list", gi.Branch); out != "" {
+		t.Errorf("the branch is still there: %s", out)
+	}
+}
+
+func TestSetupScriptRunsBeforeTheAgent(t *testing.T) {
+	dir := t.TempDir()
+	hook := filepath.Join(dir, "setup")
+	body := "#!/bin/sh\necho \"hook $" + brand.Env("HOOK") + " new=$" + brand.Env("WORKTREE_NEW") + " name=$" + brand.Env("SESSION_NAME") + " dir=$" + brand.Env("SESSION_DIR") + "\"\nexit 3\n"
+	if err := os.WriteFile(hook, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	m := &Manifest{Name: "my task", Cwd: "/work/app wt", Git: &GitInfo{CreatedBy: true, RepoRoot: "/work/app"}}
+	argv := startArgv([]string{"echo", "AGENT"}, hook, hookVars(m, false), nil)
+	out, err := exec.Command(argv[0], argv[1:]...).Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "[" + brand.Name + ": running " + hook + "]\n" +
+		"hook setup new=1 name=my task dir=/work/app wt\n" +
+		"\n[" + brand.Name + ": " + hook + " exited with 3; the agent starts anyway]\n\n" +
+		"AGENT\n"
+	if string(out) != want {
+		t.Fatalf("got\n%q\nwant\n%q", out, want)
+	}
+	// After a restart the resume hook says so, and the worktree is not new.
+	if v := strings.Join(hookVars(m, true), " "); !strings.Contains(v, brand.Env("HOOK")+"=resume") || !strings.Contains(v, brand.Env("WORKTREE_NEW")+"=0") {
+		t.Fatalf("resume vars %s", v)
+	}
+}

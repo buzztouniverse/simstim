@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -32,6 +33,9 @@ type fakeHost struct {
 	latency  time.Duration
 	dialErr  error
 	newErr   error
+	// setupRepo is a repository with a setup script: a start there asks,
+	// unless it is answered.
+	setupRepo string
 }
 
 // fakeBackend pretends to be SSH, the hosts and the terminal.
@@ -55,13 +59,7 @@ type fakeBackend struct {
 	saves     int
 	secrets   map[string]api.Secret // a host's own secrets, for every start
 	secretErr error
-}
-
-func (b *fakeBackend) Secrets(_ context.Context, h client.Host) (map[string]api.Secret, error) {
-	b.record("secrets %s", h.Name)
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return b.secrets, b.secretErr
+	trust     map[string]map[string]bool // answers about setup scripts, by host and repository
 }
 
 func newFakeBackend() *fakeBackend {
@@ -228,11 +226,18 @@ func (c *fakeConn) NewSession(_ context.Context, a client.NewArgs) (*client.Sess
 	} else {
 		c.be.record("new %s agent=%s cwd=%s name=%s worktree=%v size=%dx%d", c.name, a.Agent, a.Cwd, a.Name, a.Worktree, a.Cols, a.Rows)
 	}
+	if a.Setup != "" {
+		c.be.record("new %s setup=%s", c.name, a.Setup)
+	}
 	c.be.mu.Lock()
 	defer c.be.mu.Unlock()
 	h := c.host()
 	if h.newErr != nil {
 		return nil, h.newErr
+	}
+	if _, known := a.SetupTrust[h.setupRepo]; h.setupRepo != "" && a.Setup == "" && !known {
+		data, _ := json.Marshal(client.SetupQuestion{Repo: h.setupRepo, Script: h.setupRepo + "/.setup"})
+		return nil, &client.UserError{Msg: "the repository has a setup script", Code: api.CodeSetupTrust, Data: data}
 	}
 	name := a.Name
 	if name == "" {
