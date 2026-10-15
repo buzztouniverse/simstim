@@ -4,7 +4,7 @@ How the project is built, tested, documented and released. New here? Read [CONTR
 
 | Page | What it covers |
 | --- | --- |
-| [Testing](testing.md) | Unit, golden, fuzz and end-to-end tests, and how to run them |
+| [Testing](testing.md) | Unit, golden, fuzz and end-to-end tests, coverage, and how to run them |
 | [Docs](docs.md) | How the docs are organised, generated, checked and published |
 | [Style](style.md) | Rules for code and for writing |
 | [Releasing](releasing.md) | Versions, what a release contains, and how to cut and check one |

@@ -5,6 +5,7 @@ Every change keeps the tests green, and every bug fix adds the test that would h
 | Command | What it runs | Where |
 | --- | --- | --- |
 | `just test` | Unit tests with the race detector | Anywhere |
+| `just cover` | The unit tests' coverage, which must stay at 70 % or more | Anywhere |
 | `go test ./internal/tui -run TestGolden -update` | Rewrites the golden screens after an intended change; review the diff | Anywhere |
 | `just fuzz` | Fuzzes the input filter for 30 s (`just fuzz 5m` for longer) | Anywhere |
 | `just lint` | `go vet`, golangci-lint, the name check and the private-detail check | Anywhere |
@@ -31,6 +32,26 @@ Most of the host helper runs in the unit tests, on the machine that runs them, w
 - **Races in holders count.** The race detector writes a holder's report to a file, and the test fails.
 
 Some parts need Linux: ports and idle stop read `/proc`, and memory caps need systemd. Their tests read a fake `/proc` instead (`procRoot`). Tests that need the shadow terminal skip when it is not built; its Go side is also tested with a fake child, a shell script that echoes every frame.
+
+## Coverage
+
+The unit tests must cover at least 70 % of the statements in `internal/`, without the launcher (`internal/tui`, which the golden screens test). CI fails below that. To see the number:
+
+```sh
+just cover
+```
+
+It runs the same as this:
+
+```sh
+pk=$(go list ./internal/... | grep -v '/tui$' | tr '\n' ',')
+go test -count=1 -coverpkg="${pk%,}" -coverprofile=cover.out ./internal/...
+go tool cover -func=cover.out | tail -1
+```
+
+The coverage is counted across packages: a test in one package counts for the code it runs in another, so an attach test in `internal/client` counts for the bridge in `internal/host`. Holders that a test starts write their coverage too, where `go test` collects it. `go tool cover -html=cover.out` shows which lines ran.
+
+The bar is a floor, not the goal. A test checks what the code does, not just that it runs. When the bar was set, in October 2026, the coverage was 83 %, and 82 % without the shadow terminal.
 
 ## End-to-end tests
 

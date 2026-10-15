@@ -38,6 +38,8 @@ jobs:
           for arch in amd64 arm64; do cp vt/zig-out/linux/shadow-vt-$arch internal/client/helpers/vt-linux-$arch; done
       - run: go vet ./...
       - run: go test -race -count=1 ./...
+      - name: Coverage of internal/ without the launcher (70 % or more)
+        run: scripts/cover.sh 70
       - name: Cross-build the client
         run: |
           for t in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64; do

@@ -64,6 +64,10 @@ install: build
 test:
     go test -race -count=1 ./...
 
+# The unit tests' coverage of internal/ without the launcher, counted across packages (the bar is 70 %).
+cover:
+    scripts/cover.sh
+
 # Fuzz the input filter for a while.
 fuzz time="30s":
     go test ./internal/keys -run '^$' -fuzz FuzzFilter -fuzztime {{time}}
