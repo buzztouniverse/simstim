@@ -40,6 +40,8 @@ It asks one thing at a time:
 
 Press **Ctrl+C** at any step to stop. The setup says what it did, and running it again picks up from there.
 
+The launcher offers the same setup: run `simstim` with no hosts, and press Enter.
+
 For a script, or to skip the questions, answer them with flags:
 
 <!-- test: help (it changes the host) -->

@@ -8,11 +8,15 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 )
 
-// The add-host wizard (docs/contributing/ux-spec.md 2.2): one step per screen, Esc goes back.
+// The add-host wizard (docs/contributing/ux-spec.md 2.10): one step per screen, Esc goes back.
+// After "ready" come the agent checklist, the installs, the logins and a
+// summary (wizard_agents.go).
 type wizStep int
 
 const (
@@ -20,9 +24,12 @@ const (
 	wzTest
 	wzInstall
 	wzReady
+	wzAgents // the checklist
+	wzRun    // one install or login, in a session the user watches
+	wzDone   // the summary, and the first session
 )
 
-const wizSteps = 4
+const wizSteps = 6
 
 type checkState int
 
@@ -59,6 +66,16 @@ type wizard struct {
 	conn   Conn
 	info   *client.HostInfo
 	saved  bool
+
+	// guided is set when the guided setup opened the wizard: the agent
+	// checklist always follows "ready". made is set for a host the setup
+	// just made, which counts as the user's yes to the helper. prev is the
+	// sheet that Esc on the first step returns to.
+	guided bool
+	made   bool
+	prev   modal
+
+	agentPart
 }
 
 // Wizard results.
@@ -85,16 +102,20 @@ type (
 )
 
 func (m *Model) openWizard() tea.Cmd {
-	w := &wizard{pick: -1}
-	w.in[0] = newInput("", "a Host from your SSH config, or user@host")
-	w.in[1] = newInput("", "the SSH target")
-	w.in[2] = newInput("", "optional: an extra SSH config file")
-	m.modal = w
+	m.modal = newWizard()
 	be := m.be
 	return func() tea.Msg { return sshHostsMsg{be.SSHConfigHosts()} }
 }
 
-func (w *wizard) busy() bool { return w.run }
+func newWizard() *wizard {
+	w := &wizard{pick: -1}
+	w.in[0] = newInput("", "a Host from your SSH config, or user@host")
+	w.in[1] = newInput("", "the SSH target")
+	w.in[2] = newInput("", "optional: an extra SSH config file")
+	return w
+}
+
+func (w *wizard) busy() bool { return w.run || w.checking }
 
 func (w *wizard) paste(s string) {
 	if w.step == wzWhere {
@@ -165,27 +186,38 @@ func (w *wizard) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 			return w.install(m)
 		}
 	case wzReady:
-		if ks == "enter" && !w.run {
+		if ks == "enter" && !w.run && !w.checking {
 			if w.err != nil {
 				return w.setup(m)
 			}
+			if w.saved && w.wantsAgents() {
+				w.step = wzAgents
+				return nil
+			}
 			if w.saved {
-				h := m.hostByName(w.host.Name)
-				m.modal = nil
-				if h != nil {
-					m.openHost(h)
-					m.modal = newSessionDialog(m, h)
-				}
+				w.startSession(m, "")
 			}
 		}
+	case wzAgents, wzRun, wzDone:
+		return w.agentKey(m, k)
 	}
 	return nil
 }
 
-// back goes one step back, or closes the wizard from the first step.
+// back goes one step back, or closes the wizard from the first step. A
+// host the setup made is kept, and joins the list, even when the wizard
+// closes before it is ready.
 func (w *wizard) back(m *Model) tea.Cmd {
+	if w.saved && w.step >= wzAgents {
+		return w.agentBack(m)
+	}
 	w.stop()
 	switch {
+	case w.made && !w.saved:
+		m.modal = nil
+		return m.addHost(w.host, nil, nil)
+	case w.step == wzWhere && w.prev != nil:
+		m.modal = w.prev
 	case w.step == wzWhere || w.saved:
 		m.modal = nil
 	case w.step == wzInstall:
@@ -321,6 +353,7 @@ func (w *wizard) setup(m *Model) tea.Cmd {
 	w.checks = []check{{name: "prepare", state: ckRunning, detail: "linger, terminfo"}}
 	ctx, seq := w.begin(m)
 	be, h, set, clock := m.be, w.host, m.conns, m.now
+	idle := w.made && h.Machine != nil && onboard.PowersOffWhenIdle(h.Machine.Provider)
 	return func() tea.Msg {
 		start := clock()
 		cctx, cancel := context.WithTimeout(ctx, 90*time.Second)
@@ -341,6 +374,14 @@ func (w *wizard) setup(m *Model) tea.Cmd {
 		if err != nil {
 			set.drop(c)
 			return setupMsg{seq: seq, err: err}
+		}
+		if idle {
+			st := api.Check{Name: "idle stop", OK: true}
+			st.Detail, err = be.Local().SetIdle(cctx, h)
+			if err != nil {
+				st.OK, st.Detail = false, err.Error()
+			}
+			res.Steps = append(res.Steps, st)
 		}
 		return setupMsg{seq: seq, conn: c, res: res, info: info, took: clock().Sub(start)}
 	}
@@ -374,8 +415,17 @@ func (w *wizard) onMsg(m *Model, msg tea.Msg) tea.Cmd {
 		}
 		if msg.p.Installed {
 			w.checks = append(w.checks, check{name: "helper", state: ckOK, detail: m.be.HelperVersion() + " found"})
+			if w.made {
+				return w.setup(m)
+			}
 		} else {
 			w.checks = append(w.checks, check{name: "helper", state: ckNote, detail: "not installed yet"})
+			if w.made {
+				// Making the host was the user's yes: the consent screen
+				// shows what is installed, and the install runs at once.
+				w.step = wzInstall
+				return w.install(m)
+			}
 		}
 		return nil
 
@@ -421,6 +471,11 @@ func (w *wizard) onMsg(m *Model, msg tea.Msg) tea.Cmd {
 		}
 		return m.saveHosts(w.host, false)
 
+	case agentChecksMsg:
+		return w.onAgentChecks(m, msg)
+	case actStartedMsg:
+		return w.onActStarted(m, msg)
+
 	case hostSavedMsg:
 		w.run, w.cancel = false, nil
 		if msg.err != nil {
@@ -434,7 +489,7 @@ func (w *wizard) onMsg(m *Model, msg tea.Msg) tea.Cmd {
 		if h := m.hostByName(w.host.Name); h != nil {
 			m.openHost(h)
 		}
-		return cmd
+		return tea.Batch(cmd, w.loadAgents(m))
 	}
 	return nil
 }

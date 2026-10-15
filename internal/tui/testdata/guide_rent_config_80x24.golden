@@ -1,0 +1,24 @@
+
+
+
+
+
+
+
+                            ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+                        ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+                  ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+                      ⠈⠑⠢⢌⡑⠢⠤⠤⠒⠁    ⢈⠦⡊   ⠈⠢⢄ ⢀⣔⠕⠊
+  ── A server I will rent ───────────────────────────────────── step 4 of 4 ──
+
+    A name for the server
+
+    These lines give the server its name in ~/.ssh/config:
+
+      Host my-server
+          HostName 203.0.113.10
+          User dev
+
+    Add them to the end of ~/.ssh/config?
+
+    y add them   n I will add them   esc back

@@ -9,6 +9,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/client"
 	"github.com/iAmLakshya/simstim/internal/client/helpers"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 )
 
 // Backend is everything the launcher needs from outside: saved hosts,
@@ -39,6 +40,9 @@ type Backend interface {
 	// repositories' setup scripts on a host.
 	SetupTrust(host string) map[string]bool
 	RememberSetup(host, repo string, run bool) error
+	// Local is what the guided setup reads and changes on this computer:
+	// where agents can run, SSH keys and config, and making hosts.
+	Local() onboard.Local
 }
 
 // Conn is one connection to a host. *client.Conn satisfies it.
@@ -52,6 +56,7 @@ type Conn interface {
 	Setup(ctx context.Context) (client.SetupResult, error)
 	RoundTrip(ctx context.Context) (time.Duration, error)
 	Folders(ctx context.Context, prefix string) (client.FoldersResult, error)
+	AgentChecks(ctx context.Context) ([]client.AgentCheck, error)
 	Done() <-chan struct{}
 	Close()
 }
@@ -59,7 +64,16 @@ type Conn interface {
 var _ Conn = (*client.Conn)(nil)
 
 // realBackend talks to real hosts through package client.
-type realBackend struct{}
+type realBackend struct {
+	local onboard.Local
+}
+
+func (b realBackend) Local() onboard.Local {
+	if b.local == nil {
+		return onboard.System{}
+	}
+	return b.local
+}
 
 func (realBackend) LoadHosts() ([]client.Host, error) { return client.LoadHosts() }
 func (realBackend) SaveHosts(h []client.Host) error   { return client.SaveHosts(h) }
@@ -87,12 +101,23 @@ func (realBackend) Dial(ctx context.Context, h client.Host) (Conn, error) {
 	return c, nil
 }
 
+// Probe and Install reach the host the way every connection does: the
+// system ssh, or the provider's own transport for a host that a provider
+// made. They never prompt.
 func (realBackend) Probe(ctx context.Context, h client.Host) (client.Platform, error) {
-	return client.Probe(ctx, &client.SSH{Host: h})
+	t, err := client.HostTransport(ctx, h, false)
+	if err != nil {
+		return client.Platform{}, err
+	}
+	return client.Probe(ctx, t)
 }
 
 func (realBackend) Install(ctx context.Context, h client.Host, p client.Platform) error {
-	return client.Install(ctx, &client.SSH{Host: h}, p)
+	t, err := client.HostTransport(ctx, h, false)
+	if err != nil {
+		return err
+	}
+	return client.Install(ctx, t, p)
 }
 
 func (realBackend) HelperSize(p client.Platform) (int, bool) {

@@ -26,6 +26,7 @@ The launcher's commands and their default keys. Every command is also in the com
 | session: next waiting | `w` |
 | host: open | `enter` |
 | host: add | `a` |
+| host: set up | `s` |
 | host: details | `i` |
 | host: test | palette only |
 | host: reconnect | palette only |

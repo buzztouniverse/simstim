@@ -23,11 +23,13 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// Run opens the launcher.
+// Run opens the launcher, with no providers for the guided setup.
 func Run(ctx context.Context) error { return RunWith(ctx, Options{}) }
 
 // RunWith opens the launcher with options; Motion is set from the settings.
-func RunWith(ctx context.Context, o Options) error { return runWith(ctx, realBackend{}, o) }
+func RunWith(ctx context.Context, o Options) error {
+	return runWith(ctx, realBackend{local: o.Local}, o)
+}
 
 func runWith(ctx context.Context, be Backend, o Options) error {
 	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {

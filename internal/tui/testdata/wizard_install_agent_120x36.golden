@@ -1,0 +1,36 @@
+
+  ⢄⡠⠊ simstim  › pi                                                                                       · 0 sessions
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+    No sessions on pi yet.
+
+    n start one from a single line, like: claude ~/src/app
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ── Install Codex? ─────────────────────────────────────────────────────────────────────────────────── step 5 of 6 ──
+
+    Codex (1 of 1) installs with its vendor's installer, from https://github.com/openai/codex#readme. It runs in a
+    session named install-codex on pi, where you can answer its questions.
+
+      curl -fsSL https://chatgpt.com/codex/install.sh | sh
+
+    ctrl+\ leaves the session running, and comes back here.
+
+    enter run it   s skip   esc stop

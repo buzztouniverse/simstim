@@ -55,7 +55,7 @@ func (m *Model) viewFirstRun() string {
 	}
 	lines = append(lines, "")
 	if m.since(m.epoch) >= keysAt || !m.motion {
-		lines = append(lines, center(welcomeLine([]hint{{"a", add}, {"ctrl+o", "commands"}, {"?", "keys"}}, m.width-4)))
+		lines = append(lines, center(welcomeLine([]hint{{"enter", "set up"}, {"a", add}, {"ctrl+o", "commands"}, {"?", "keys"}}, m.width-4)))
 	} else {
 		lines = append(lines, "")
 	}

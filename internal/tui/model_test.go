@@ -521,9 +521,11 @@ func TestWizard(t *testing.T) {
 	if hs.m.screen != scrSessions || hs.m.cur != "raspberry" {
 		t.Fatal("the new host's sessions are not open")
 	}
+	// The host has no agents yet, so the checklist comes next
+	// (guide_test.go follows it to the end).
 	hs.key("enter")
-	if d, ok := hs.m.modal.(*newSession); !ok || d.host != "raspberry" {
-		t.Fatalf("start a session opened %T", hs.m.modal)
+	if w.step != wzAgents {
+		t.Fatalf("after ready: step %v", w.step)
 	}
 }
 

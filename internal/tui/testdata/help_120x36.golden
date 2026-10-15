@@ -20,11 +20,10 @@
 
 
 
-
   ── Keys ────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-    ↑↓ jk          move                                     w              next waiting session
-    1–9            open that row                            a              add host
+    ↑↓ jk          move                                     a              add host
+    1–9            open that row                            s              guided setup
     esc            back to hosts                            i              host details
     n              new session                              /              search every host
     enter          attach                                   alt+e          show ended
@@ -32,5 +31,6 @@
     r f2           rename                                   q              quit
     d              delete                                   ctrl+o         commands
     y              copy attach command                      ctrl+c ctrl+c  quit
+    w              next waiting session
 
     esc close

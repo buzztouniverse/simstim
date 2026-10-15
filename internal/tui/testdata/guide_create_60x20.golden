@@ -1,0 +1,20 @@
+
+
+
+
+
+                  ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+              ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+        ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+  ── A container, for testing (Docker) ───────────────────
+
+    It makes the machine, installs the helper on it, and
+    connects. Making it counts as your yes to the
+    helper.
+
+    Name         docker
+
+    ⠶ create      with docker
+      made a docker machine
+
+    esc stop

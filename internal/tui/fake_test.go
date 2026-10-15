@@ -36,6 +36,8 @@ type fakeHost struct {
 	// setupRepo is a repository with a setup script: a start there asks,
 	// unless it is answered.
 	setupRepo string
+	// checks are the host's agent checks (guide_fake_test.go).
+	checks []client.AgentCheck
 }
 
 // fakeBackend pretends to be SSH, the hosts and the terminal.
@@ -60,6 +62,10 @@ type fakeBackend struct {
 	secrets   map[string]api.Secret // a host's own secrets, for every start
 	secretErr error
 	trust     map[string]map[string]bool // answers about setup scripts, by host and repository
+	local     *fakeLocal                 // the guided setup's computer (guide_fake_test.go)
+	// attachHook runs during each attach, with the lock held: what the
+	// user does in the session.
+	attachHook func(client.AttachOptions)
 }
 
 func newFakeBackend() *fakeBackend {
@@ -173,6 +179,9 @@ func (b *fakeBackend) Attach(_ context.Context, o client.AttachOptions) (client.
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.attached = append(b.attached, o)
+	if b.attachHook != nil {
+		b.attachHook(o)
+	}
 	o.State.Key, o.State.Offset, o.State.Valid = o.Host.Name+"/"+o.Session, int64(100*len(b.attached)), true
 	return b.attach, b.attachErr
 }

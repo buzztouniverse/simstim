@@ -1,0 +1,36 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+                                            ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+                                      ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+                                          ⠈⠑⠢⢌⡑⠢⠤⠤⠒⠁    ⢈⠦⡊   ⠈⠢⢄ ⢀⣔⠕⠊
+                                              ⠈⠒⠢⢄⣀⣀⣀⡠⠤⠒⠁ ⠈⠢⢄⡀ ⣀⡠⠝⠉
+  ── Set up ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Where will agents run?
+
+      1 ● A host in your SSH config           3 found: atlas-dev, gcp-dev, hetzner-1
+    ▍ 2 ○ A local VM, with Lima               limactl is not on your PATH
+      3 ● A container, for testing (Docker)   no systemd, so no memory caps
+      4 ○ A cloud sandbox, with E2B           no E2B API key found
+      5 ● A server I will rent                step by step, with checks
+
+    To make it ready:
+    On macOS, with Homebrew:
+      brew install lima
+    or with MacPorts:
+      sudo port install lima
+    Other ways, such as the release archive, are in Lima's guide: https://lima-vm.io/docs/installation/
+
+    enter check again   ↑↓ move   esc close

@@ -1,0 +1,36 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+  ── A server I will rent ───────────────────────────────────────────────────────────────────────────── step 3 of 4 ──
+
+    A user for your agents
+
+    Agents should not run as root. Log in once as root, and make a user with your key:
+      ssh root@203.0.113.10
+      adduser --disabled-password --gecos "" dev
+      usermod -aG sudo dev
+      echo "dev ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/dev
+      install -d -m 700 -o dev -g dev /home/dev/.ssh
+      install -m 600 -o dev -g dev ~/.ssh/authorized_keys /home/dev/.ssh/
+      exit
+    Passwordless sudo lets agents install packages. Leave out the echo line to type a password for sudo yourself.
+
+    User         dev
+
+    ✕ ssh         dev@203.0.113.10
+
+    ✕ Cannot log in to dev@203.0.113.10 with ssh yet: Permission denied (publickey).
+    → ssh dev@203.0.113.10   (run it yourself to see what it asks)
+
+    enter check that ssh dev@203.0.113.10 works   esc back

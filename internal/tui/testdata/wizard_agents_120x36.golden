@@ -1,0 +1,36 @@
+
+  ⢄⡠⠊ simstim  › pi                                                                                       · 0 sessions
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+    No sessions on pi yet.
+
+    n start one from a single line, like: claude ~/src/app
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ── Agents on pi ───────────────────────────────────────────────────────────────────────────────────── step 5 of 6 ──
+
+    Tick the agents to install on pi. Each one installs with its vendor's own installer, in a session you watch.
+
+      ✓ Claude Code       installed, logged in
+    ▍ ● Codex             not installed
+      ○ opencode          not installed
+      ○ Antigravity CLI   not installed
+      ▸ 5 more agents, best effort
+
+    space tick   enter install 1 agent   esc back

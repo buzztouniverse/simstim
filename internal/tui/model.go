@@ -11,6 +11,7 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 
 	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 )
 
 // screen is the one list the launcher shows (docs/contributing/ux-spec.md 2): the hosts, or
@@ -33,6 +34,9 @@ type Options struct {
 	Now func() time.Time
 	// Switcher opens on the sessions of every host, for a quick switch.
 	Switcher bool
+	// Local is the guided setup's view of this computer. The command tree
+	// passes one that knows its providers.
+	Local onboard.Local
 }
 
 // Model is the launcher: one list at a time, and the dialogs drawn over it.
@@ -164,6 +168,9 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 // Close closes every connection and saves what the launcher saw. Run calls
 // it after the program ends.
 func (m *Model) Close() {
+	if g, ok := m.modal.(*guide); ok {
+		g.halt() // a half-made machine is deleted before the launcher goes
+	}
 	m.remember()()
 	m.conns.closeAll()
 }
@@ -357,7 +364,11 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 	case startedMsg:
 		return m.onStarted(msg)
 	case attachDoneMsg:
-		return m.onAttachDone(msg)
+		cmd := m.onAttachDone(msg)
+		if w, ok := m.modal.(*wizard); ok && w.waiting != "" && w.waiting == msg.id && w.host.Name == msg.host {
+			cmd = tea.Batch(cmd, w.afterAttach(m, msg))
+		}
+		return cmd
 	case hostSavedMsg:
 		return m.onHostSaved(msg)
 	case setupMsg:
@@ -386,8 +397,11 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 		}
 		return nil
 	}
-	if w, ok := m.modal.(*wizard); ok {
-		return w.onMsg(m, msg)
+	switch d := m.modal.(type) {
+	case *wizard:
+		return d.onMsg(m, msg)
+	case *guide:
+		return d.onMsg(m, msg)
 	}
 	return nil
 }

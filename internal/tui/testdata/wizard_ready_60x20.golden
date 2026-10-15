@@ -5,7 +5,7 @@
     No sessions on raspberry yet.
 
     n start one from a single line, like: claude ~/src/app
-  ── Add a host ─────────────────────────── step 4 of 4 ──
+  ── Add a host ─────────────────────────── step 4 of 6 ──
 
     ✓ connect
     ✓ linger      on
@@ -17,4 +17,4 @@
       System  Ubuntu 24.04 · arm64 · 2 CPUs · 4 GiB
       Limits  1.5 GiB per session
 
-    enter start a session   esc close
+    enter choose agents   esc close

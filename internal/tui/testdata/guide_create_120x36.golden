@@ -1,0 +1,36 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+                                            ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+                                      ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+                                          ⠈⠑⠢⢌⡑⠢⠤⠤⠒⠁    ⢈⠦⡊   ⠈⠢⢄ ⢀⣔⠕⠊
+                                              ⠈⠒⠢⢄⣀⣀⣀⡠⠤⠒⠁ ⠈⠢⢄⡀ ⣀⡠⠝⠉
+                                                             ⠈⠉
+
+                                                     s i m s t i m
+                                                  jack in to any host
+
+                                 enter set up   a add a host   ctrl+o commands   ? keys
+
+
+  ── A container, for testing (Docker) ───────────────────────────────────────────────────────────────────────────────
+
+    It makes the machine, installs the helper on it, and connects. Making it counts as your yes to the helper.
+
+    Name         docker
+
+    ⠶ create      with docker
+      made a docker machine
+
+    esc stop

@@ -174,6 +174,7 @@ func registry() []*command {
 			},
 			run: (*Model).openSelectedHost},
 		{noun: "host", verb: "add", short: "add host", keys: []binding{{"a", anywhere}}, firstRun: true, run: (*Model).openWizard},
+		{noun: "host", verb: "set up", short: "guided setup", keys: []binding{{"s", anywhere}}, firstRun: true, run: (*Model).openGuide},
 		{noun: "host", verb: "details", short: "host details", keys: []binding{{"i", anywhere}}, why: needHost,
 			run: func(m *Model) tea.Cmd { m.modal = &details{host: m.selectedHost().name()}; return nil }},
 		{noun: "host", verb: "test", why: needHost, run: func(m *Model) tea.Cmd { return m.testHost(m.selectedHost()) }},

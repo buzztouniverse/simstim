@@ -19,7 +19,7 @@ Creating a host counts as your consent to install the helper on it. `host create
 simstim setup --create lima --name dev --agents claude --yes
 ```
 
-Press Ctrl+C while Lima or Docker makes the machine, and the setup deletes the half-made VM or container, so nothing is left behind. After that, the host is saved: `simstim host destroy dev` deletes it.
+Press Ctrl+C while Lima or Docker makes the machine, and the setup deletes the half-made VM or container, so nothing is left behind. After that, the host is saved: `simstim host destroy dev` deletes it. The launcher's setup (`s`) does the same, and Esc stops it.
 
 ## A local VM with Lima
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/iAmLakshya/simstim/internal/brand"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 )
 
 func (w *wizard) view(m *Model) string {
@@ -31,19 +32,47 @@ func (w *wizard) view(m *Model) string {
 	case wzReady:
 		body = w.readyView(m, cw)
 		hints = []hint{{"enter", "start a session"}, {"esc", "close"}}
-		if !w.saved {
+		switch {
+		case !w.saved && w.err != nil:
+			hints = []hint{{"enter", "try again"}, {"esc", "back"}}
+		case !w.saved:
 			hints = []hint{{"esc", "back"}}
-			if w.err != nil {
-				hints = []hint{{"enter", "try again"}, {"esc", "back"}}
-			}
+		case w.checking:
+			hints = []hint{{"esc", "close"}}
+		case w.wantsAgents():
+			hints = []hint{{"enter", "choose agents"}, {"esc", "close"}}
 		}
+	case wzAgents:
+		title = "Agents on " + w.host.Name
+		body, hints = w.agentsView(m, cw)
+	case wzRun:
+		title, body, hints = w.runView(m, cw)
+	case wzDone:
+		title = w.host.Name + " is set up"
+		body, hints = w.doneView(cw)
 	}
+	if w.guided && title == "Add a host" {
+		title = "Set up"
+	}
+	var tail []string
 	if w.err != nil {
-		body = append(append(body, ""), errorLines(w.err, cw)...)
+		tail = errorLines(w.err, cw)
 	}
-	body = append(body, "")
-	step := sFaint.Render(fmt.Sprintf("step %d of %d", int(w.step)+1, wizSteps))
-	return sheet(width, title, step, hints, trimBlank(body), toneNormal)
+	return sheet(width, title, w.stepLabel(), hints, fitBody(body, tail, m.height), toneNormal)
+}
+
+// stepLabel is the step count at the right of the sheet's rule.
+func (w *wizard) stepLabel() string {
+	n := int(w.step) + 1
+	switch {
+	case w.step == wzDone:
+		return sFaint.Render("done")
+	case w.step == wzRun && w.act.Kind == onboard.ActLogin:
+		n = wizSteps
+	case w.step == wzRun:
+		n = int(wzAgents) + 1
+	}
+	return sFaint.Render(fmt.Sprintf("step %d of %d", n, wizSteps))
 }
 
 func (w *wizard) whereView(cw int) ([]string, []hint) {
@@ -79,9 +108,13 @@ func (w *wizard) whereView(cw int) ([]string, []hint) {
 	return body, hints
 }
 
-func (w *wizard) checkLines(m *Model, cw int) []string {
+func (w *wizard) checkLines(m *Model, cw int) []string { return m.checkLines(w.checks, cw) }
+
+// checkLines draws the progress of a step: a spinner, then ✓ or ✕, the
+// check's name, and its detail.
+func (m *Model) checkLines(checks []check, cw int) []string {
 	var out []string
-	for _, c := range w.checks {
+	for _, c := range checks {
 		var mark string
 		switch c.state {
 		case ckRunning:

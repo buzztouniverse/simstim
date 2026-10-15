@@ -15,6 +15,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/agents"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 	"github.com/iAmLakshya/simstim/internal/tui"
 )
 
@@ -379,7 +380,7 @@ func flipCmd() *cobra.Command {
 			if len(args) == 1 {
 				return attachCmd().RunE(cmd, args)
 			}
-			return tui.RunWith(cmd.Context(), tui.Options{Switcher: true})
+			return tui.RunWith(cmd.Context(), tui.Options{Switcher: true, Local: onboard.System{Providers: providers}})
 		},
 	}
 }

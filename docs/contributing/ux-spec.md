@@ -10,7 +10,7 @@ simstim has two kinds of screen, with opposite rules:
 
 | | The launcher | An attached session |
 | --- | --- | --- |
-| What | Hosts, sessions, search, the quick start, sheets, the add-host wizard | The agent's real TUI |
+| What | Hosts, sessions, search, the quick start, sheets, the add-host wizard, the guided setup | The agent's real TUI |
 | Who draws it | simstim, in the alternate screen | The agent, byte for byte |
 | Job | Start or join a session in a few keys, then get out of the way | Everything else |
 | Look | Our own: a signal. One column, a cyan accent, live traces, sheets that rise from the bottom | Untouched. Every row and column is the agent's. |
@@ -46,14 +46,14 @@ With no hosts, the screen is a centred welcome.
                                  s i m s t i m
                               jack in to any host
 
-                    a add a host   ctrl+o commands   ? keys
+             enter set up   a add a host   ctrl+o commands   ? keys
 ```
 
 The welcome plays as a short sequence:
 
 1. **The mark** opens out from its middle. It is three strands of a signal woven into a ribbon that pinches at both ends, drawn in braille, in the brand gradient. Then it flows, a pulse runs along it, and the strands are brighter where they cross.
 2. **The name** decodes out of braille noise, letter by letter.
-3. **The tagline**, then **the keys**, come in under it. The first key says how many hosts your SSH config already has.
+3. **The tagline**, then **the keys**, come in under it. Enter opens the guided setup (2.12). `a` opens the add-host wizard, and says how many hosts your SSH config already has.
 
 ### 2.2 The launcher's layout
 
@@ -211,6 +211,7 @@ Every dialog is a sheet. It rises from the bottom of the screen over the dimmed 
 | Keys | `?` | Every key that works here, in two columns, built from the live registry |
 | Host details | `i` | Route, system, helper, agents, limits; `t` test, `s` shell, `r` reconnect, `x` remove |
 | Add a host | `a` | The wizard (2.10) |
+| Set up | Enter on the first-run screen, `s` | The guided setup (2.12) |
 
 A click outside the palette, the peek, the host details or a confirm closes it.
 
@@ -245,7 +246,26 @@ The agent owns the whole terminal: every row and every column. There is no borde
 1. **Where.** A target from `~/.ssh/config` (↑↓ pick, and typing filters), a name, and an optional extra SSH config file.
 2. **Test.** Each check shows the spinner, then `✓` or `✕` with the time it took. A failure shows the error and its next step.
 3. **Install the helper.** This is the consent screen. It says what is installed and where, what else changes (linger, terminfo), and that nothing listens on the network.
-4. **Ready.** The agents found, the system, and the memory cap per session. Enter starts a session on the new host, whose sessions are now open.
+4. **Ready.** The agents found, the system, and the memory cap per session. The host's sessions are now open behind the sheet. When a first-class or supported agent is missing or not logged in, Enter goes on to the agents; otherwise it starts a session.
+5. **Agents.** The checklist: every agent with an installer, first-class and supported ones first. An installed agent has a green `✓`, a ticked one a cyan `●`, the rest a faint `○`, each with its state. The best-effort agents wait under a fold, `▸ 5 more agents, best effort`, which Enter or Space opens. Space ticks, and Enter installs what is ticked.
+
+   ```text
+     ── Agents on pi ───────────────────────────────────────────── step 5 of 6 ──
+
+       Tick the agents to install on pi. Each one installs with its vendor's
+       own installer, in a session you watch.
+
+         ✓ Claude Code       installed, logged in
+       ▍ ● Codex             not installed
+         ○ opencode          not installed
+         ○ Antigravity CLI   not installed
+         ▸ 5 more agents, best effort
+
+       space tick   enter install 1 agent   esc back
+   ```
+
+6. **Install, then log in.** One sheet for each install, then one for each agent that is installed but not logged in. Each shows the command, where it comes from, and the session it runs in (`install-codex`, `login-codex`). Enter starts the session and attaches; the user answers the installer or the login there. When they detach, or the session ends, the sheet checks the host again, and the next sheet shows how it went. `s` skips one, and Esc stops the rest.
+7. **Done.** Each agent with its mark (`✓` ready, `!` not logged in, `?` login unknown, `✕` missing) and the step to try, then the command for the first session. Enter opens the new-session form with that agent chosen.
 
 ### 2.11 Fast paths
 
@@ -257,6 +277,44 @@ The agent owns the whole terminal: every row and every column. There is no borde
 - **The tab title** counts the sessions that need you: `● 1 · simstim · homelab`.
 - **When nobody is looking.** If a session starts to need you while the terminal is in the background, the launcher sends a desktop notification.
 - **From the shell.** `simstim attach -` attaches to the last session.
+
+### 2.12 Guided setup
+
+Enter on the first-run screen, or `s` from any screen: a sheet that asks where agents will run, then hands the host to the add-host wizard (2.10), which ends with the agents and their logins. The engine behind it is shared with `simstim setup` ([decision 0020](decisions/0020-guided-setup.md)).
+
+1. **Where.** The places, numbered. A green `●` marks one this computer can use now, a faint `○` one it cannot, with what is missing. The selected place that is not ready shows its steps under the list, with each command in cyan; Enter checks again.
+
+   ```text
+     ── Set up ──────────────────────────────────────────────────────────────────
+
+       Where will agents run?
+
+         1 ● A host in your SSH config           3 found: atlas-dev, gcp-dev, …
+       ▍ 2 ○ A local VM, with Lima               limactl is not on your PATH
+         3 ● A container, for testing (Docker)   no systemd, so no memory caps
+         4 ○ A cloud sandbox, with E2B           no E2B API key found
+         5 ● A server I will rent                step by step, with checks
+
+       To make it ready:
+       On macOS, with Homebrew:
+         brew install lima
+       or with MacPorts:
+         sudo port install lima
+       Other ways, such as the release archive, are in Lima's guide:
+       https://lima-vm.io/docs/installation/
+
+       enter check again   ↑↓ move   esc close
+   ```
+
+2. **A host in the SSH config** opens the wizard's first step, with the hosts listed. Esc there comes back.
+3. **Lima, Docker or E2B** asks for a name, then makes the machine. The spinner shows the provider's last line of progress. Esc stops it, and a half-made Lima VM or container is deleted. The wizard then installs the helper without its consent screen, since making the host was the user's yes, and turns on idle stop for a VM.
+4. **A server I will rent** has one screen for each step, with the step count at the right of the rule:
+   1. **An SSH key.** The key it found, or how to make one. `k` runs `ssh-keygen` in the terminal.
+   2. **A server.** What to rent, and the command that prints the key to paste. Then its address.
+   3. **A user for your agents.** The commands to run as root, with the address and user filled in. Enter checks that `ssh user@address` works, and the error shows when it does not.
+   4. **A name for the server.** Then the lines for `~/.ssh/config`, in full. `y` adds them, `n` leaves them to the user; Enter checks that `ssh <name>` works. Then the wizard tests the host.
+
+The sheets keep the field and its error in view on a short screen; long steps give way first, ending in `…`.
 
 ## 3. Keymap
 
@@ -279,6 +337,7 @@ These keys work in the launcher. You can rebind any key in `config.toml`, and `s
 | `w` | Anywhere | Go to the next session that needs you, on any host; press again for the one after |
 | `alt+e` (`opt+e`) | Sessions | Hide or show ended sessions |
 | `a` | Anywhere | Add a host |
+| `s`, or `enter` on the first-run screen | Anywhere | The guided setup |
 | `i` | Anywhere | Host details |
 | `tab`, `ctrl+enter`, `ctrl+f` | Quick start | Complete; start detached; open the form |
 | `ctrl+o` | Anywhere | Commands |

@@ -39,6 +39,9 @@ func (m *Model) onKey(k tea.KeyPressMsg) tea.Cmd {
 	if m.rename != nil {
 		return m.renameKey(k)
 	}
+	if len(m.hosts) == 0 && ks == "enter" {
+		return m.openGuide() // the welcome's first key
+	}
 	if len(m.hosts) > 0 && len(ks) == 1 && ks >= "1" && ks <= "9" {
 		return m.quickOpen(int(ks[0] - '0'))
 	}
