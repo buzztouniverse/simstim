@@ -110,10 +110,10 @@ func TestSplitStreams(t *testing.T) {
 		{"\x1b[92;5u", true}, {"\x1c", true}, {"\x1b[118;5:1u", true}, {"\x1b[27;5;118~", true},
 		{"\x1b[200~pasted \x1c text\x1b[201~", false},
 	}
-	for round := 0; round < 2000; round++ {
+	for round := range 2000 {
 		var stream []byte
 		want := 0
-		for i := 0; i < 20; i++ {
+		for range 20 {
 			p := vocab[rng.Intn(len(vocab))]
 			stream = append(stream, p.s...)
 			if p.match {

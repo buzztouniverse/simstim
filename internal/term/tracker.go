@@ -75,140 +75,170 @@ func (t *Tracker) kitty() *[]int {
 }
 
 func (t *Tracker) token(tok Token) {
-	m := &t.M
 	switch tok.Kind {
 	case CSI:
-		switch {
-		case tok.Prefix == '?' && (tok.Final == 'h' || tok.Final == 'l') && len(tok.Intermediate) == 0:
-			on := tok.Final == 'h'
-			for _, n := range Ints(tok.Params) {
-				switch n {
-				case 1049, 1047, 47:
-					if on && !m.AltScreen {
-						m.KittyAlt = nil
-					}
-					m.AltScreen = on
-				default:
-					if tracked[n] {
-						m.Private[n] = on
-					}
-				}
-			}
-		case tok.Prefix == 0 && (tok.Final == 'h' || tok.Final == 'l') && len(tok.Intermediate) == 0:
-			for _, n := range Ints(tok.Params) {
-				if n == 4 {
-					m.Insert = tok.Final == 'h'
-				}
-			}
-		case tok.Final == 'u' && len(tok.Intermediate) == 0:
-			st := t.kitty()
-			v := Ints(tok.Params)
-			switch tok.Prefix {
-			case '>':
-				f := 0
-				if len(v) > 0 && v[0] > 0 {
-					f = v[0]
-				}
-				*st = append(*st, f)
-				if len(*st) > 64 {
-					*st = (*st)[1:]
-				}
-			case '<':
-				n := 1
-				if len(v) > 0 && v[0] > 0 {
-					n = v[0]
-				}
-				if n >= len(*st) {
-					*st = (*st)[:0]
-				} else {
-					*st = (*st)[:len(*st)-n]
-				}
-			case '=':
-				f := 0
-				if len(v) > 0 && v[0] > 0 {
-					f = v[0]
-				}
-				if len(*st) > 0 {
-					(*st)[len(*st)-1] = f
-				} else {
-					m.KittySet = f != 0
-				}
-			}
-		case tok.Prefix == '>' && tok.Final == 'm':
-			v := Ints(tok.Params)
-			if len(v) >= 1 && v[0] == 4 {
-				if len(v) >= 2 && v[1] > 0 {
-					m.ModifyOtherKeys = v[1]
-				} else {
-					m.ModifyOtherKeys = -1
-				}
-			}
-		case tok.Prefix == '>' && tok.Final == 'n':
-			v := Ints(tok.Params)
-			if len(v) >= 1 && v[0] == 4 {
-				m.ModifyOtherKeys = -1
-			}
-		case tok.Prefix == 0 && tok.Final == 'q' && bytes.Equal(tok.Intermediate, []byte(" ")):
-			v := Ints(tok.Params)
-			if len(v) == 0 || v[0] <= 0 {
-				m.CursorShape = -1
-			} else {
-				m.CursorShape = v[0]
-			}
-		case tok.Prefix == 0 && tok.Final == 'r' && len(tok.Intermediate) == 0:
-			v := Ints(tok.Params)
-			m.ScrollTop, m.ScrollBottom = 0, 0
-			if len(v) >= 2 && v[0] > 0 && v[1] > 0 {
-				m.ScrollTop, m.ScrollBottom = v[0], v[1]
-			}
-		case tok.Prefix == 0 && tok.Final == 'p' && bytes.Equal(tok.Intermediate, []byte("!")):
-			// DECSTR, a soft reset.
-			alt := m.AltScreen
-			main, altStack := m.KittyMain, m.KittyAlt
-			colors, title := m.Colors, m.Title
-			t.Reset()
-			m.AltScreen, m.KittyMain, m.KittyAlt, m.Colors, m.Title = alt, main, altStack, colors, title
-		}
+		t.csiToken(tok)
 	case Esc:
-		switch {
-		case tok.Final == '=' && len(tok.Intermediate) == 0:
-			m.Keypad = true
-		case tok.Final == '>' && len(tok.Intermediate) == 0:
-			m.Keypad = false
-		case tok.Final == 'c' && len(tok.Intermediate) == 0:
-			t.Reset()
-		}
+		t.escToken(tok)
 	case OSC:
-		num, rest, _ := bytes.Cut(tok.Payload, []byte(";"))
-		switch string(num) {
-		case "0", "2":
-			m.Title = append([]byte(nil), tok.Raw...)
-		case "10", "11", "12", "17", "19":
-			if !bytes.HasSuffix(rest, []byte("?")) {
-				m.Colors[string(num)] = append([]byte(nil), tok.Raw...)
+		t.oscToken(tok)
+	default:
+		// Text, DCS and other strings change no mode the tracker keeps.
+	}
+}
+
+// csiToken handles the control sequences that set modes.
+func (t *Tracker) csiToken(tok Token) {
+	m := &t.M
+	plain := len(tok.Intermediate) == 0
+	switch {
+	case tok.Prefix == '?' && (tok.Final == 'h' || tok.Final == 'l') && plain:
+		t.privateModes(Ints(tok.Params), tok.Final == 'h')
+	case tok.Prefix == 0 && (tok.Final == 'h' || tok.Final == 'l') && plain:
+		for _, n := range Ints(tok.Params) {
+			if n == 4 {
+				m.Insert = tok.Final == 'h'
 			}
-		case "4":
-			if !bytes.Contains(rest, []byte("?")) {
-				idx, _, _ := bytes.Cut(rest, []byte(";"))
-				m.Colors["4;"+string(idx)] = append([]byte(nil), tok.Raw...)
-			}
-		case "104":
-			for k := range m.Colors {
-				if len(k) > 2 && k[:2] == "4;" {
-					delete(m.Colors, k)
-				}
-			}
-		case "110", "111", "112", "117", "119":
-			delete(m.Colors, string(num[1:]))
-		case "22":
-			m.Pointer = len(rest) > 0
 		}
+	case tok.Final == 'u' && plain:
+		t.kittyKeys(tok.Prefix, Ints(tok.Params))
+	case tok.Prefix == '>' && (tok.Final == 'm' || tok.Final == 'n'):
+		t.modifyOtherKeys(tok.Final, Ints(tok.Params))
+	case tok.Prefix == 0 && tok.Final == 'q' && bytes.Equal(tok.Intermediate, []byte(" ")):
+		m.CursorShape = -1
+		if v := Ints(tok.Params); len(v) > 0 && v[0] > 0 {
+			m.CursorShape = v[0]
+		}
+	case tok.Prefix == 0 && tok.Final == 'r' && plain:
+		v := Ints(tok.Params)
+		m.ScrollTop, m.ScrollBottom = 0, 0
+		if len(v) >= 2 && v[0] > 0 && v[1] > 0 {
+			m.ScrollTop, m.ScrollBottom = v[0], v[1]
+		}
+	case tok.Prefix == 0 && tok.Final == 'p' && bytes.Equal(tok.Intermediate, []byte("!")):
+		t.softReset()
+	}
+}
+
+// modifyOtherKeys follows xterm's modifyOtherKeys level: CSI > 4 ; n m sets
+// it, and CSI > 4 m or CSI > 4 n resets it.
+func (t *Tracker) modifyOtherKeys(final byte, v []int) {
+	if len(v) == 0 || v[0] != 4 {
+		return
+	}
+	t.M.ModifyOtherKeys = -1
+	if final == 'm' && len(v) >= 2 && v[1] > 0 {
+		t.M.ModifyOtherKeys = v[1]
+	}
+}
+
+// privateModes records DEC private modes set (on) or reset.
+func (t *Tracker) privateModes(modes []int, on bool) {
+	m := &t.M
+	for _, n := range modes {
+		switch n {
+		case 1049, 1047, 47:
+			if on && !m.AltScreen {
+				m.KittyAlt = nil
+			}
+			m.AltScreen = on
+		default:
+			if tracked[n] {
+				m.Private[n] = on
+			}
+		}
+	}
+}
+
+// kittyKeys follows the kitty keyboard flag stack of the current screen:
+// CSI > f u pushes, CSI < n u pops, CSI = f u sets the top.
+func (t *Tracker) kittyKeys(prefix byte, v []int) {
+	st := t.kitty()
+	first := func(def int) int {
+		if len(v) > 0 && v[0] > 0 {
+			return v[0]
+		}
+		return def
+	}
+	switch prefix {
+	case '>':
+		*st = append(*st, first(0))
+		if len(*st) > 64 {
+			*st = (*st)[1:]
+		}
+	case '<':
+		if n := first(1); n >= len(*st) {
+			*st = (*st)[:0]
+		} else {
+			*st = (*st)[:len(*st)-n]
+		}
+	case '=':
+		if f := first(0); len(*st) > 0 {
+			(*st)[len(*st)-1] = f
+		} else {
+			t.M.KittySet = f != 0
+		}
+	}
+}
+
+// softReset is DECSTR: modes go back to their defaults, but the screen, the
+// keyboard stacks, the colours and the title stay.
+func (t *Tracker) softReset() {
+	m := &t.M
+	alt := m.AltScreen
+	main, altStack := m.KittyMain, m.KittyAlt
+	colors, title := m.Colors, m.Title
+	t.Reset()
+	m.AltScreen, m.KittyMain, m.KittyAlt, m.Colors, m.Title = alt, main, altStack, colors, title
+}
+
+// escToken handles the keypad modes and RIS.
+func (t *Tracker) escToken(tok Token) {
+	if len(tok.Intermediate) != 0 {
+		return
+	}
+	switch tok.Final {
+	case '=':
+		t.M.Keypad = true
+	case '>':
+		t.M.Keypad = false
+	case 'c':
+		t.Reset()
+	}
+}
+
+// oscToken keeps the title, the colours and the pointer shape.
+func (t *Tracker) oscToken(tok Token) {
+	m := &t.M
+	num, rest, _ := bytes.Cut(tok.Payload, []byte(";"))
+	switch string(num) {
+	case "0", "2":
+		m.Title = append([]byte(nil), tok.Raw...)
+	case "10", "11", "12", "17", "19":
+		if !bytes.HasSuffix(rest, []byte("?")) {
+			m.Colors[string(num)] = append([]byte(nil), tok.Raw...)
+		}
+	case "4":
+		if !bytes.Contains(rest, []byte("?")) {
+			idx, _, _ := bytes.Cut(rest, []byte(";"))
+			m.Colors["4;"+string(idx)] = append([]byte(nil), tok.Raw...)
+		}
+	case "104":
+		for k := range m.Colors {
+			if len(k) > 2 && k[:2] == "4;" {
+				delete(m.Colors, k)
+			}
+		}
+	case "110", "111", "112", "117", "119":
+		delete(m.Colors, string(num[1:]))
+	case "22":
+		m.Pointer = len(rest) > 0
 	}
 }
 
 func csi(b *bytes.Buffer, s string) { b.WriteString("\x1b[" + s) }
 
-// Reset returns the sequence that undoes every change the session made,
+// ResetSequence returns the sequence that undoes every change the session made,
 // in a safe order. It never contains RIS.
 func (m *Modes) ResetSequence() []byte {
 	var b bytes.Buffer

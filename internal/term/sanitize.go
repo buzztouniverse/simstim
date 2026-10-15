@@ -47,6 +47,7 @@ func IsQuery(t Token) bool {
 				}
 			}
 		}
+		return false
 	case OSC:
 		// Colour, clipboard, status and pointer queries end with "?".
 		if bytes.HasSuffix(t.Payload, []byte("?")) || bytes.Contains(t.Payload, []byte(";?;")) {
@@ -64,6 +65,7 @@ func IsQuery(t Token) bool {
 	case StrSeq:
 		// Kitty graphics queries (APC G with a=q).
 		return bytes.HasPrefix(t.Payload, []byte("G")) && bytes.Contains(t.Payload, []byte("a=q"))
+	default:
+		return false
 	}
-	return false
 }

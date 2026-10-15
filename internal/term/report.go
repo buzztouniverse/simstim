@@ -11,8 +11,9 @@ func IsReport(t Token) bool {
 		return true
 	case CSI:
 		return isCSIReport(t)
+	default:
+		return false
 	}
-	return false
 }
 
 func isCSIReport(t Token) bool {

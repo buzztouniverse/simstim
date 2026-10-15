@@ -10,6 +10,7 @@ package keys
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -52,7 +53,7 @@ func (k Key) String() string {
 func Parse(s string) (Key, error) {
 	s = strings.ToLower(strings.TrimSpace(s))
 	if s == "" {
-		return Key{}, fmt.Errorf("empty key")
+		return Key{}, errors.New("empty key")
 	}
 	var k Key
 	parts := strings.Split(s, "+")
@@ -99,7 +100,7 @@ func (k Key) legacy() []byte {
 		}
 	case ModAlt:
 		if c < 0x80 {
-			return []byte{0x1b, byte(c)}
+			return []byte{0x1b, byte(c)} //nolint:gosec // G115: c is below 0x80, so it fits in a byte
 		}
 	case 0:
 		return []byte(string(c))
@@ -160,110 +161,123 @@ func New(watch ...Key) *Filter {
 // call, or until Flush. Use Pending to know whether to arm a short flush timer.
 func (f *Filter) Feed(p []byte) []Piece {
 	f.buf = append(f.buf, p...)
-	var out []Piece
-	b := f.buf
-	i, passStart := 0, 0
-	emitPass := func(end int) {
-		if end > passStart {
-			out = append(out, Piece{Kind: Pass, Raw: append([]byte(nil), b[passStart:end]...)})
+	s := &scan{b: f.buf}
+	i, stop := 0, false
+	for i < len(s.b) && !stop {
+		switch {
+		case f.inPaste:
+			i, stop = f.feedPaste(s, i)
+		case s.b[i] != 0x1b:
+			i = f.feedByte(s, i)
+		default:
+			i, stop = f.feedEsc(s, i)
 		}
 	}
-	for i < len(b) {
-		if f.inPaste {
-			j := bytes.Index(b[i:], pasteEnd)
-			if j < 0 {
-				// Keep all but a possible partial end marker.
-				keep := len(b) - i
-				if keep > len(pasteEnd)-1 {
-					keep = len(pasteEnd) - 1
-				}
-				f.paste.Write(b[i : len(b)-keep])
-				i = len(b) - keep
-				if f.paste.Len() > MaxPaste {
-					out = append(out, Piece{Kind: Pass, Raw: append(append([]byte(nil), pasteStart...), f.paste.Bytes()...)})
-					f.paste.Reset()
-					f.inPaste = false
-					passStart = i
-					// The rest of this paste, and its end marker, pass through as normal input.
-				}
-				break
-			}
-			f.paste.Write(b[i : i+j])
-			text := append([]byte(nil), f.paste.Bytes()...)
-			raw := append(append(append([]byte(nil), pasteStart...), text...), pasteEnd...)
-			out = append(out, Piece{Kind: Paste, Raw: raw, Text: text})
+	if !f.inPaste {
+		s.pass(i)
+	}
+	// In a paste, the bytes up to i went into the paste buffer.
+	rest := append([]byte(nil), s.b[i:]...)
+	f.buf = append(f.buf[:0], rest...)
+	return dropEmpty(s.out)
+}
+
+// scan is one Feed's progress: the bytes, the pieces so far, and where the
+// bytes that pass through unchanged begin.
+type scan struct {
+	b         []byte
+	out       []Piece
+	passStart int
+}
+
+// pass emits the bytes from passStart up to end as one pass-through piece.
+func (s *scan) pass(end int) {
+	if end > s.passStart {
+		s.out = append(s.out, Piece{Kind: Pass, Raw: append([]byte(nil), s.b[s.passStart:end]...)})
+	}
+}
+
+// match emits what passed before i, then the n bytes at i as piece p, and
+// returns the index after them.
+func (s *scan) match(i, n int, p Piece) int {
+	s.pass(i)
+	p.Kind, p.Raw = Match, append([]byte(nil), s.b[i:i+n]...)
+	s.out = append(s.out, p)
+	s.passStart = i + n
+	return i + n
+}
+
+// feedPaste collects a bracketed paste from i. stop is true when the input
+// ran out before the paste's end marker.
+func (f *Filter) feedPaste(s *scan, i int) (next int, stop bool) {
+	b := s.b
+	j := bytes.Index(b[i:], pasteEnd)
+	if j < 0 {
+		// Keep all but a possible partial end marker.
+		keep := min(len(b)-i, len(pasteEnd)-1)
+		f.paste.Write(b[i : len(b)-keep])
+		i = len(b) - keep
+		if f.paste.Len() > MaxPaste {
+			s.out = append(s.out, Piece{Kind: Pass, Raw: append(append([]byte(nil), pasteStart...), f.paste.Bytes()...)})
 			f.paste.Reset()
 			f.inPaste = false
-			i += j + len(pasteEnd)
-			passStart = i
-			continue
+			s.passStart = i
+			// The rest of this paste, and its end marker, pass through as normal input.
 		}
-		c := b[i]
-		if c != 0x1b {
-			if idx := f.matchLegacyByte(c); idx >= 0 {
-				emitPass(i)
-				out = append(out, Piece{Kind: Match, Raw: []byte{c}, Index: idx})
-				i++
-				passStart = i
-				continue
-			}
-			i++
-			continue
-		}
-		// ESC: a sequence, an Alt+key, or the Esc key itself.
-		if i+1 >= len(b) {
-			// A lone ESC at the end of a read is almost always the Esc key.
-			// Keep it only briefly (see Pending/Flush) in case the rest follows.
-			break
-		}
-		if bytes.HasPrefix(b[i:], pasteStart) {
-			emitPass(i)
-			f.inPaste = true
-			i += len(pasteStart)
-			passStart = i
-			continue
-		}
-		if b[i+1] == '[' {
-			n, complete, valid := csiLen(b[i:])
-			if !complete {
-				break // incomplete
-			}
-			if !valid {
-				i += n // not a real CSI: pass it through untouched
-				continue
-			}
-			seq := b[i : i+n]
-			if idx, rel, rep, ok := f.matchCSI(seq); ok {
-				emitPass(i)
-				out = append(out, Piece{Kind: Match, Raw: append([]byte(nil), seq...), Index: idx, Release: rel, Repeat: rep})
-				i += n
-				passStart = i
-				continue
-			}
-			i += n
-			continue
-		}
-		// Legacy Alt+key: ESC followed by the key.
-		if idx := f.matchLegacyAlt(b[i : i+2]); idx >= 0 {
-			emitPass(i)
-			out = append(out, Piece{Kind: Match, Raw: append([]byte(nil), b[i:i+2]...), Index: idx})
-			i += 2
-			passStart = i
-			continue
-		}
-		i++
+		return i, true
 	}
-	if f.inPaste {
-		emitPass(passStart)
-		// Bytes after passStart up to i were consumed into the paste buffer.
-		rest := append([]byte(nil), b[i:]...)
-		f.buf = append(f.buf[:0], rest...)
-		return dropEmpty(out)
+	f.paste.Write(b[i : i+j])
+	text := append([]byte(nil), f.paste.Bytes()...)
+	raw := append(append(append([]byte(nil), pasteStart...), text...), pasteEnd...)
+	s.out = append(s.out, Piece{Kind: Paste, Raw: raw, Text: text})
+	f.paste.Reset()
+	f.inPaste = false
+	i += j + len(pasteEnd)
+	s.passStart = i
+	return i, false
+}
+
+// feedByte handles a byte that does not start an escape sequence.
+func (f *Filter) feedByte(s *scan, i int) int {
+	if idx := f.matchLegacyByte(s.b[i]); idx >= 0 {
+		return s.match(i, 1, Piece{Index: idx})
 	}
-	emitPass(i)
-	rest := append([]byte(nil), b[i:]...)
-	f.buf = append(f.buf[:0], rest...)
-	return dropEmpty(out)
+	return i + 1
+}
+
+// feedEsc handles ESC at i: a sequence, an Alt+key, the start of a paste,
+// or the Esc key itself. stop is true when the sequence is not complete yet.
+func (f *Filter) feedEsc(s *scan, i int) (next int, stop bool) {
+	b := s.b
+	if i+1 >= len(b) {
+		// A lone ESC at the end of a read is almost always the Esc key.
+		// Keep it only briefly (see Pending/Flush) in case the rest follows.
+		return i, true
+	}
+	if bytes.HasPrefix(b[i:], pasteStart) {
+		s.pass(i)
+		f.inPaste = true
+		s.passStart = i + len(pasteStart)
+		return s.passStart, false
+	}
+	if b[i+1] == '[' {
+		n, complete, valid := csiLen(b[i:])
+		switch {
+		case !complete:
+			return i, true
+		case !valid:
+			return i + n, false // not a real CSI: pass it through untouched
+		}
+		if idx, rel, rep, ok := f.matchCSI(b[i : i+n]); ok {
+			return s.match(i, n, Piece{Index: idx, Release: rel, Repeat: rep}), false
+		}
+		return i + n, false
+	}
+	// Legacy Alt+key: ESC followed by the key.
+	if idx := f.matchLegacyAlt(b[i : i+2]); idx >= 0 {
+		return s.match(i, 2, Piece{Index: idx}), false
+	}
+	return i + 1, false
 }
 
 func dropEmpty(ps []Piece) []Piece {
@@ -330,53 +344,59 @@ func (f *Filter) matchCSI(seq []byte) (idx int, release, repeat, ok bool) {
 		return
 	}
 	body := seq[2 : len(seq)-1]
-	final := seq[len(seq)-1]
 	if len(body) > 0 && (body[0] < '0' || body[0] > '9') {
 		return 0, false, false, false // has a prefix such as ? > < =: not a key
 	}
-	fields := strings.Split(string(body), ";")
-	var code, mods, event int
-	switch final {
-	case 'u':
-		// CSI code[:shifted[:base]] ; mods[:event] [; text] u
-		c := strings.Split(fields[0], ":")
-		var err error
-		if code, err = strconv.Atoi(c[0]); err != nil {
-			return
-		}
-		mods, event = 1, 1
-		if len(fields) > 1 && fields[1] != "" {
-			m := strings.Split(fields[1], ":")
-			if mods, err = strconv.Atoi(m[0]); err != nil {
-				return
-			}
-			if len(m) > 1 {
-				if event, err = strconv.Atoi(m[1]); err != nil {
-					return
-				}
-			}
-		}
-	case '~':
-		// CSI 27 ; mods ; code ~
-		if len(fields) != 3 || fields[0] != "27" {
-			return
-		}
-		var err error
-		if mods, err = strconv.Atoi(fields[1]); err != nil {
-			return
-		}
-		if code, err = strconv.Atoi(fields[2]); err != nil {
-			return
-		}
-		event = 1
-	default:
-		return
+	code, mods, event, ok := parseKeyCSI(seq[len(seq)-1], strings.Split(string(body), ";"))
+	if !ok {
+		return 0, false, false, false
 	}
 	m := (mods - 1) &^ lockBits
 	for i, k := range f.keys {
-		if rune(code) == k.Code && m == k.Mods {
+		if int(k.Code) == code && m == k.Mods {
 			return i, event == 3, event == 2, true
 		}
 	}
-	return
+	return 0, false, false, false
+}
+
+// parseKeyCSI reads a key from the fields of a CSI sequence that ends in
+// final: the kitty form, CSI code[:shifted[:base]] ; mods[:event] [; text] u,
+// or xterm's modifyOtherKeys form, CSI 27 ; mods ; code ~.
+func parseKeyCSI(final byte, fields []string) (code, mods, event int, ok bool) {
+	var err error
+	switch final {
+	case 'u':
+		c, _, _ := strings.Cut(fields[0], ":")
+		if code, err = strconv.Atoi(c); err != nil {
+			return 0, 0, 0, false
+		}
+		mods, event = 1, 1
+		if len(fields) > 1 && fields[1] != "" {
+			ms, ev, hasEvent := strings.Cut(fields[1], ":")
+			if mods, err = strconv.Atoi(ms); err != nil {
+				return 0, 0, 0, false
+			}
+			if hasEvent {
+				ev, _, _ = strings.Cut(ev, ":")
+				if event, err = strconv.Atoi(ev); err != nil {
+					return 0, 0, 0, false
+				}
+			}
+		}
+		return code, mods, event, true
+	case '~':
+		if len(fields) != 3 || fields[0] != "27" {
+			return 0, 0, 0, false
+		}
+		if mods, err = strconv.Atoi(fields[1]); err != nil {
+			return 0, 0, 0, false
+		}
+		if code, err = strconv.Atoi(fields[2]); err != nil {
+			return 0, 0, 0, false
+		}
+		return code, mods, 1, true
+	default:
+		return 0, 0, 0, false
+	}
 }

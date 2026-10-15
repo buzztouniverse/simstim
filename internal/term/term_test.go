@@ -40,9 +40,9 @@ func TestParserSplitsSequences(t *testing.T) {
 func TestParserPreservesBytes(t *testing.T) {
 	rng := rand.New(rand.NewSource(7))
 	pieces := []string{"hello ", "\x1b[?1049h", "\x1b[>1u", "\x1b]11;?\x1b\\", "\x1bP+q544e\x1b\\", "\x1b=", "日本語", "\x1b[38;2;10;20;30m", "\r\n", "\x07"}
-	for round := 0; round < 200; round++ {
+	for round := range 200 {
 		var stream []byte
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			stream = append(stream, pieces[rng.Intn(len(pieces))]...)
 		}
 		var p Parser

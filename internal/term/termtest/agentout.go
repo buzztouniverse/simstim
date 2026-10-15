@@ -23,7 +23,7 @@ func AgentOutput(n int) []byte {
 			if row%5 == 0 {
 				b.WriteString("\x1b[1m")
 			}
-			for w := 0; w < 9; w++ {
+			for w := range 9 {
 				b.WriteString(words[(frame+row+w)%len(words)])
 				b.WriteByte(' ')
 			}

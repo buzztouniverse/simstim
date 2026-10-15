@@ -37,7 +37,8 @@ func (c *Catchup) Feed(off int64, data []byte) (show, fresh []byte) {
 		if off+n >= c.Live {
 			hist = append(hist, c.san.Flush()...)
 		}
-		show = append(hist, data[n:]...)
+		hist = append(hist, data[n:]...)
+		show = hist
 	}
 	c.Offset = end
 	return show, data
