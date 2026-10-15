@@ -80,7 +80,7 @@ sid = start("e2e-counter", "/bin/bash", "-c", "sleep 3; for i in $(seq 1 400); d
 t = Term([cli, "attach", HOST + "/" + sid], env=env)
 ok(t.wait_for(rb"N20\r", 30), "counter running")
 # Kill the client's bridge ssh (as a network drop would), and the shared master.
-subprocess.run(["pkill", "-f", NAME + "-host bridge"], check=False)
+subprocess.run(["pkill", "-f", NAME + "-host\"? bridge"], check=False)  # the path may be quoted
 subprocess.run(["pkill", "-f", "ControlPath=.*" + NAME + "/cm"], check=False)
 t0 = time.time()
 ok(t.wait_for(rb"N400\r", 60), "client reconnected by itself and kept receiving (%.1fs)" % (time.time() - t0))
@@ -156,7 +156,7 @@ created.append(sid6)
 t = Term([cli, "attach", HOST + "/" + sid6], env=env)
 t.wait_for(rb"T\d+", 20); time.sleep(1)
 os.kill(t.pid, signal.SIGSTOP)
-subprocess.run(["pkill", "-f", NAME + "-host bridge"], check=False)
+subprocess.run(["pkill", "-f", NAME + "-host\"? bridge"], check=False)  # the path may be quoted
 subprocess.run(["pkill", "-f", "ControlPath=.*" + NAME + "/cm"], check=False)
 time.sleep(15)
 t.buf = b""
