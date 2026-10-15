@@ -508,9 +508,7 @@ func (h *Holder) resize(c *hclient, rz proto.Resize, force bool) {
 func (h *Holder) drop(c *hclient) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if _, ok := h.clients[c]; ok {
-		delete(h.clients, c)
-	}
+	delete(h.clients, c)
 	c.attached = false
 	if h.leader == c {
 		h.leader = nil

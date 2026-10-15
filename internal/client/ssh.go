@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -160,13 +161,9 @@ func sshError(h Host, err error, stderr string) error {
 	if msg == "" {
 		return err
 	}
-	return fmt.Errorf("%v: %s", err, msg)
+	return fmt.Errorf("%w: %s", err, msg)
 }
 
 func asExit(err error, target **exec.ExitError) bool {
-	e, ok := err.(*exec.ExitError)
-	if ok {
-		*target = e
-	}
-	return ok
+	return errors.As(err, target)
 }

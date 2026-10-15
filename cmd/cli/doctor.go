@@ -45,7 +45,7 @@ func keyTester() error {
 	if err != nil {
 		return err
 	}
-	defer term.Restore(fd, old)
+	defer func() { _ = term.Restore(fd, old) }()
 	// Kitty keyboard flags 1|2|4|8|16: report everything, with event types.
 	fmt.Print("\x1b[>31u\x1b[?2004h")
 	defer fmt.Print("\x1b[<u\x1b[?2004l")

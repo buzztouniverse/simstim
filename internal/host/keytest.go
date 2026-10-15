@@ -19,7 +19,7 @@ func KeyTest() error {
 	if err != nil {
 		return err
 	}
-	defer term.Restore(fd, old)
+	defer func() { _ = term.Restore(fd, old) }()
 	fmt.Print("\x1b[>31u")
 	defer fmt.Print("\x1b[<u")
 	fmt.Print("Key test on the host. Press keys; press q twice to quit.\r\n\r\n")

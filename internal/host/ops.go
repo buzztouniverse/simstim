@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -202,8 +203,7 @@ func memoryCurrent(unit string) int64 {
 	if err != nil {
 		return 0
 	}
-	var n int64
-	fmt.Sscan(strings.TrimSpace(string(b)), &n)
+	n, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
 	return n
 }
 
@@ -374,9 +374,8 @@ func Doctor() HostInfo {
 			}
 		}
 	}
-	var st syscall.Statfs_t
-	if h, err := os.UserHomeDir(); err == nil && syscall.Statfs(h, &st) == nil {
-		info.DiskFree = int64(st.Bavail) * int64(st.Bsize)
+	if h, err := os.UserHomeDir(); err == nil {
+		info.DiskFree = diskFree(h)
 	}
 	login, err := LoginEnv(15 * time.Second)
 	if err != nil {
@@ -469,7 +468,7 @@ func Setup(a SetupArgs) SetupResult {
 			os.Remove(f.Name())
 			err = terr
 			if err != nil {
-				err = fmt.Errorf("%v: %s", err, strings.TrimSpace(string(out)))
+				err = fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
 			}
 		}
 		ok := err == nil && HasTerminfo(name)

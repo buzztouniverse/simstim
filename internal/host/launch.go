@@ -81,7 +81,7 @@ func launchHolder(m *Manifest) error {
 		args = append(args, exe, "holder", m.ID)
 		out, err := exec.Command("systemd-run", args...).CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("systemd-run: %v: %s", err, strings.TrimSpace(string(out)))
+			return fmt.Errorf("systemd-run: %w: %s", err, strings.TrimSpace(string(out)))
 		}
 		m.Run.Unit = unit
 	} else {

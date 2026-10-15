@@ -4,9 +4,8 @@ package host
 // It finds the bell, desktop notifications (OSC 9 and OSC 777) and progress
 // reports (OSC 9;4). It keeps its state across chunks.
 type scanner struct {
-	state   int
-	osc     []byte
-	escSeen bool
+	state int
+	osc   []byte
 }
 
 const (

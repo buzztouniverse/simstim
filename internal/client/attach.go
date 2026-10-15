@@ -76,8 +76,7 @@ type attacher struct {
 	res     AttachResult
 	key     string
 	// swallow holds watched keys whose press we consumed, so their release is swallowed too.
-	swallow       map[int]bool
-	pendingDetach []byte
+	swallow map[int]bool
 }
 
 // Attach connects to a session and runs it in this terminal until the user
