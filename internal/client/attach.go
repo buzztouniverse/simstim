@@ -34,7 +34,6 @@ type AttachState struct {
 type AttachOptions struct {
 	Host     Host
 	Session  string
-	Title    string
 	Settings Settings
 	State    *AttachState
 	// Interactive allows SSH prompts on the first connection.
@@ -143,11 +142,9 @@ func Attach(ctx context.Context, o AttachOptions) (AttachResult, error) {
 		}
 	}()
 
-	// Remember the title, and show which session this terminal now shows.
+	// Remember the title, to put it back on detach. While attached the
+	// title is the agent's: the client draws nothing of its own.
 	a.write([]byte("\x1b[22;0t"))
-	if o.Title != "" {
-		a.write([]byte("\x1b]2;" + o.Title + "\x1b\\"))
-	}
 	a.begin(att, o.State, rows)
 
 	runErr := a.loop(ctx)
@@ -460,7 +457,7 @@ func (a *attacher) sendUpload(name string, data []byte) {
 	defer cancel()
 	path, err := a.conn.Upload(ctx, a.o.Session, name, data)
 	if err != nil {
-		a.flash("upload failed: " + err.Error())
+		a.notify("upload failed: " + err.Error())
 		return
 	}
 	a.pasteText([]byte(path + " "))
@@ -493,7 +490,7 @@ func (a *attacher) paste(p keys.Piece) {
 		path, err := a.conn.Upload(ctx, a.o.Session, filepath.Base(f), data)
 		cancel()
 		if err != nil {
-			a.flash("upload failed: " + err.Error())
+			a.notify("upload failed: " + err.Error())
 			_ = a.conn.Send(proto.TInput, p.Raw)
 			return
 		}
@@ -566,7 +563,15 @@ func shellQuote(p string) string {
 	return p
 }
 
-// flash shows a short message on the bottom row without disturbing the session.
+// notify raises a system notification (OSC 777). It draws nothing on the
+// screen, so the session keeps every row and column.
+func (a *attacher) notify(msg string) {
+	title := brand.DisplayName + " · " + a.o.Host.Name
+	a.write([]byte("\x1b]777;notify;" + oscSafe(title) + ";" + oscSafe(msg) + "\x1b\\"))
+}
+
+// flash shows the reconnect notice on the bottom row: the one thing the
+// client draws while attached, and only while the link is down.
 func (a *attacher) flash(msg string) {
 	_, rows, _, _ := a.size()
 	a.write([]byte(fmt.Sprintf("\x1b7\x1b[%d;1H\x1b[2K\x1b[2m %s · %s\x1b[0m\x1b8", rows, brand.DisplayName, msg)))
@@ -581,7 +586,14 @@ func (a *attacher) clearFlash() {
 // if the user pressed the detach key meanwhile.
 func (a *attacher) reconnect(ctx context.Context) (detached bool, err error) {
 	a.res.Reconnects++
-	a.write([]byte("\x1b]9;4;3\x1b\\\x1b]2;⧗ reconnecting · " + a.key + "\x1b\\"))
+	// The title says so too, pushed so that it can be put back as it was.
+	a.write([]byte("\x1b]9;4;3\x1b\\\x1b[22;0t\x1b]2;⧗ reconnecting · " + a.key + "\x1b\\"))
+	defer func() {
+		a.write([]byte("\x1b]9;4;0\x1b\\\x1b[23;0t"))
+		if len(a.tracker.M.Title) > 0 {
+			a.write(a.tracker.M.Title) // for terminals without a title stack
+		}
+	}()
 	start := time.Now()
 	banner := time.After(bannerAfter)
 	delay := time.Duration(0)
@@ -628,11 +640,6 @@ func (a *attacher) reconnect(ctx context.Context) (detached bool, err error) {
 					a.begin(att, &AttachState{}, rows)
 				}
 				a.res.Missed += att.Live - before
-				title := []byte("\x1b]2;" + a.o.Title + "\x1b\\")
-				if len(a.tracker.M.Title) > 0 {
-					title = a.tracker.M.Title
-				}
-				a.write(append([]byte("\x1b]9;4;0\x1b\\"), title...))
 				return false, nil
 			}
 			var ue *UserError

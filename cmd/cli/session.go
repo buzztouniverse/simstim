@@ -81,7 +81,6 @@ func attach(ctx context.Context, h client.Host, id, name string) error {
 	}
 	res, err := client.Attach(ctx, client.AttachOptions{
 		Host: h, Session: id, Settings: client.LoadSettings(), Interactive: true,
-		Title: fmt.Sprintf("%s · %s/%s", brand.DisplayName, h.Name, name),
 	})
 	if err != nil {
 		return err
@@ -353,7 +352,7 @@ func demoCmd() *cobra.Command {
 	var empty bool
 	cmd := &cobra.Command{
 		Use:   "demo",
-		Short: "Try the home screen with sample hosts and sessions (nothing connects anywhere)",
+		Short: "Try the launcher with sample hosts and sessions (nothing connects anywhere)",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return tui.RunDemo(cmd.Context(), empty)

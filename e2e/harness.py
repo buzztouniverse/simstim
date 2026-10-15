@@ -27,6 +27,9 @@ class Term:
         return False
     def send(self, b):
         os.write(self.fd, b)
+    def resize(self, cols, rows):
+        # The kernel sends SIGWINCH to the client, as a terminal would.
+        fcntl.ioctl(self.fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
     def exit_code(self, timeout=10):
         end = time.time() + timeout
         while time.time() < end:

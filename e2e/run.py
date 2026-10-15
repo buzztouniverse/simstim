@@ -222,6 +222,43 @@ t.send(b"\x04"); time.sleep(0.3)
 t.send(b"\x1c"); t.exit_code(10)
 os.remove(img)
 
+# K. The session owns the whole terminal: its PTY is the terminal's size and
+#    follows a resize, and the client draws nothing of its own while attached.
+sid10 = start("e2e-size", "/bin/bash", "--norc", "-i")
+created.append(sid10)
+t = Term([cli, "attach", HOST + "/" + sid10], cols=101, rows=37, env=env)
+time.sleep(2); t.read(1)
+t.send(b"stty size\r")
+ok(t.wait_for(rb"[\r\n]37 101\r", 15), "attached: the agent's PTY is the terminal's size (37 rows, 101 columns)")
+t.resize(120, 40); time.sleep(1)
+t.send(b"stty size\r")
+ok(t.wait_for(rb"[\r\n]40 120\r", 15), "attached: a resize reaches the agent's PTY (40 rows, 120 columns)")
+t.send(b"\x1c"); t.exit_code(10)
+
+# The session fills its screen, every row and column, from its own PTY size,
+# then sleeps. Everything the client writes must be that and nothing else.
+ROWS, COLS, ABC = 30, 100, b"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+fill = ("sleep 3; set -- $(stty size); L=ABCDEFGHIJKLMNOPQRSTUVWXYZ; "
+        "for r in $(seq 1 $1); do printf '\\033[%d;1H' $r; printf \"%${2}s\" '' | tr ' ' \"${L:$(( (r-1) % 26 )):1}\"; done; "
+        "printf '\\033[1;1H'; sleep 600")
+want = b"".join(b"\x1b[%d;1H" % r + bytes([ABC[(r - 1) % 26]]) * COLS for r in range(1, ROWS + 1)) + b"\x1b[1;1H"
+ESCAPES = re.compile(rb"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1bP[^\x1b]*\x1b\\|\x1b[()][0-9A-Za-z]|\x1b[@-Z\\-_78=>]")
+NOTIFY = re.compile(rb"\x1b\]777;[^\x07\x1b]*(?:\x07|\x1b\\)")  # system notifications draw nothing
+sid11 = start("e2e-fill", "/bin/bash", "-c", fill)
+created.append(sid11)
+t = Term([cli, "attach", HOST + "/" + sid11], cols=COLS, rows=ROWS, env=env)
+ok(t.wait_for(re.escape(want[-(COLS + 16):]), 30), "attached: the session filled its %dx%d screen" % (COLS, ROWS))
+t.read(1)
+mark = len(t.buf)
+t.read(6)  # the session is asleep: anything now would be the client's own
+at = t.buf.find(want[:6 + COLS])
+pre = ESCAPES.sub(b"", t.buf[:max(at, 0)])
+ok(at >= 0 and not pre.strip(), "attached: before the session's bytes the client draws no text of its own (%r)" % pre.strip()[:40])
+ok(NOTIFY.sub(b"", t.buf[at:]) == want, "attached: the screen is the session's bytes alone, every row and column, byte for byte")
+ok(not NOTIFY.sub(b"", t.buf[mark:]), "attached: the client writes nothing while the session is idle (6 s)")
+ok(b"\x1b]2;" not in t.buf and b"\x1b]0;" not in t.buf, "attached: the client sets no window title of its own")
+t.send(b"\x1c"); t.exit_code(10)
+
 # Clean up.
 for s in created:
     subprocess.run([cli, "kill", HOST + "/" + s], capture_output=True)
