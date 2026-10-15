@@ -26,6 +26,7 @@ type boxGeo struct {
 	x, y, w, h   int
 	listY, listN int // the first list row on screen, and how many are drawn
 	top          int // the list index of the first row drawn
+	detailY      int // the detail line under the list, or 0
 }
 
 // boxW is the width of the launcher's box.
@@ -88,8 +89,10 @@ func (m *Model) viewLauncher() string {
 	}
 	listAt := len(all)
 	all = append(all, v.rows...)
+	detailAt := 0
 	if v.detail != "" {
 		all = append(all, "", v.detail)
+		detailAt = len(all) - 1
 	}
 	if m.showHelp {
 		all = append(all, "", strings.Repeat("─", cw))
@@ -102,6 +105,9 @@ func (m *Model) viewLauncher() string {
 	m.geo = boxGeo{x: x, y: top, w: w, h: len(b), listY: top + 1 + listAt, top: v.top}
 	if v.listed {
 		m.geo.listN = len(v.rows)
+	}
+	if detailAt > 0 {
+		m.geo.detailY = top + 1 + detailAt
 	}
 	lines := make([]string, m.height)
 	for i, l := range b {

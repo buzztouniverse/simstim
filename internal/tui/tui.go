@@ -106,8 +106,11 @@ func (m *Model) render() string {
 	} else {
 		uv.NewStyledString(m.viewLauncher()).Draw(c, c.Bounds())
 		g := m.geo
-		for i := range g.listN { // rows fade in, one after another
+		for i := range g.listN { // rows fade in, one after another, then the detail line
 			m.fade(c, g.x+2, g.listY+i, g.w-4, 1, m.rowAlpha(i))
+		}
+		if g.detailY > 0 {
+			m.fade(c, g.x+2, g.detailY, g.w-4, 1, m.rowAlpha(g.listN+1))
 		}
 		if gl, ok := m.glowAt(g.x, g.y, g.w, g.h, m.modal == nil && m.glowing(), time.Time{}); ok {
 			m.applyGlow(c, gl)
