@@ -348,3 +348,17 @@ func flipCmd() *cobra.Command {
 		},
 	}
 }
+
+func demoCmd() *cobra.Command {
+	var empty bool
+	cmd := &cobra.Command{
+		Use:   "demo",
+		Short: "Try the home screen with sample hosts and sessions (nothing connects anywhere)",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return tui.RunDemo(cmd.Context(), empty)
+		},
+	}
+	cmd.Flags().BoolVar(&empty, "empty", false, "start with no hosts, as on the first run")
+	return cmd
+}

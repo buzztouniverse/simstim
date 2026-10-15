@@ -25,11 +25,12 @@ import (
 func Run(ctx context.Context) error { return RunWith(ctx, Options{}) }
 
 // RunWith opens the home screen with options; Motion is set from the settings.
-func RunWith(ctx context.Context, o Options) error {
+func RunWith(ctx context.Context, o Options) error { return runWith(ctx, realBackend{}, o) }
+
+func runWith(ctx context.Context, be Backend, o Options) error {
 	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
 		return &client.UserError{Msg: "the home screen needs a terminal", Hint: brand.Name + " ls, or run it in a terminal"}
 	}
-	be := realBackend{}
 	o.Motion = motionOn(be.Settings().UI.Motion, os.Getenv)
 	m := New(ctx, be, o)
 	defer m.Close()
