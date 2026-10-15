@@ -10,7 +10,7 @@ coverage.*
 
 # Host helpers embedded into the client at build time (see justfile: helpers, vt)
 /internal/client/helpers/*
-!/internal/client/helpers/embed.go
+!/internal/client/helpers/*.go
 !/internal/client/helpers/README.md
 
 # Zig build output and fetched packages for the shadow terminal
