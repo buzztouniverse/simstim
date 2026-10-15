@@ -80,6 +80,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Folders that the host helper makes for worktrees, for the files `.worktreeinclude` copies, and for systemd user units are now the user's only (0700). Unit files stay readable (0644), because systemd warns about a unit file that others cannot read.
 - Errors from the host helper say what it was doing, and for which session or file, before the system's own message: for example `read the manifest of session ab12cd34: …` instead of the bare `open …: no such file or directory`.
 - The module path is now `github.com/iamlakshya/simstim`, in lower case, as the owner's GitHub account now is: `go install github.com/iamlakshya/simstim@latest`. Links, the issue forms, CODEOWNERS and the Homebrew cask follow.
 - Host setup says when it turned on linger with `sudo -n` (which never asks for a password), instead of using sudo without a word.

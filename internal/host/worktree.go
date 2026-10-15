@@ -72,7 +72,7 @@ func makeWorktree(cwd, name, id, base string) (*GitInfo, error) {
 	slug := Slug(name)
 	branch := brand.Name + "/" + slug + "-" + id
 	wt := filepath.Join(WorktreesDir(), filepath.Base(root), slug+"-"+id)
-	if err := os.MkdirAll(filepath.Dir(wt), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(wt), 0o700); err != nil {
 		return nil, fmt.Errorf("make the folder for the worktree: %w", err)
 	}
 	if _, err := git(root, "worktree", "add", "-b", branch, wt, sha); err != nil {
@@ -121,7 +121,7 @@ func copyFile(src, dst string) error {
 		return fmt.Errorf("copy %s: %w", src, err)
 	}
 	defer in.Close()
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dst), 0o700); err != nil {
 		return fmt.Errorf("copy %s: %w", src, err)
 	}
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, st.Mode().Perm())

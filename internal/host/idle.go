@@ -98,10 +98,11 @@ func IdleSetup(after string) (string, error) {
 		return "", errors.New("idle stop needs a systemd user manager, and this host has none")
 	}
 	service, timer := IdleUnits(currentHelper(), d)
-	if err := os.MkdirAll(userUnitDir(), 0o755); err != nil {
+	if err := os.MkdirAll(userUnitDir(), 0o700); err != nil {
 		return "", fmt.Errorf("make the folder for the idle units: %w", err)
 	}
 	for name, text := range map[string]string{idleUnit("service"): service, idleUnit("timer"): timer} {
+		//nolint:gosec // G306: systemd warns about a unit file that others cannot read; its text is public through systemd anyway
 		if err := os.WriteFile(filepath.Join(userUnitDir(), name), []byte(text), 0o644); err != nil {
 			return "", fmt.Errorf("write the idle unit %s: %w", name, err)
 		}

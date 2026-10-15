@@ -129,13 +129,14 @@ func InstallRestoreUnit() Check {
 	}
 	home, _ := os.UserHomeDir()
 	dir := filepath.Join(home, ".config", "systemd", "user")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		c.Detail = err.Error()
 		return c
 	}
 	unit := restoreUnitText()
 	path := filepath.Join(dir, restoreUnit())
 	if old, err := os.ReadFile(path); err != nil || string(old) != unit {
+		//nolint:gosec // G306: systemd warns about a unit file that others cannot read; its text is public through systemd anyway
 		if err := os.WriteFile(path, []byte(unit), 0o644); err != nil {
 			c.Detail = err.Error()
 			return c
