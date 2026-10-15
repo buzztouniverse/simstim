@@ -356,3 +356,100 @@ Built locally on 15 October 2026 and served with gzip, as GitHub Pages serves it
 | Requests to other sites | none | none |
 
 The search's interface (26 KB with gzip) loads when the browser is idle, so search opens at once; its index loads only when a reader searches.
+
+## 17. The third round: why
+
+The owner's review of the rebuilt site, on 15 October 2026, found it still "text heavy" with "no visual story", disliked its teal accent and its UI, and asked for a hero animation, no visible motion controls, and a site that is "simple and clean and clearly conveying". They named three sites as visual references: [Firecrawl](https://www.firecrawl.dev/), [Greptile](https://www.greptile.com/) and [turbopuffer](https://turbopuffer.com/). Three research lanes followed, each with its own sources and screenshots, read on 15 and 16 October 2026. This section and the next three keep what they found.
+
+## 18. How to design a clean website
+
+From 88 pages by 30 publishers: design systems (IBM Carbon, Atlassian, GitHub Primer, Shopify Polaris, Material, Apple, Vercel Geist, Radix, GOV.UK), practitioners (Refactoring UI, Butterick, Utopia, Every Layout, Josh Comeau, Rauno Freiberg) and the Nielsen Norman Group's studies.
+
+- **One spacing scale, few values.** Carbon uses 2, 4, 8, 12, 16, 24, 32, 40, 48, 64, 80, 96 and 160 px, and asks for nothing off the scale ([Carbon spacing](https://carbondesignsystem.com/elements/spacing/overview/)). Primer and Polaris use the same 4 px base. Small gaps group; large gaps separate ([Atlassian spacing](https://atlassian.design/foundations/spacing): 32–80 px between sections).
+- **A short measure and calm text.** Body lines of 45–75 characters ([Practical Typography](https://practicaltypography.com/summary-of-key-rules.html)); body text 16–20 px with a line height near 1.5 ([Primer typography](https://primer.style/foundations/typography)).
+- **Few sizes, two families, two or three weights.** No more than 3 sizes on a screen and 2 big elements ([NN/g, visual hierarchy](https://www.nngroup.com/articles/visual-hierarchy-ux-definition/)). Material's baseline styles use 2 weights; Apple asks for few typefaces ([Apple typography](https://developer.apple.com/design/human-interface-guidelines/typography)).
+- **One focal point a screen.** 57 % of viewing time is above the fold and 74 % in the first two screens, from 130,000 fixations ([NN/g, scrolling and attention](https://www.nngroup.com/articles/scrolling-and-attention/)). The first two screens carry the story.
+- **One grey ramp, one accent, each step with a job.** Radix gives 12 steps: backgrounds, fills, borders, solids, text ([Radix scale](https://www.radix-ui.com/colors/docs/palette-composition/understanding-the-scale)); Geist gives 10 ([Geist colours](https://vercel.com/geist/colors)). Of 112 minimalist sites, 95 % had a limited palette, 49 % monochrome and 46 % with one or two accents ([NN/g, minimalism](https://www.nngroup.com/articles/characteristics-minimalism/)).
+- **Contrast floors, not grey to look calm.** 4.5:1 for text, 3:1 for large text and control edges ([WCAG 2.2](https://www.w3.org/TR/WCAG22/)); low-contrast grey hurts reading and trust ([NN/g, low contrast](https://www.nngroup.com/articles/low-contrast/)).
+- **Light by default.** Dark text on light reads better for people with normal vision; follow the system and design dark on purpose ([NN/g, dark mode](https://www.nngroup.com/articles/dark-mode/)).
+- **Half the words.** Users read at most 28 % of a page's words, and about 18 % of each extra 100 ([NN/g, how little users read](https://www.nngroup.com/articles/how-little-do-users-read/)); a concise rewrite raised usability by 58 % ([NN/g, how users read](https://www.nngroup.com/articles/how-users-read-on-the-web/)).
+- **Show the product; let words caption it.** Developer-tool heroes show product UI, code or a live tool ([Evil Martians, 100 landing pages](https://evilmartians.com/chronicles/we-studied-100-devtool-landing-pages-here-is-what-actually-works-in-2025)); a decorative hero that pushes content down hurts ([NN/g, image-focused design](https://www.nngroup.com/articles/image-focused-design/)).
+- **One primary action a view** ([Carbon buttons](https://carbondesignsystem.com/components/button/usage/)), and a short navigation of 5 destinations or fewer.
+- **Space first, borders second, shadows last; two or three radii.** Shadows for overlays only ([Atlassian elevation](https://atlassian.design/foundations/elevation)); no cards for lists of like items ([NN/g, cards](https://www.nngroup.com/articles/cards-component/)); about 6 px for controls and 12 px for containers ([Geist materials](https://vercel.com/geist/materials)).
+- **Plain code blocks:** one command a line, scrolled sideways, a copy button, no shadow ([Carbon code snippet](https://carbondesignsystem.com/components/code-snippet/usage/)).
+- **What reads as clutter:** walls of text, everything emphasised, many fonts and colours, decoration with no job, cards for every list, auto-advancing carousels, and off-scale values ([NN/g, aesthetic and minimalist design](https://www.nngroup.com/articles/aesthetic-minimalist-design/)).
+
+**The site on 15 October, against these rules:** about 677 words in the landing page's main part, 9 section headings, 6 font weights, 11 corner radii, 17 colours in the landing page's styles and 10 widths. The targets for the redesign: 300 words or fewer in 5–6 sections, one accent, two families, two weights, four type sizes, one 4 px spacing scale, radii of 6 and 12 px, and one figure per section.
+
+## 19. Landing pages that tell a story
+
+Twenty-nine product sites studied live on 16 October 2026 in headless Chrome, at 1440 × 900 and 390 × 844: hero frames over 10 s, the network and canvas use behind each animation, words and placement by text box, and a second load with reduced motion on.
+
+| Site | Headline words | Hero motion | Technique | Shows the product? | Words in main | Accent |
+| --- | --- | --- | --- | --- | --- | --- |
+| [Firecrawl](https://www.firecrawl.dev/) (owner's reference) | 7 | Typed queries in a search box; a page becoming JSON just below | Canvas 2D and WebGL, CSS | Yes | 2,971 | Orange-red #FA5D19 |
+| [Greptile](https://www.greptile.com/) (owner's reference) | 4 | A halftone lizard; a fly circles; the tongue strikes | dotLottie | As a metaphor | 940 | Mint #28E99F |
+| [turbopuffer](https://turbopuffer.com/) (owner's reference) | 3 | The wordmark decodes once; a still box diagram | Script, text | As a diagram | 542 | Peach #FDBA74 |
+| [Linear](https://linear.app/) | 8 | The product window fades in; an agent takes a task, once | HTML, CSS, script | Yes | 1,265 | Indigo #5E6AD2 |
+| [Warp](https://www.warp.dev/) | 6 | A grid of 224 task squares fills; a live counter | HTML grid, script | Yes | 1,381 | Blue #2A1EFF |
+| [Arc](https://arc.net/) | 7 | Ask, think, answer: 6.7 s, once | WebM | Yes | 241 | Blue #3139FB |
+| [Railway](https://railway.com/) | 3 | A five-chapter product demo with a chapter bar | HTML, SVG, script | Yes | 2,337 | Purple #553F83 |
+| [Clerk](https://clerk.com/) | 5 | A cursor fills the real sign-up form, a 10 s loop | HTML, script | Yes | 1,794 | Violet #6C47FF |
+| [Ghostty](https://ghostty.org/) | none | An ASCII ghost in a terminal window | Text frames, script | The medium itself | 54 | Blue #3551F3 |
+| [Raycast](https://www.raycast.com/) | 4 | Red light slats, an endless shader | WebGL2 | No | 1,078 | Red #FF6363 |
+| [Stripe](https://stripe.com/) | 23 | A colour ribbon, a live counter | WebGL | No | 1,825 | Blurple #533AFD |
+| [Tailscale](https://tailscale.com/) | 9 | None | Still SVG | No | 442 | Red #D04841 |
+
+The rest of the 29 (Vercel, Bun, Cursor, Turso, Superhuman, Charm, Tuple, Zed, Resend, Fly.io, Supabase, Neon, OrbStack, Framer, Zellij, Dia, Conductor) fit the same patterns.
+
+What the owner's three references share:
+
+- **A tinted neutral ground and one loud accent,** used on the primary button and one or two key words: #F8F7F7 with orange #FA5D19, #E9E9E9 with mint, navy and #F9FAFC with peach.
+- **Mono as the machine's voice:** labels, navigation and captions in a monospace face, often in square brackets; a plainer sans for headlines.
+- **Construction lines left visible:** 1 px hairlines with plus marks at the crossings, dashed frames, boxes that share their borders, square corners.
+- **Texture made of dots and characters:** ASCII particles, a halftone engraving, dithered shadows. No photos, no glossy 3D, no gradients as decoration.
+- **Few words above the fold:** headlines of 3–7 words, sub-headlines of 14–15, one accent button and one quiet one.
+- **One moving thing in the hero, and it means something.** None uses video.
+- **Diagrams and numbers as proof:** a box-and-arrow architecture, three numbered steps with small diagrams, benchmark tables, real code.
+
+Patterns across all 29:
+
+- **Short pages tell the best stories:** Arc has 241 words in its main part, Dia 301, turbopuffer 542; the median is 902.
+- **About 12 of 29 heroes show the product doing its job** (a request, the work, a result, in one frame, with no captions): Linear about 5 s once, Arc 6.7 s once, Clerk a 10 s loop, Railway over 30 s. Decorative heroes (Raycast, Stripe, Vercel, Resend, Neon) look rich and say nothing about the product.
+- **Left-aligned text on 20 of 29 pages;** paragraph lines with a median of about 53 characters; about 43 % of the first two screens empty.
+- **One repeated unit carries the page:** a heading and one line over a full-width figure (Linear), one frame reused in every section (Arc).
+- **Every site has one interface accent;** strong colour beyond it lives only in art.
+- **Most heroes ignore reduced motion:** 15 of 29 keep moving under it, and four keep animation loops running at the bottom of the page. No site but ours had a visible pause button.
+
+For simstim, the study recommends a wordless hero loop of about 14 s (a laptop and a host joined by an SSH line; the lid shuts; the host's sessions keep working while time passes; the lid opens; the laptop shows the same screen), then five short sections and about 200 words in all, each a short heading and one line over one figure.
+
+## 20. Hero animation that explains
+
+Six ways to build the hero's story, built as test pages on 15–16 October 2026 with the same 20 s scene, and measured with Lighthouse 13.5 (mobile preset) and with traces on an emulated phone (390 × 844, DPR 3, 4× slower CPU), three runs each.
+
+| Technique | Size with gzip | Main thread, on screen | Off screen, with no help | Phone Lighthouse | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Inline SVG with CSS keyframes | about 1.7 KB, scene and script | about 1 ms a second | the compositor keeps ticking until paused | 100 | Sharp, themed by CSS variables; SVG animations run on the GPU in Chrome 89 and later ([Chrome](https://developer.chrome.com/blog/hardware-accelerated-animations)) |
+| HTML and CSS shapes | about 1.8 KB | about 1 ms a second | as SVG | 100 | Three times the GPU work of SVG |
+| Canvas 2D | about 2.6 KB of code | about 34 ms a second | keeps drawing: 65 ms a second | 100 | Lighthouse cannot see the running cost; invisible to screen readers |
+| Video, AV1 or H.264 | 50 KB AV1; 280–490 KB for the H.264 or HEVC that Safari needs on older devices | about 0.5 ms a second | a video started from script keeps playing | 100 with a poster | Soft on high-density screens, cannot follow the theme |
+| Animated WebP or AVIF | 450 KB WebP; 128 KB AVIF | low | stopped by Chrome | **94**: the image becomes the LCP element (3.15 s) | No pause possible |
+| Rive, Lottie, three.js | 40 KB (Lottie light) to 817 KB (Rive with WebGL); 155 KB for three.js | not measured | none by default | not measured | Rive and dotLottie fetch their WASM from a CDN by default ([Rive](https://rive.app/docs/runtimes/web/preloading-wasm), [LottieFiles](https://docs.lottiefiles.com/en/runtimes/distributions/js/v0.x/advanced/performance)); Rive's free exports play a splash screen ([pricing](https://rive.app/pricing)) |
+
+Of 14 product heroes probed, none used Lottie or Rive and none had a visible pause control; Vercel loads no three.js at all under reduced motion, and Stripe draws a cheap still first.
+
+**What WCAG 2.2.2 asks** ([Understanding 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)): motion that starts by itself, lasts more than five seconds and sits beside other content needs "a mechanism for the user to pause", stop or hide it. A hero next to its headline counts. Playing once does not meet it if the motion lasts more than 5 s; neither does moving only while in view, because scrolling something into view still starts it "automatically". The reduced-motion setting is listed as a technique for 2.3.3 ([C39](https://www.w3.org/WAI/WCAG22/Techniques/css/C39)), not for 2.2.2; whether it can count for 2.2.2 is argued both ways ([Hidde de Vries](https://hidde.blog/meeting-2-22-pause-stop-hide-with-prefers-reduced-motion/), against: [WAI list](https://lists.w3.org/Archives/Public/w3c-wai-ig/2022JulSep/0121.html)).
+
+**For simstim:** inline SVG in an Astro component, with CSS keyframes on `transform` and `opacity` only, generated from one table of named phases, with no library. About 14 s: connect, lid shuts, away (the hours pass, the bars keep growing, one agent finishes), lid opens, replay, in sync; then rest on the last frame. Pause when off screen or the tab is hidden, which takes the off-screen cost to zero. Under reduced motion, freeze one meaningful frame. With no visible button, the figure itself can be the mechanism: a tap, a click, or Enter or Space pauses it while it plays and replays it when it has finished.
+
+## 21. Three directions
+
+From sections 18 to 20, three directions for the redesign were drawn as static comps of the hero and one section, at 1440 and 390 px wide, each with a four-beat strip of its hero story. All three use the owner's references' vocabulary; none uses teal or cyan. The comps are kept outside the repository, for the owner's choice.
+
+| Direction | Ground and ink | Accent | Type | The hero's story |
+| --- | --- | --- | --- | --- |
+| A, Blueprint | off-white #FBFBFA with a hairline grid and plus marks; ink #16181D | signal orange #EF5A1F (#C2410C for text) | Schibsted Grotesk headings, Inter text, JetBrains Mono labels | an SVG line diagram: a square packet runs along the ssh line; the lid folds flat; the host's bars keep filling cell by cell; the lid opens and both screens match, with "replayed 18 KiB" |
+| B, Halftone | warm paper #F3F1EC; indigo ink #221E4A | amber #E28C1E | Archivo, expanded, and JetBrains Mono | a halftone drawn in the browser: the sky darkens dot by dot while the host's windows stay lit; at dawn the lid opens |
+| C, Terminal | navy #0B1530 band over a light page | peach #FFB088 | JetBrains Mono throughout | box-drawing text frames: the laptop's box folds to a line, the link breaks, the host's bars keep filling, a status line counts the hours |
+
+All three pass 4.5:1 for text (the orange headline words in A, at 72 px, pass the 3:1 for large text). The recommendation is A: it is the closest to the owner's three references, the lightest to build (an SVG of a few KB), the easiest to read, and the one that carries over to the docs' chrome without fighting the text.
