@@ -158,12 +158,20 @@ func (h *Holder) start() error {
 	if len(m.Agent.Argv) == 0 {
 		return errors.New("no command to run")
 	}
-	bin, err := lookPath(m.Agent.Argv[0], envValue(m.Env, "PATH"))
+	argv := m.Agent.Argv
+	if m.RunHook != "" {
+		// Run the setup (or resume) hook in the session's terminal, so its output
+		// is visible, then the agent. A failing hook is reported, not fatal.
+		script := `"$0"; s=$?; [ $s -eq 0 ] || printf '\n[hook %s exited with %s]\n\n' "$0" $s; exec "$@"`
+		argv = append([]string{"/bin/sh", "-c", script, m.RunHook}, argv...)
+		m.RunHook = ""
+	}
+	bin, err := lookPath(argv[0], envValue(m.Env, "PATH"))
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(bin, m.Agent.Argv[1:]...)
-	cmd.Args[0] = m.Agent.Argv[0]
+	cmd := exec.Command(bin, argv[1:]...)
+	cmd.Args[0] = argv[0]
 	cmd.Env = m.Env
 	cmd.Dir = m.Cwd
 	cols, rows := m.Term.Cols, m.Term.Rows
@@ -555,6 +563,11 @@ func (h *Holder) request(c *hclient, req proto.Request) {
 		h.dirty = true
 		h.mu.Unlock()
 		reply(map[string]string{"name": args.Name}, nil)
+	case "ports":
+		h.mu.Lock()
+		unit, pid := h.m.Run.Unit != "", h.m.Run.AgentPID
+		h.mu.Unlock()
+		reply(listeningPorts(sessionPIDs(unit, pid)), nil)
 	case "hook":
 		var ev HookEvent
 		if json.Unmarshal(req.Args, &ev) == nil {

@@ -84,7 +84,11 @@ func main() {
 			err = fmt.Errorf("usage: %s rm <id>", name)
 			break
 		}
-		err = host.Delete(os.Args[2])
+		var res host.DeleteResult
+		res, err = host.Delete(os.Args[2])
+		if err == nil && res.Worktree != "" {
+			fmt.Println(res.Worktree)
+		}
 	case "doctor":
 		d := host.Doctor()
 		if hasFlag("--json") {

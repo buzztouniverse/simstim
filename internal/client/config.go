@@ -26,6 +26,8 @@ type Host struct {
 	SSHConfig string `toml:"ssh_config,omitempty"`
 	// Labels are free-form, for example provider = "gcp".
 	Labels map[string]string `toml:"labels,omitempty"`
+	// Provider is an optional script that starts and stops the host.
+	Provider *Provider `toml:"provider,omitempty"`
 }
 
 // Settings are the user's preferences.

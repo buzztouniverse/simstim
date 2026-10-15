@@ -50,6 +50,7 @@ func Restore(all bool) []RestoreResult {
 			argv, why := resumeArgv(m)
 			r.Argv = argv
 			m.Agent.Argv = argv
+			m.RunHook = m.ResumeHook
 			m.Run.RespawnCount++
 			m.Run.BootID = boot
 			m.Labels = withLabel(m.Labels, "restored_at", time.Now().UTC().Format(time.RFC3339))

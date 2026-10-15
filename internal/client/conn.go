@@ -52,6 +52,14 @@ var ErrNotInstalled = errors.New("the helper is not installed")
 // version is installed first: an upgrade never needs the user.
 func Dial(ctx context.Context, h Host, interactive bool) (*Conn, error) {
 	c, err := dial(ctx, h, interactive)
+	var ue *UserError
+	if err != nil && h.Provider != nil && h.Provider.WakeOnAttach && errors.As(err, &ue) && strings.HasPrefix(ue.Msg, "cannot reach") {
+		// A stopped cloud host: start it through its provider script, then try again.
+		if werr := wake(ctx, h); werr != nil {
+			return nil, werr
+		}
+		c, err = dial(ctx, h, interactive)
+	}
 	if !errors.Is(err, ErrNotInstalled) {
 		return c, err
 	}

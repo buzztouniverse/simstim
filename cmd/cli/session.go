@@ -27,8 +27,8 @@ func termSize() (int, int) {
 }
 
 func newCmd() *cobra.Command {
-	var agent, dir, name string
-	var detach bool
+	var agent, dir, name, base string
+	var detach, worktree bool
 	cmd := &cobra.Command{
 		Use:   "new <host> [-- command…]",
 		Short: "Start a session on a host, and attach to it",
@@ -47,7 +47,7 @@ func newCmd() *cobra.Command {
 				return err
 			}
 			cols, rows := termSize()
-			a := client.TerminalArgs(client.NewArgs{Agent: agent, Cwd: dir, Name: name}, cols, rows)
+			a := client.TerminalArgs(client.NewArgs{Agent: agent, Cwd: client.RemotePath(dir), Name: name, Worktree: worktree, Base: base}, cols, rows)
 			if dash := cmd.ArgsLenAtDash(); dash >= 0 {
 				a.Argv = args[dash:]
 			}
@@ -68,6 +68,8 @@ func newCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&dir, "dir", "d", "~", "the folder on the host")
 	cmd.Flags().StringVarP(&name, "name", "n", "", "a name for the session (default: the folder name)")
 	cmd.Flags().BoolVar(&detach, "detach", false, "start it without attaching")
+	cmd.Flags().BoolVarP(&worktree, "worktree", "w", false, "give the session its own git worktree and branch")
+	cmd.Flags().StringVar(&base, "base", "", "the commit or branch the worktree starts from (default: HEAD)")
 	return cmd
 }
 
@@ -180,10 +182,14 @@ func killCmd() *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return withSession(cmd.Context(), args[0], func(ctx context.Context, h client.Host, conn *client.Conn, s *client.Session) error {
-				if err := conn.DeleteSession(ctx, s.ID); err != nil {
+				res, err := conn.Delete(ctx, s.ID)
+				if err != nil {
 					return err
 				}
 				fmt.Printf("Deleted %s (%s) on %s.\n", s.Name, s.ID, h.Name)
+				if res.Worktree != "" {
+					fmt.Println(strings.ToUpper(res.Worktree[:1]) + res.Worktree[1:] + ".")
+				}
 				return nil
 			})
 		},

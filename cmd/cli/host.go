@@ -19,13 +19,16 @@ import (
 
 func hostCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "host", Short: "Add, list, test and remove hosts"}
-	cmd.AddCommand(hostAddCmd(), hostLsCmd(), hostRmCmd(), hostTestCmd(), hostDoctorCmd(), hostRestoreCmd())
+	cmd.AddCommand(hostAddCmd(), hostLsCmd(), hostRmCmd(), hostTestCmd(), hostDoctorCmd(), hostRestoreCmd(),
+		hostProviderCmd("start", "Start the host through its provider script"),
+		hostProviderCmd("stop", "Stop the host through its provider script (its sessions stop too)"),
+		hostProviderCmd("status", "Ask the provider script whether the host is running"))
 	return cmd
 }
 
 func hostAddCmd() *cobra.Command {
-	var sshConfig, label string
-	var yes bool
+	var sshConfig, label, providerScript string
+	var yes, wake bool
 	cmd := &cobra.Command{
 		Use:   "add <name> [ssh-target]",
 		Short: "Connect a host: check it, install the helper, prepare it",
@@ -34,6 +37,9 @@ func hostAddCmd() *cobra.Command {
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := client.Host{Name: args[0], SSH: args[0], SSHConfig: sshConfig}
+			if providerScript != "" {
+				h.Provider = &client.Provider{Script: providerScript, WakeOnAttach: wake}
+			}
 			if len(args) == 2 {
 				h.SSH = args[1]
 			}
@@ -53,6 +59,8 @@ func hostAddCmd() *cobra.Command {
 	cmd.Flags().StringVar(&sshConfig, "ssh-config", "", "an extra SSH config file to include")
 	cmd.Flags().StringVar(&label, "label", "", "labels, for example provider=gcp,region=eu")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "install the helper without asking")
+	cmd.Flags().StringVar(&providerScript, "provider-script", "", "a script that starts and stops the host (see examples/providers)")
+	cmd.Flags().BoolVar(&wake, "wake", false, "start the host through its provider script when it does not answer")
 	return cmd
 }
 
@@ -331,4 +339,30 @@ func hostRestoreCmd() *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&all, "all", false, "also restart sessions whose holder crashed without a host restart")
 	return cmd
+}
+
+func hostProviderCmd(action, short string) *cobra.Command {
+	return &cobra.Command{
+		Use:   action + " <name>",
+		Short: short,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			h, err := client.FindHost(args[0])
+			if err != nil {
+				return err
+			}
+			ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Minute)
+			defer cancel()
+			out, err := client.RunProvider(ctx, h, action)
+			if err != nil {
+				return err
+			}
+			if s := strings.TrimSpace(string(out)); s != "" {
+				fmt.Println(s)
+			} else {
+				fmt.Printf("%s: %s done.\n", h.Name, action)
+			}
+			return nil
+		},
+	}
 }

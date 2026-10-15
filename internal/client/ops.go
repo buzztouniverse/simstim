@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/iAmLakshya/simstim/internal/api"
@@ -44,9 +45,31 @@ func (c *Conn) NewSession(ctx context.Context, a NewArgs) (*Session, error) {
 	return &s, nil
 }
 
-// DeleteSession stops and removes a session.
+// DeleteResult says what deleting a session did.
+type DeleteResult = api.DeleteResult
+
+// DeleteSession stops and removes a session. The result says what happened to
+// its worktree, if it had one.
 func (c *Conn) DeleteSession(ctx context.Context, id string) error {
-	return c.Call(ctx, "delete", map[string]string{"id": id}, nil)
+	_, err := c.Delete(ctx, id)
+	return err
+}
+
+// Delete stops and removes a session, and reports what happened to its worktree.
+func (c *Conn) Delete(ctx context.Context, id string) (DeleteResult, error) {
+	var r DeleteResult
+	err := c.Call(ctx, "delete", map[string]string{"id": id}, &r)
+	return r, err
+}
+
+// Port is a TCP port a session listens on.
+type Port = api.Port
+
+// Ports lists the TCP ports a session's processes listen on.
+func (c *Conn) Ports(ctx context.Context, id string) ([]Port, error) {
+	var out []Port
+	err := c.Call(ctx, "ports", map[string]string{"id": id}, &out)
+	return out, err
 }
 
 // RenameSession renames a session.
@@ -111,4 +134,21 @@ func (c *Conn) Restore(ctx context.Context, all bool) ([]RestoreResult, error) {
 	var out []RestoreResult
 	err := c.Call(ctx, "restore", map[string]bool{"all": all}, &out)
 	return out, err
+}
+
+// RemotePath turns a path under this machine's home folder into the same path
+// under the host's home folder. Shells expand ~ before the client sees it, so
+// "--dir ~/src/app" arrives as /Users/me/src/app and must become ~/src/app.
+func RemotePath(p string) string {
+	h, err := os.UserHomeDir()
+	if err != nil || h == "" || h == "/" {
+		return p
+	}
+	if p == h {
+		return "~"
+	}
+	if rest, ok := strings.CutPrefix(p, h+"/"); ok {
+		return "~/" + rest
+	}
+	return p
 }

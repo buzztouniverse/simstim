@@ -59,6 +59,7 @@ const (
 	deadAfter   = 15 * time.Second
 	bannerAfter = 3 * time.Second
 	doubleTap   = 400 * time.Millisecond
+	watchEvery  = 5 * time.Second
 	escFlush    = 15 * time.Millisecond
 )
 
@@ -77,6 +78,8 @@ type attacher struct {
 	key     string
 	// swallow holds watched keys whose press we consumed, so their release is swallowed too.
 	swallow map[int]bool
+	// seen is the last known state of each session on this host, for notifications.
+	seen map[string]string
 }
 
 // Attach connects to a session and runs it in this terminal until the user
@@ -264,9 +267,26 @@ func (a *attacher) loop(ctx context.Context) error {
 	defer signal.Stop(winch)
 	heart := time.NewTicker(pingEvery)
 	defer heart.Stop()
+	watch := time.NewTicker(watchEvery)
+	defer watch.Stop()
+	others := make(chan []Session, 1)
 	var detachTimer, flushTimer <-chan time.Time
 	for {
 		select {
+		case <-watch.C:
+			conn := a.conn
+			go func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
+				if list, err := conn.Sessions(ctx); err == nil {
+					select {
+					case others <- list:
+					default:
+					}
+				}
+			}()
+		case list := <-others:
+			a.notifyOthers(list)
 		case f := <-a.conn.Stream():
 			if done, err := a.frame(f); done || err != nil {
 				return err
@@ -308,6 +328,48 @@ func (a *attacher) loop(ctx context.Context) error {
 			return nil
 		}
 	}
+}
+
+// notifyOthers shows a desktop notification, through the local terminal, when
+// another session on this host starts to need the user or ends.
+func (a *attacher) notifyOthers(list []Session) {
+	if a.seen == nil {
+		a.seen = map[string]string{}
+		for _, s := range list {
+			a.seen[s.ID] = s.State
+		}
+		return
+	}
+	for _, s := range list {
+		before, known := a.seen[s.ID]
+		a.seen[s.ID] = s.State
+		if s.ID == a.o.Session || !known || before == s.State {
+			continue
+		}
+		var body string
+		switch s.State {
+		case "needs_input":
+			body = s.Name + " needs you"
+			if s.Reason != "" {
+				body += ": " + s.Reason
+			}
+		case "exited", "errored":
+			body = s.Name + " ended"
+		default:
+			continue
+		}
+		title := brand.DisplayName + " · " + a.o.Host.Name
+		a.write([]byte("\x1b]777;notify;" + oscSafe(title) + ";" + oscSafe(body) + "\x1b\\"))
+	}
+}
+
+func oscSafe(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f || r == ';' {
+			return ' '
+		}
+		return r
+	}, s)
 }
 
 // frame handles one frame from the host. done is true when the attach is over.

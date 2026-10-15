@@ -167,3 +167,25 @@ func sshError(h Host, err error, stderr string) error {
 func asExit(err error, target **exec.ExitError) bool {
 	return errors.As(err, target)
 }
+
+// Forward builds an ssh command that forwards local ports to the host until it
+// is stopped. Each pair maps a local port to an address and port on the host.
+func (s *SSH) Forward(ctx context.Context, pairs []ForwardPair) (*exec.Cmd, error) {
+	args, err := s.baseArgs()
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, "-N", "-o", "ExitOnForwardFailure=yes")
+	for _, p := range pairs {
+		args = append(args, "-L", fmt.Sprintf("127.0.0.1:%d:%s:%d", p.Local, p.RemoteHost, p.Remote))
+	}
+	args = append(args, "--", s.Host.SSH)
+	return exec.CommandContext(ctx, "ssh", args...), nil
+}
+
+// ForwardPair is one forwarded port.
+type ForwardPair struct {
+	Local      int
+	RemoteHost string
+	Remote     int
+}

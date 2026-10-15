@@ -45,6 +45,13 @@ type Manifest struct {
 
 	// Restart is used by v2 respawn.
 	Restart Restart `json:"restart"`
+	// Git is set when the session has its own worktree.
+	Git *GitInfo `json:"git,omitempty"`
+	// SetupHook and ResumeHook run in the session's terminal before the agent starts.
+	SetupHook  string `json:"setup_hook,omitempty"`
+	ResumeHook string `json:"resume_hook,omitempty"`
+	// RunHook is the hook for the next start: the setup hook, or the resume hook after a restart.
+	RunHook string `json:"run_hook,omitempty"`
 
 	extra map[string]json.RawMessage
 }
@@ -123,7 +130,7 @@ func (m *Manifest) UnmarshalJSON(b []byte) error {
 	known := map[string]bool{"schema": true, "id": true, "name": true, "created_at": true, "updated_at": true,
 		"last_activity_at": true, "last_attached_at": true, "host_version": true, "holder_binary": true,
 		"agent": true, "cwd": true, "env": true, "term": true, "limits": true, "runtime": true, "status": true,
-		"labels": true, "restart": true}
+		"labels": true, "restart": true, "git": true, "setup_hook": true, "resume_hook": true, "run_hook": true}
 	for k := range all {
 		if known[k] {
 			delete(all, k)

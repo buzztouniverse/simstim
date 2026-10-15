@@ -97,6 +97,18 @@ func New(a NewArgs) (*SessionInfo, error) {
 		login = os.Environ()
 	}
 	id := NewID()
+	var gi *GitInfo
+	if a.Worktree {
+		n := a.Name
+		if strings.TrimSpace(n) == "" {
+			n = filepath.Base(cwd)
+		}
+		gi, err = makeWorktree(cwd, n, id, a.Base)
+		if err != nil {
+			return nil, err
+		}
+		cwd = gi.Worktree
+	}
 	term := a.Term
 	if !HasTerminfo(term) {
 		term = "xterm-256color"
@@ -147,6 +159,9 @@ func New(a NewArgs) (*SessionInfo, error) {
 		Status:  Status{State: StateStarting, Since: now},
 		Restart: Restart{Policy: "resume", MaxAttempts: 3},
 	}
+	m.Git = gi
+	m.SetupHook, m.ResumeHook = findHook(cwd, "setup"), findHook(cwd, "resume")
+	m.RunHook = m.SetupHook
 	if known {
 		m.Agent.ResumeArgv = agent.Resume
 		m.Agent.ContinueArgv = agent.Continue
@@ -296,8 +311,32 @@ func HolderRequest(id, op string, args any, timeout time.Duration) (json.RawMess
 	}
 }
 
-// Delete stops a session and removes its files.
-func Delete(id string) error {
+// findHook returns an executable hook: the repository's .<name>/<kind>, else the
+// host's ~/.config/<name>/hooks/<kind>.
+func findHook(cwd, kind string) string {
+	home, _ := os.UserHomeDir()
+	for _, p := range []string{
+		filepath.Join(cwd, "."+brand.Name, kind),
+		filepath.Join(home, ".config", brand.Name, "hooks", kind),
+	} {
+		if st, err := os.Stat(p); err == nil && st.Mode().IsRegular() && st.Mode()&0o111 != 0 {
+			return p
+		}
+	}
+	return ""
+}
+
+// Delete stops a session and removes its files, and its worktree when that loses nothing.
+func Delete(id string) (DeleteResult, error) {
+	var res DeleteResult
+	err := deleteSession(id, &res)
+	return res, err
+}
+
+// DeleteResult says what deleting a session did.
+type DeleteResult = api.DeleteResult
+
+func deleteSession(id string, res *DeleteResult) error {
 	if !validID(id) {
 		return UserError("not_found", "no session "+id, "List sessions to find its ID.")
 	}
@@ -318,7 +357,14 @@ func Delete(id string) error {
 		_ = syscall.Kill(m.Run.HolderPID, syscall.SIGTERM)
 	}
 	os.Remove(paths.Socket(id))
-	return os.RemoveAll(paths.SessionDir(id))
+	if m != nil {
+		res.Worktree = removeWorktree(m.Git)
+	}
+	if err := os.RemoveAll(paths.SessionDir(id)); err != nil {
+		return err
+	}
+	res.Deleted = true
+	return nil
 }
 
 // Rename changes a session's name.

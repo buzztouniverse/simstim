@@ -28,6 +28,9 @@ type NewArgs struct {
 	TermProgram        string   `json:"term_program,omitempty"`
 	TermProgramVersion string   `json:"term_program_version,omitempty"`
 	MemoryMax          int64    `json:"memory_max,omitempty"`
+	// Worktree gives the session its own git worktree and branch, from Base (default HEAD).
+	Worktree bool   `json:"worktree,omitempty"`
+	Base     string `json:"base,omitempty"`
 }
 
 // SessionInfo is one row of the session list.
@@ -97,4 +100,18 @@ type RestoreResult struct {
 	Action string   `json:"action"` // restored, skipped, failed
 	Why    string   `json:"why,omitempty"`
 	Argv   []string `json:"argv,omitempty"`
+}
+
+// Port is a TCP port a session's processes listen on.
+type Port struct {
+	Port    int    `json:"port"`
+	Address string `json:"address"`
+	PID     int    `json:"pid"`
+	Process string `json:"process,omitempty"`
+}
+
+// DeleteResult says what deleting a session did.
+type DeleteResult struct {
+	Deleted  bool   `json:"deleted"`
+	Worktree string `json:"worktree,omitempty"`
 }
