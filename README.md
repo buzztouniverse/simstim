@@ -6,6 +6,8 @@ simstim runs Claude Code, Codex, opencode, Antigravity CLI or any other terminal
 
 ![The launcher: the hosts, one host's sessions, a peek at a session, search across hosts, and the quick-start line](docs/images/launcher.svg)
 
+**Docs:** [simstim.astrel.sh](https://simstim.astrel.sh)
+
 > **Status:** pre-release. Everything in v1 and v2 of [the first plan](docs/contributing/history.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet.
 
 ## Why

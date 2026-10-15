@@ -4,7 +4,10 @@
 # release job attached), and main's docs at /dev/. Before the first release,
 # main's docs are also at the root. Needs gh, logged in (GH_TOKEN in CI).
 #
-#   scripts/pages-assemble.sh https://<owner>.github.io/<repo>
+#   scripts/pages-assemble.sh https://docs.example.org
+#
+# CI passes the address that GitHub Pages reports: the custom domain, when
+# the repo has one.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
