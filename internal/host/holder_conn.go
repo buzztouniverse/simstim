@@ -69,6 +69,8 @@ func (h *Holder) serve(conn net.Conn) {
 			if json.Unmarshal(f.Payload, &req) == nil {
 				h.request(c, req)
 			}
+		default:
+			// Other frames are not for a holder: ignore them.
 		}
 	}
 }

@@ -132,13 +132,12 @@ func (p *pickPump) frame(f proto.Frame) (end pickEnd, done bool, err error) {
 		p.write(f.Payload)
 		p.tracker.Feed(f.Payload)
 	case proto.TOutput:
-		off, data, err := proto.DecodeOutput(f.Payload)
-		if err != nil {
-			return end, false, nil
-		}
-		if show, fresh := p.cu.Feed(off, data); fresh != nil {
-			p.write(show)
-			p.tracker.Feed(fresh)
+		// A frame that does not decode is skipped; the next one goes on.
+		if off, data, derr := proto.DecodeOutput(f.Payload); derr == nil {
+			if show, fresh := p.cu.Feed(off, data); fresh != nil {
+				p.write(show)
+				p.tracker.Feed(fresh)
+			}
 		}
 	case proto.TEnded:
 		var e proto.Ended
@@ -148,6 +147,8 @@ func (p *pickPump) frame(f proto.Frame) (end pickEnd, done bool, err error) {
 		var pe proto.Error
 		_ = json.Unmarshal(f.Payload, &pe)
 		return end, true, &pe
+	default:
+		// Other frames do not change the terminal.
 	}
 	return end, false, nil
 }

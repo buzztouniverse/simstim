@@ -109,6 +109,8 @@ func RunBridge(in io.Reader, out io.Writer) error {
 			b.uploadChunk(f.Payload)
 		case proto.TUploadEnd:
 			b.uploadEnd(f.Payload)
+		default:
+			// A client sends no other frame: drop it.
 		}
 	}
 }
@@ -282,6 +284,8 @@ func (b *bridge) attach(a proto.Attach) error {
 					conn.Close()
 					return
 				}
+			default:
+				// Other frames from the holder are not for the client.
 			}
 		}
 	}()
