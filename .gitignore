@@ -15,8 +15,10 @@ coverage.*
 /vt/.zig-cache/
 /vt/zig-pkg/
 
-# Notes that must never reach git history (clean-room material, private notes)
+# Notes that must never reach git history (clean-room material, private notes,
+# the owner's goals, status and logs)
 /docs/research/private/
+/private/
 
 # Editors and OS
 .DS_Store
