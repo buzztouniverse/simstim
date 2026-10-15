@@ -4,7 +4,7 @@
 
 simstim runs Claude Code, Codex, opencode, Antigravity CLI or any other terminal program in a session on a host you own: a VPS, a cloud VM or a homelab machine. Close the laptop, change networks, switch devices: the session keeps running. Come back, and you flip straight back in. Your terminal draws the agent's real screen, byte for byte, so keys, colours, scrollback, clipboard and notifications work as they do locally.
 
-![The launcher: the sessions on one host, each with its state, agent, folder, age and a trace of its output](docs/images/sessions.svg)
+![The launcher: the hosts, one host's sessions, a peek at a session, search across hosts, and the quick-start line](docs/images/launcher.svg)
 
 > **Status:** pre-release. Everything in v1 and v2 of [the first plan](docs/contributing/history.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet.
 
@@ -103,7 +103,7 @@ The launcher does one thing: it starts or joins a session in a few keys, then ge
 
 **Attached.** The agent owns every row and column of your terminal. There is no frame or status bar. `ctrl+\` brings the launcher back.
 
-![An attached session: a made-up agent's screen from the demo, filling the whole terminal](docs/images/attached.svg)
+![Joining a session: the agent fills the whole terminal, a prompt is typed, and Ctrl+\\ detaches back to the launcher](docs/images/attach.svg)
 
 **Add a host.** The wizard offers the hosts in your `~/.ssh/config`, tests the connection, and installs the helper with your consent.
 

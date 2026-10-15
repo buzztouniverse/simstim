@@ -92,35 +92,47 @@ type run struct {
 
 // svgScreen draws the emulator's screen as a terminal window.
 func svgScreen(emu *vt.SafeEmulator) string {
+	width, height := windowSize(emu.Width(), emu.Height())
+	var b strings.Builder
+	b.WriteString(svgHead(width, height, ""))
+	b.WriteString(svgCells(emu))
+	b.WriteString("</svg>\n")
+	return b.String()
+}
+
+// windowSize is the picture's size for a terminal of w by h cells.
+func windowSize(w, h int) (width, height float64) {
+	return padX*2 + float64(w)*cellW, padTop + padBot + float64(h)*cellH
+}
+
+// svgHead opens the picture: the font, the window and its buttons. style is
+// extra CSS, for an animation.
+func svgHead(width, height float64, style string) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%.0f" height="%.0f" viewBox="0 0 %.0f %.0f">`+"\n",
+		width, height, width, height)
+	fmt.Fprintf(&b, `<style>text{font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:%.0fpx;white-space:pre}%s</style>`+"\n", fontSize, style)
+	fmt.Fprintf(&b, `<rect width="%.0f" height="%.0f" rx="10" fill="%s"/>`+"\n", width, height, shotTheme.bg)
+	for i, c := range []string{"#FF5F57", "#FEBC2E", "#28C840"} {
+		fmt.Fprintf(&b, `<circle cx="%d" cy="20" r="6" fill="%s"/>`+"\n", 22+i*20, c)
+	}
+	return b.String()
+}
+
+// svgCells draws the screen's cells.
+func svgCells(emu *vt.SafeEmulator) string {
+	return strings.Join(svgRows(emu), "")
+}
+
+// svgRows draws each row of the screen on its own: its backgrounds, then its
+// text. An animation keeps each distinct row once.
+func svgRows(emu *vt.SafeEmulator) []string {
 	w, h := emu.Width(), emu.Height()
-	width, height := padX*2+float64(w)*cellW, padTop+padBot+float64(h)*cellH
-	var bgs, texts strings.Builder
+	rows := make([]string, h)
 	for y := 0; y < h; y++ {
+		var b strings.Builder
 		top := padTop + float64(y)*cellH
-		var runs []*run
-		for x := 0; x < w; x++ {
-			c := emu.CellAt(x, y)
-			if c != nil && c.Width == 0 && c.Content == "" {
-				continue // the second half of a wide character
-			}
-			content, cells, lk := " ", 1, resolve(uv.Style{})
-			if c != nil {
-				lk = resolve(c.Style)
-				if c.Content != "" {
-					content, cells = c.Content, max(c.Width, 1)
-				}
-			}
-			// A symbol gets a run of its own, so a fallback font cannot shift
-			// the text after it.
-			symbol := len(content) > 1 && !isBoxDrawing(content)
-			last := len(runs) - 1
-			if last < 0 || runs[last].look != lk || symbol || runs[last].symbol() {
-				runs = append(runs, &run{x: x, look: lk})
-				last++
-			}
-			runs[last].text.WriteString(content)
-			runs[last].cells += cells
-		}
+		runs := rowRuns(emu, y, w)
 		// Backgrounds, with neighbours of one colour merged so no seam shows.
 		for i := 0; i < len(runs); {
 			j, cells := i, 0
@@ -128,7 +140,7 @@ func svgScreen(emu *vt.SafeEmulator) string {
 				cells += runs[j].cells
 			}
 			if runs[i].look.bg != shotTheme.bg {
-				fmt.Fprintf(&bgs, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" fill="%s"/>`+"\n",
+				fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" fill="%s"/>`+"\n",
 					padX+float64(runs[i].x)*cellW, top, float64(cells)*cellW, cellH, runs[i].look.bg)
 			}
 			i = j
@@ -140,22 +152,41 @@ func svgScreen(emu *vt.SafeEmulator) string {
 			if strings.TrimSpace(text) == "" && !r.look.under && !r.look.through {
 				continue
 			}
-			fmt.Fprintf(&texts, `<text x="%.1f" y="%.1f" textLength="%.1f" fill="%s"%s>%s</text>`+"\n",
+			fmt.Fprintf(&b, `<text x="%.1f" y="%.1f" textLength="%.1f" fill="%s"%s>%s</text>`+"\n",
 				x, top+baseline, span, r.look.fg, attrs(r.look), escapeXML(text))
 		}
+		rows[y] = b.String()
 	}
-	var b strings.Builder
-	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%.0f" height="%.0f" viewBox="0 0 %.0f %.0f">`+"\n",
-		width, height, width, height)
-	fmt.Fprintf(&b, `<style>text{font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:%.0fpx;white-space:pre}</style>`+"\n", fontSize)
-	fmt.Fprintf(&b, `<rect width="%.0f" height="%.0f" rx="10" fill="%s"/>`+"\n", width, height, shotTheme.bg)
-	for i, c := range []string{"#FF5F57", "#FEBC2E", "#28C840"} {
-		fmt.Fprintf(&b, `<circle cx="%d" cy="20" r="6" fill="%s"/>`+"\n", 22+i*20, c)
+	return rows
+}
+
+// rowRuns splits a row into runs of one look.
+func rowRuns(emu *vt.SafeEmulator, y, w int) []*run {
+	var runs []*run
+	for x := 0; x < w; x++ {
+		c := emu.CellAt(x, y)
+		if c != nil && c.Width == 0 && c.Content == "" {
+			continue // the second half of a wide character
+		}
+		content, cells, lk := " ", 1, resolve(uv.Style{})
+		if c != nil {
+			lk = resolve(c.Style)
+			if c.Content != "" {
+				content, cells = c.Content, max(c.Width, 1)
+			}
+		}
+		// A symbol gets a run of its own, so a fallback font cannot shift
+		// the text after it.
+		symbol := len(content) > 1 && !isBoxDrawing(content)
+		last := len(runs) - 1
+		if last < 0 || runs[last].look != lk || symbol || runs[last].symbol() {
+			runs = append(runs, &run{x: x, look: lk})
+			last++
+		}
+		runs[last].text.WriteString(content)
+		runs[last].cells += cells
 	}
-	b.WriteString(bgs.String())
-	b.WriteString(texts.String())
-	b.WriteString("</svg>\n")
-	return b.String()
+	return runs
 }
 
 func (r *run) symbol() bool {

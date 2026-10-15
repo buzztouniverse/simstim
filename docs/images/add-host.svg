@@ -4,7 +4,6 @@
 <circle cx="22" cy="20" r="6" fill="#FF5F57"/>
 <circle cx="42" cy="20" r="6" fill="#FEBC2E"/>
 <circle cx="62" cy="20" r="6" fill="#28C840"/>
-<rect x="166.8" y="452.0" width="8.4" height="17.0" fill="#BFBDB6"/>
 <text x="40.8" y="74.0" textLength="8.4" fill="#0C4547">⢄</text>
 <text x="49.2" y="74.0" textLength="8.4" fill="#0C5E67">⡠</text>
 <text x="57.6" y="74.0" textLength="8.4" fill="#057989">⠊</text>
@@ -75,6 +74,7 @@
 <text x="813.6" y="397.0" textLength="92.4" fill="#656565">step 1 of 4</text>
 <text x="914.4" y="397.0" textLength="16.8" fill="#656565">──</text>
 <text x="57.6" y="431.0" textLength="159.6" fill="#BFBDB6" font-weight="bold">Where does it live?</text>
+<rect x="166.8" y="452.0" width="8.4" height="17.0" fill="#BFBDB6"/>
 <text x="57.6" y="465.0" textLength="109.2" fill="#BFBDB6" font-weight="bold">SSH target   </text>
 <text x="166.8" y="465.0" textLength="8.4" fill="#0B0E14">a</text>
 <text x="175.2" y="465.0" textLength="336.0" fill="#656565"> Host from your SSH config, or user@host</text>

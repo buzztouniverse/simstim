@@ -49,6 +49,8 @@ func main() {
 	// Replies to the program's queries go back to it, like a real terminal.
 	go func() { _, _ = io.Copy(ptmx, emu) }()
 	var mu sync.Mutex
+	var rec *recording
+	var recMu sync.Mutex
 	go func() {
 		buf := make([]byte, 64<<10)
 		for {
@@ -57,6 +59,11 @@ func main() {
 				mu.Lock()
 				_, _ = emu.Write(buf[:n])
 				mu.Unlock()
+				recMu.Lock()
+				if rec != nil {
+					rec.output(buf[:n])
+				}
+				recMu.Unlock()
 			}
 			if err != nil {
 				return
@@ -105,6 +112,22 @@ func main() {
 				os.Exit(2)
 			}
 			_, _ = ptmx.Write([]byte(s))
+		case "type":
+			// type "text" [delay]: one key at a time, as a person types.
+			q, tail, _ := strings.Cut(strings.TrimSpace(rest), "\" ")
+			text, err := strconv.Unquote(strings.TrimSuffix(q, "\"") + "\"")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "bad type %q: %v\n", rest, err)
+				os.Exit(2)
+			}
+			delay := 70 * time.Millisecond
+			if d, err := time.ParseDuration(strings.TrimSpace(tail)); err == nil {
+				delay = d
+			}
+			for _, r := range text {
+				_, _ = ptmx.Write([]byte(string(r)))
+				time.Sleep(delay)
+			}
 		case "sleep":
 			d, _ := time.ParseDuration(strings.TrimSpace(rest))
 			time.Sleep(d)
@@ -135,6 +158,35 @@ func main() {
 			}
 		case "shot":
 			fmt.Print("----\n" + screen() + "----\n")
+		case "record":
+			// record start | record save <picture.svg> [<cast>] [hold]
+			args := strings.Fields(rest)
+			switch {
+			case len(args) == 1 && args[0] == "start":
+				recMu.Lock()
+				rec = startRecording(emu, &mu)
+				recMu.Unlock()
+			case len(args) >= 2 && args[0] == "save" && rec != nil:
+				cast, hold := "", 2*time.Second
+				for _, a := range args[2:] {
+					if d, err := time.ParseDuration(a); err == nil {
+						hold = d
+					} else {
+						cast = a
+					}
+				}
+				recMu.Lock()
+				r := rec
+				rec = nil
+				recMu.Unlock()
+				if err := r.save(args[1], cast, *cols, *rows, hold); err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					os.Exit(1)
+				}
+			default:
+				fmt.Fprintf(os.Stderr, "bad record %q\n", rest)
+				os.Exit(2)
+			}
 		case "save":
 			// The screen with its colours and styles: an SVG image for a
 			// path ending in .svg, otherwise ANSI text.

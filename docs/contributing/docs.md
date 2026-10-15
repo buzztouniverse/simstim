@@ -49,4 +49,9 @@ CI builds the site on every push and keeps it as an artifact named `docs-site`. 
 
 ## Images
 
-Screenshots come from scripts, never by hand: `just screenshots` draws `docs/images/*.svg` from the `demo` command, so the images always show the current build.
+Screenshots and recordings come from scripts, never by hand. `just screenshots` runs the `demo` command, where nothing connects anywhere, inside `test/ttyshot`:
+
+- the stills in `docs/images/*.svg` come from the shot list in `scripts/screenshots.sh`;
+- the recorded demos come from the tapes in `docs/demos/*.tape`, with motion on. Each tape is a script of keys and pauses (`send`, `type`, `sleep`, `wait`) between `record start` and `record save`, which writes an animated SVG (it stands still for readers who ask for reduced motion) and an asciicast (`.cast`) for asciinema's player.
+
+Run it after any change to the launcher, so the images always show the current build.
