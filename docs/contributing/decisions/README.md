@@ -23,5 +23,6 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0017](0017-release-signatures.md) | Release signatures that any machine with OpenSSH can check | Accepted |
 | [0018](0018-feature-set.md) | The feature set: what we build now, next and later | Accepted |
 | [0019](0019-alerts-and-hooks.md) | Alerts and event hooks run on the host | Accepted |
+| [0020](0020-guided-setup.md) | A guided setup: one command and one sheet, over one engine | Proposed |
 
 Write a new record from [the template](template.md).
