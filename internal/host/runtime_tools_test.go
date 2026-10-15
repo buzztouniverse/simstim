@@ -76,9 +76,12 @@ func TestPhonePath(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		t.Fatal("the menu did not quit")
 	}
-	if !manifest(t, s.ID).LastAttachedAt.After(time.Time{}) {
-		t.Error("the attach was not recorded")
-	}
+	// The holder saves its manifest once a second, and once more when the
+	// program ends, just after it tells the clients: wait for that save.
+	hosttest.WaitFor(t, 5*time.Second, "the attach in the manifest", func() bool {
+		m, err := host.LoadManifest(s.ID)
+		return err == nil && m.LastAttachedAt.After(time.Time{})
+	})
 }
 
 func TestManifestKeepsFieldsItDoesNotKnow(t *testing.T) {
