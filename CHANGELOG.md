@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `scripts/time-to-agent.sh` measures the time from a clean machine to an agent running on a host: 2.2 s of machine time on the test host ([testing](docs/contributing/testing.md#time-to-first-agent)).
 - An explanation page, [how simstim compares](docs/explanation/comparison.md): multiplexers, pass-through session tools, hosted agents, vendor agents on your own machine and cloud development environments, with when to choose each instead, and where simstim is behind.
 - `host create <provider> [name]` makes a host and sets it up in one step: a local Lima VM (`lima`), a Docker container for testing (`docker`, experimental) or an E2B sandbox (`e2b`). It creates the machine, installs the helper (printing what and where), and connects. `host destroy <name>` asks first, refuses while a session is working unless `--force`, deletes the machine, and forgets the host. `hosts.toml` records the provider and the machine in a `[host.machine]` table. See [Create a host](docs/how-to/create-a-host.md).
 - A transport seam: the bridge, the helper's install and the hello run over SSH, `docker exec -i`, or E2B's envd process API, with no SSH and no new port for the last two. Bridges started over envd end themselves when the client's pings stop for 30 s.
@@ -106,6 +107,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- On a Mac whose cache folder has a long path, `host add` failed with "ControlPath too long": OpenSSH's socket path went over macOS's 104-byte limit. The shared connections' sockets now move to a private folder in `/tmp` when the cache path is too long, and the client checks that the folder is its own.
 - `scripts/setup.sh` had the same ellipsis bug as `install.sh`; `just lint` now checks every script for it.
 - `install.sh` stopped with "unbound variable" in shells that read the `…` after `$arch` as part of the name.
 - On a light background, the end of the brand gradient showed pink: blended colours with a channel near zero were sent as their 16-bit value. The gradient is now sent as plain 8-bit RGB.

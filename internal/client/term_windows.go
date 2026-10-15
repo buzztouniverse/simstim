@@ -47,3 +47,6 @@ func watchResize(f *os.File) (<-chan struct{}, func()) {
 // controlMaster reports whether this OpenSSH can share connections.
 // The Windows port of OpenSSH cannot.
 const controlMaster = false
+
+// privateDir is never needed on Windows, which shares no connections.
+func privateDir(string) bool { return false }

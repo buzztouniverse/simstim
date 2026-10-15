@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,20 +73,43 @@ func expand(p string) string {
 	return p
 }
 
-// controlPath is short, because macOS limits socket paths to 104 bytes.
-func controlPath() string { return filepath.Join(CacheDir(), "cm", "%C") }
+// maxSocketPath is the longest socket path that works everywhere: macOS
+// allows 104 bytes with the closing NUL, Linux 108.
+const maxSocketPath = 103
+
+// controlDir is the folder for the shared connections' sockets. It is the
+// cache folder when a socket path there fits in maxSocketPath (OpenSSH's %C
+// is 40 characters), and otherwise a private folder of our own in /tmp. It
+// is "" when neither can be used safely; the client then shares no
+// connections, which is slower but works.
+func controlDir() string {
+	d := filepath.Join(CacheDir(), "cm")
+	if len(d)+1+40 <= maxSocketPath {
+		if os.MkdirAll(d, 0o700) != nil {
+			return ""
+		}
+		return d
+	}
+	d = filepath.Join("/tmp", fmt.Sprintf("%s-%d", brand.Name, os.Getuid()))
+	if err := os.Mkdir(d, 0o700); err != nil && !errors.Is(err, fs.ErrExist) {
+		return ""
+	}
+	if !privateDir(d) {
+		return ""
+	}
+	return d
+}
 
 func (s *SSH) baseArgs() ([]string, error) {
 	cfg, err := writeWrapper(s.Host)
 	if err != nil {
 		return nil, err
 	}
-	if err := os.MkdirAll(filepath.Join(CacheDir(), "cm"), 0o700); err != nil {
-		return nil, err
-	}
 	args := []string{"-F", cfg}
 	if controlMaster {
-		args = append(args, "-o", "ControlMaster=auto", "-o", "ControlPath="+controlPath(), "-o", "ControlPersist=600")
+		if d := controlDir(); d != "" {
+			args = append(args, "-o", "ControlMaster=auto", "-o", "ControlPath="+filepath.Join(d, "%C"), "-o", "ControlPersist=600")
+		}
 	}
 	if !s.Interactive {
 		args = append(args, "-o", "BatchMode=yes")

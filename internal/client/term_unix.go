@@ -43,3 +43,14 @@ func watchResize(_ *os.File) (<-chan struct{}, func()) {
 
 // controlMaster reports whether this OpenSSH can share connections.
 const controlMaster = true
+
+// privateDir reports whether d is a real folder (not a link) that only this
+// user owns and can open, so nobody else can plant or read sockets in it.
+func privateDir(d string) bool {
+	fi, err := os.Lstat(d)
+	if err != nil || !fi.IsDir() || fi.Mode().Perm() != 0o700 {
+		return false
+	}
+	st, ok := fi.Sys().(*syscall.Stat_t)
+	return ok && int(st.Uid) == os.Getuid()
+}
