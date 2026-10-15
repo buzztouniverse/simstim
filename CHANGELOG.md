@@ -80,6 +80,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- The command reference (`docs/reference/cli/`) is our own Markdown, not cobra's: each page says what the command does, its usage, its help, examples, a table of its flags (without `--help`, with defaults), its subcommands and its parent. The commands' index lists every command and subcommand in one table.
 - The strict lint set is now the repository's own (`.golangci.yml`), with a reason beside each exclusion; `scripts/check-size.sh` keeps Go source files at 500 lines or fewer, and depguard keeps logs on `log/slog`. The testing page lists every quality bar and what checks it.
 - The log of each session on the host (`holder.log`) is written with Go's `log/slog`: each line has the time, a level, a short message and its details as `key=value` pairs, as [troubleshoot](docs/how-to/troubleshoot.md#logs) shows. When a session cannot start, the error shows the message and the error from its last line, without the time.
 - Folders that the host helper makes for worktrees, for the files `.worktreeinclude` copies, and for systemd user units are now the user's only (0700). Unit files stay readable (0644), because systemd warns about a unit file that others cannot read.
@@ -129,6 +130,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- The reference showed "detach with Ctrl+)" for `attach`: Markdown read the backslash in `Ctrl+\` as an escape. The generator now escapes backslashes, angle brackets and stars in help text outside code.
 - `scripts/setup.sh` threw away the test output, so a failed check said nothing about which test failed; it now prints the failures.
 - A session's out-of-memory count came from whatever cgroup its holder ran in; without a systemd user manager that could be another program's service, so its kills counted for the session. Only the session's own unit counts now.
 - `new --worktree` with an agent that is not installed left the worktree and its branch behind; the agent is now found before anything is made.

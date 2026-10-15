@@ -124,3 +124,19 @@ func TestSitePages(t *testing.T) {
 		t.Errorf("install.md has no srcPath:\n%.200s", page)
 	}
 }
+
+// Help text keeps its backslashes, angle brackets and web addresses in
+// Markdown, and flags become code.
+func TestInline(t *testing.T) {
+	for in, want := range map[string]string{
+		`detach with Ctrl+\); - is the last one`: `detach with Ctrl+\\); - is the last one`,
+		`unless you add --add, then <host>`:      "unless you add `--add`, then &lt;host&gt;",
+		"keep `ctrl+\\` as it is":                "keep `ctrl+\\` as it is",
+		"(https://ntfy.sh/<topic> or yours)":     "(`https://ntfy.sh/<topic>` or yours)",
+		"see https://example.com.":               "see `https://example.com`.",
+	} {
+		if got := inline(in); got != want {
+			t.Errorf("inline(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
