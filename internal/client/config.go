@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -140,7 +141,11 @@ func LoadSettings() Settings {
 		s.Attach.DetachKey = "ctrl+\\"
 	}
 	if s.Attach.ImagePasteKey == "" {
+		// Windows Terminal keeps Ctrl+V for itself.
 		s.Attach.ImagePasteKey = "ctrl+v"
+		if runtime.GOOS == "windows" {
+			s.Attach.ImagePasteKey = "alt+v"
+		}
 	}
 	if s.Attach.Scrollback == "" {
 		s.Attach.Scrollback = "keep"

@@ -29,11 +29,24 @@ jobs:
       - run: go test -race -count=1 ./...
       - name: Cross-build the client
         run: |
-          for t in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
+          for t in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64; do
             CGO_ENABLED=0 GOOS=${t%/*} GOARCH=${t#*/} go build -o /dev/null ./cmd/cli
           done
       - name: Name check
         run: scripts/check-name.sh
+
+  windows:
+    # The client also runs on Windows (with Windows OpenSSH); hosts are Linux.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Unit tests of the portable packages
+        run: go test -count=1 ./internal/client/... ./internal/keys/... ./internal/term/... ./internal/ring/... ./internal/proto/... ./internal/agents/... ./internal/api/...
+      - name: Build the client
+        run: go build -o client.exe ./cmd/cli
 
   lint:
     runs-on: ubuntu-latest

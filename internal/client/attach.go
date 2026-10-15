@@ -7,14 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/muesli/cancelreader"
-	"golang.org/x/sys/unix"
 	xterm "golang.org/x/term"
 
 	"github.com/iAmLakshya/simstim/internal/brand"
@@ -175,13 +172,7 @@ func (a *attacher) write(b []byte) {
 	}
 }
 
-func (a *attacher) size() (cols, rows, xpx, ypx int) {
-	ws, err := unix.IoctlGetWinsize(int(a.o.Out.Fd()), unix.TIOCGWINSZ)
-	if err != nil || ws.Col == 0 {
-		return 80, 24, 0, 0
-	}
-	return int(ws.Col), int(ws.Row), int(ws.Xpixel), int(ws.Ypixel)
-}
+func (a *attacher) size() (cols, rows, xpx, ypx int) { return termSize(a.o.Out) }
 
 // handshake sends the attach request and waits for the answer.
 func (a *attacher) handshake(last int64, cols, rows, xpx, ypx int) (proto.Attached, error) {
@@ -262,9 +253,8 @@ func (a *attacher) output(off int64, data []byte) {
 }
 
 func (a *attacher) loop(ctx context.Context) error {
-	winch := make(chan os.Signal, 1)
-	signal.Notify(winch, syscall.SIGWINCH)
-	defer signal.Stop(winch)
+	winch, stopWinch := watchResize(a.o.Out)
+	defer stopWinch()
 	heart := time.NewTicker(pingEvery)
 	defer heart.Stop()
 	watch := time.NewTicker(watchEvery)

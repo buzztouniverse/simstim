@@ -83,10 +83,9 @@ func (s *SSH) baseArgs() ([]string, error) {
 	if err := os.MkdirAll(filepath.Join(CacheDir(), "cm"), 0o700); err != nil {
 		return nil, err
 	}
-	args := []string{"-F", cfg,
-		"-o", "ControlMaster=auto",
-		"-o", "ControlPath=" + controlPath(),
-		"-o", "ControlPersist=600",
+	args := []string{"-F", cfg}
+	if controlMaster {
+		args = append(args, "-o", "ControlMaster=auto", "-o", "ControlPath="+controlPath(), "-o", "ControlPersist=600")
 	}
 	if !s.Interactive {
 		args = append(args, "-o", "BatchMode=yes")
@@ -135,6 +134,9 @@ func (s *SSH) Run(ctx context.Context, remote string, stdin io.Reader) ([]byte, 
 // ExitMaster stops the ControlMaster for this host. Call it before reconnecting
 // after a network change, because a master on a dead TCP connection hangs new sessions.
 func (s *SSH) ExitMaster() {
+	if !controlMaster {
+		return
+	}
 	args, err := s.baseArgs()
 	if err != nil {
 		return
