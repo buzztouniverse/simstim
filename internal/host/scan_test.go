@@ -20,7 +20,7 @@ func TestScannerSignals(t *testing.T) {
 		var s scanner
 		var got []outSignal
 		// Feed one byte at a time, to check that state carries across chunks.
-		for i := 0; i < len(in); i++ {
+		for i := range len(in) {
 			s.feed([]byte{in[i]}, func(x outSignal) { got = append(got, x) })
 		}
 		if len(got) != len(want) {

@@ -90,7 +90,7 @@ func TestVTFramesWithAFakeChild(t *testing.T) {
 	v.Resize(0, 40, 0, 0) // ignored
 	v.AnswerQueries(true)
 	v.SetProfile(VTProfile{XTVersion: "test 1.0"})
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	snap, upTo, err := v.Snapshot(90, 20, 50, 5*time.Second)
@@ -159,7 +159,7 @@ func TestVTRestartsWithBackoff(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer v.Close()
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	pid := func() int {
@@ -186,7 +186,7 @@ func TestVTRestartsWithBackoff(t *testing.T) {
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	if !logged("shadow terminal stopped") || !logged("restarting it in 10ms") {

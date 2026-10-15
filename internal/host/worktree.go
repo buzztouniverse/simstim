@@ -60,7 +60,7 @@ func makeWorktree(cwd, name, id, base string) (*GitInfo, error) {
 	}
 	root, err := git(cwd, "rev-parse", "--show-toplevel")
 	if err != nil {
-		return nil, UserError("not_a_repo", fmt.Sprintf("%s is not inside a git repository", cwd), "Pick a folder inside a repository, or start without a worktree.")
+		return nil, UserError("not_a_repo", cwd+" is not inside a git repository", "Pick a folder inside a repository, or start without a worktree.")
 	}
 	if base == "" {
 		base = "HEAD"

@@ -86,15 +86,12 @@ func live(t *testing.T, id string) *host.Manifest {
 }
 
 // waitState waits until a session's manifest has the state.
-func waitState(t *testing.T, id, state string) *host.Manifest {
+func waitState(t *testing.T, id, state string) {
 	t.Helper()
-	var m *host.Manifest
 	hosttest.WaitFor(t, 10*time.Second, "state "+state, func() bool {
-		var err error
-		m, err = host.LoadManifest(id)
+		m, err := host.LoadManifest(id)
 		return err == nil && m.Status.State == state
 	})
-	return m
 }
 
 // dial connects a client to this host, through the real bridge.

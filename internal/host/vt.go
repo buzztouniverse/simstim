@@ -339,9 +339,10 @@ func (v *VT) dump(maxLines int, timeout time.Duration) ([]byte, error) {
 	return out, err
 }
 
-// sync returns once the child has handled everything sent before it.
-func (v *VT) sync(timeout time.Duration) error {
-	_, _, err := v.request(vtFrameSync, nil, timeout)
+// sync returns once the child has handled everything sent before it, or
+// after 5 seconds with an error.
+func (v *VT) sync() error {
+	_, _, err := v.request(vtFrameSync, nil, 5*time.Second)
 	return err
 }
 

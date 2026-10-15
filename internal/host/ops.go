@@ -109,7 +109,7 @@ func New(a NewArgs) (*SessionInfo, error) {
 	env, term := sessionEnv(a, id, login, agent, inline)
 	argv, hooks, sessionUUID := agentArgv(argv, a, agent, known, inline)
 	if _, err := lookPath(argv[0], envValue(env, "PATH")); err != nil {
-		return nil, UserError("agent_missing", fmt.Sprintf("%s is not installed on this host", argv[0]), "Install it on the host, then try again.")
+		return nil, UserError("agent_missing", argv[0]+" is not installed on this host", "Install it on the host, then try again.")
 	}
 	name := strings.TrimSpace(a.Name)
 	if name == "" {

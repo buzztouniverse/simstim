@@ -110,15 +110,15 @@ func vtStartTest(t *testing.T, opt VTOptions) *VT {
 	return v
 }
 
-// vtFeedAll feeds data in pieces, as a PTY would deliver it.
-func vtFeedAll(v *VT, off int64, data []byte) int64 {
+// vtFeedAll feeds data from offset 0 in pieces, as a PTY would deliver it.
+func vtFeedAll(v *VT, data []byte) {
+	var off int64
 	for len(data) > 0 {
 		n := min(len(data), 4093)
 		v.Feed(off, data[:n])
 		off += int64(n)
 		data = data[n:]
 	}
-	return off
 }
 
 // The dump that the shadow terminal writes for a T frame.
@@ -239,11 +239,12 @@ func vtCompareRows(what string, want, got []vtDumpRow, scrollback bool) []string
 		if scrollback && i == len(want)-1 {
 			g.Wrap = w.Wrap
 		}
-		if w.Text != g.Text {
+		switch {
+		case w.Text != g.Text:
 			diffs = append(diffs, fmt.Sprintf("%s row %d text:\n      want %q\n      got  %q", what, i, w.Text, g.Text))
-		} else if !bytes.Equal(w.Styles, g.Styles) {
+		case !bytes.Equal(w.Styles, g.Styles):
 			diffs = append(diffs, fmt.Sprintf("%s row %d styles:\n      want %s\n      got  %s", what, i, w.Styles, g.Styles))
-		} else if w.Wrap != g.Wrap {
+		case w.Wrap != g.Wrap:
 			diffs = append(diffs, fmt.Sprintf("%s row %d wrap: want %v, got %v (%q)", what, i, w.Wrap, g.Wrap, w.Text))
 		}
 	}
@@ -273,7 +274,7 @@ func vtCheckClean(t *testing.T, snap []byte) {
 func vtRoundTrip(t *testing.T, data []byte, cols, rows, snapCols, snapRows, maxLines int) []byte {
 	t.Helper()
 	src := vtStartTest(t, VTOptions{Cols: cols, Rows: rows})
-	vtFeedAll(src, 0, data)
+	vtFeedAll(src, data)
 	snap, upTo, err := src.Snapshot(snapCols, snapRows, maxLines, 10*time.Second)
 	if err != nil {
 		t.Fatalf("snapshot: %v", err)
@@ -285,7 +286,7 @@ func vtRoundTrip(t *testing.T, data []byte, cols, rows, snapCols, snapRows, maxL
 	want := vtDumpOf(t, src, maxLines)
 
 	dst := vtStartTest(t, VTOptions{Cols: snapCols, Rows: snapRows})
-	vtFeedAll(dst, 0, snap)
+	vtFeedAll(dst, snap)
 	got := vtDumpOf(t, dst, maxLines)
 	vtCompareDumps(t, want, got)
 	return snap
@@ -427,7 +428,7 @@ func TestVTRingWrap(t *testing.T) {
 	r.Write(data)
 	tail, _ := r.ReadFrom(r.Start())
 	v := vtStartTest(t, VTOptions{Cols: 120, Rows: 40})
-	vtFeedAll(v, 0, tail)
+	vtFeedAll(v, tail)
 	if d := vtDumpOf(t, v, 0); len(d.Screens["primary"].Kitty) > 1 || strings.Contains(d.Modes, "2004") {
 		t.Errorf("a replay of the ring alone should not know the start's modes: %+v %q", d.Screens["primary"].Kitty, d.Modes)
 	}
@@ -439,7 +440,7 @@ func TestVTQueries(t *testing.T) {
 
 	// Off by default: the client's terminal answers.
 	v.Feed(0, []byte("\x1b[c"))
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	if w, _ := rec.get(); len(w) > 0 {
@@ -454,7 +455,7 @@ func TestVTQueries(t *testing.T) {
 	v.Resize(80, 24, 800, 480)
 	q := "\x1b[c\x1b[>c\x1b[>q\x1b[?u\x1b[>5u\x1b[?u\x1b]10;?\x1b\\\x1b]11;?\x07\x1b[6n\x1b[14t\x1b[18t\x1b[?996n\x1b]7501;?\x1b\\"
 	v.Feed(3, []byte(q))
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	w, _ := rec.get()
@@ -481,7 +482,7 @@ func TestVTQueries(t *testing.T) {
 	v.AnswerQueries(false)
 	before := len(w)
 	v.Feed(int64(3+len(q)), []byte("\x1b[c"))
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	if w, _ := rec.get(); len(w) != before {
@@ -492,9 +493,9 @@ func TestVTQueries(t *testing.T) {
 func TestVTEvents(t *testing.T) {
 	var rec vtRecorder
 	v := vtStartTest(t, VTOptions{OnEvent: rec.onEvent})
-	vtFeedAll(v, 0, []byte("hi\a\x1b]9;build done\x1b\\\x1b]777;notify;Agent;needs you\x07\x1b]2;my title\x07"+
+	vtFeedAll(v, []byte("hi\a\x1b]9;build done\x1b\\\x1b]777;notify;Agent;needs you\x07\x1b]2;my title\x07"+
 		"\x1b]9;4;1;42\x07\x1b]7501;state=blocked:kind=permission\x1b\\\x1b]7;file://h/tmp\x1b\\"))
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	_, ev := rec.get()
@@ -540,7 +541,7 @@ func TestVTRestart(t *testing.T) {
 	data := vtReadFixture(t, "shell")
 	feed(v, data[:len(data)/2])
 	feed(v, []byte("\a"))
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 	_, ev := rec.get()
@@ -573,14 +574,14 @@ func TestVTRestart(t *testing.T) {
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 
 	// The restarted terminal matches one fed everything once.
 	ref := vtStartTest(t, VTOptions{Cols: 60, Rows: 10})
 	all, _ := r.ReadFrom(0)
-	vtFeedAll(ref, 0, all)
+	vtFeedAll(ref, all)
 	vtCompareDumps(t, vtDumpOf(t, ref, 500), vtDumpOf(t, v, 500))
 
 	mu.Lock()
@@ -643,7 +644,7 @@ func TestVTFallsBehind(t *testing.T) {
 
 	start := time.Now()
 	chunk := bytes.Repeat([]byte("x"), 1000)
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		mu.Lock()
 		off := r.End()
 		r.Write(chunk)
@@ -666,7 +667,7 @@ func TestVTFallsBehind(t *testing.T) {
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
-	if err := v.sync(5 * time.Second); err != nil {
+	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
 }

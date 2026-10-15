@@ -1,6 +1,7 @@
 package host
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 func KeyTest() error {
 	fd := int(os.Stdin.Fd())
 	if !term.IsTerminal(fd) {
-		return fmt.Errorf("keytest needs a terminal")
+		return errors.New("keytest needs a terminal")
 	}
 	old, err := term.MakeRaw(fd)
 	if err != nil {

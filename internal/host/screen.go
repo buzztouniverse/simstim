@@ -81,9 +81,9 @@ func (m *screenModel) screen() (s agents.Screen) {
 	s.Title = m.title
 	w, h := m.e.Width(), m.e.Height()
 	var b strings.Builder
-	for y := 0; y < h; y++ {
+	for y := range h {
 		b.Reset()
-		for x := 0; x < w; x++ {
+		for x := range w {
 			if c := m.e.CellAt(x, y); c != nil && c.Content != "" {
 				b.WriteString(c.Content)
 			} else if c == nil || c.Width != 0 {
