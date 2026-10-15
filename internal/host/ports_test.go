@@ -1,6 +1,8 @@
 package host
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
@@ -56,6 +58,34 @@ func TestHolderTakesOnlyItsOwnUnit(t *testing.T) {
 		t.Cleanup(func() { _ = syscall.Kill(-pid, syscall.SIGKILL); h.ptmx.Close() })
 		if h.m.Run.Unit != want {
 			t.Errorf("in the cgroup %q the holder's unit is %q, want %q", strings.TrimSpace(cgroup), h.m.Run.Unit, want)
+		}
+	}
+}
+
+// The OOM counter comes from the session's own unit only: a holder left in
+// another program's cgroup must not count that program's kills.
+func TestOOMKillsCountOnlyTheOwnUnit(t *testing.T) {
+	const id = "oomtest1"
+	root := t.TempDir()
+	cgroupRoot = root
+	t.Cleanup(func() { cgroupRoot = "/sys/fs/cgroup" })
+	for _, c := range []struct {
+		path string
+		want int64
+	}{
+		{"/system.slice/ci-runner.service", 0},
+		{"/user.slice/" + brand.Slice + "/" + UnitName(id), 3},
+	} {
+		dir := filepath.Join(root, c.path)
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "memory.events"), []byte("low 0\nhigh 0\nmax 1\noom 3\noom_kill 3\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		fakeProc(t, map[string]string{"self/cgroup": "0::" + c.path + "\n"})
+		if got := readOOMKills(id); got != c.want {
+			t.Errorf("in %s: %d OOM kills, want %d", c.path, got, c.want)
 		}
 	}
 }

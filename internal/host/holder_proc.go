@@ -95,23 +95,30 @@ func ownUnit(id string) string {
 	return ""
 }
 
-// readOOMKills reads the oom_kill counter of this process's cgroup.
-func readOOMKills() int64 {
-	b, err := os.ReadFile("/proc/self/cgroup")
+// cgroupRoot is where the cgroup tree is mounted; tests point it elsewhere.
+var cgroupRoot = "/sys/fs/cgroup"
+
+// readOOMKills reads the oom_kill counter of the holder's own unit, the one
+// launchHolder started for session id. Without one, it is 0: another
+// program's cgroup counts kills that are not the session's.
+func readOOMKills(id string) int64 {
+	b, err := os.ReadFile(filepath.Join(procRoot, "self", "cgroup"))
 	if err != nil {
 		return 0
 	}
 	for _, line := range strings.Split(string(b), "\n") {
-		if rest, ok := strings.CutPrefix(line, "0::"); ok {
-			ev, err := os.ReadFile(filepath.Join("/sys/fs/cgroup", rest, "memory.events")) //nolint:gosec // G703: rest is the kernel's own cgroup path, from /proc/self/cgroup
-			if err != nil {
-				return 0
-			}
-			for _, l := range strings.Split(string(ev), "\n") {
-				if v, ok := strings.CutPrefix(l, "oom_kill "); ok {
-					n, _ := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
-					return n
-				}
+		rest, ok := strings.CutPrefix(line, "0::")
+		if !ok || filepath.Base(rest) != UnitName(id) {
+			continue
+		}
+		ev, err := os.ReadFile(filepath.Join(cgroupRoot, rest, "memory.events")) //nolint:gosec // G703: rest is the kernel's own cgroup path, from /proc/self/cgroup
+		if err != nil {
+			return 0
+		}
+		for _, l := range strings.Split(string(ev), "\n") {
+			if v, ok := strings.CutPrefix(l, "oom_kill "); ok {
+				n, _ := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+				return n
 			}
 		}
 	}

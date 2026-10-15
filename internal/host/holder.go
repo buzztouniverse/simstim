@@ -225,7 +225,7 @@ func (h *Holder) start() error {
 	h.cmd = cmd
 	// Make the agent, not the holder, the first choice of the OOM killer.
 	_ = os.WriteFile(fmt.Sprintf("/proc/%d/oom_score_adj", cmd.Process.Pid), []byte("500"), 0)
-	h.oomBase = readOOMKills()
+	h.oomBase = readOOMKills(h.id)
 
 	h.mu.Lock()
 	now := time.Now().UTC()
@@ -325,7 +325,7 @@ func (h *Holder) waitLoop() {
 			if ws, ok := ee.Sys().(syscall.WaitStatus); ok && ws.Signaled() {
 				ended.Signal = ws.Signal().String()
 				ended.ExitCode = 128 + int(ws.Signal())
-				if ws.Signal() == syscall.SIGKILL && readOOMKills() > h.oomBase {
+				if ws.Signal() == syscall.SIGKILL && readOOMKills(h.id) > h.oomBase {
 					ended.OOM = true
 				}
 			} else {
@@ -441,7 +441,7 @@ func (h *Holder) updateStatus() {
 // checkOOM marks the session when the memory cap stopped one of its
 // processes. The caller holds h.mu.
 func (h *Holder) checkOOM() {
-	if n := readOOMKills(); n > h.oomBase && !h.m.Status.OOM {
+	if n := readOOMKills(h.id); n > h.oomBase && !h.m.Status.OOM {
 		// A process in the session hit the memory cap and was stopped.
 		h.m.Status.OOM = true
 		h.m.Status.Reason = "a process in this session ran out of memory and was stopped"
