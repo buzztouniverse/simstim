@@ -66,6 +66,15 @@ if os.environ.get("E2E_ONLY") == "agent-setup":
     print("RESULT %d/%d passed" % (sum(results), len(results)))
     sys.exit(0 if all(results) else 1)
 
+# The guided setup (guided_setup.py). E2E_ONLY=guided-setup runs only these.
+import guided_setup
+def guided_checks():
+    guided_setup.run(guided_setup.Ctx(cli=cli, HOST=HOST, NAME=NAME, env=env, ok=ok, Term=Term))
+if os.environ.get("E2E_ONLY") == "guided-setup":
+    guided_checks()
+    print("RESULT %d/%d passed" % (sum(results), len(results)))
+    sys.exit(0 if all(results) else 1)
+
 # --- Attach, detach, reattach ---
 # 1. Start a detached shell session.
 t = Term([cli, "new", HOST, "--agent", "shell", "--name", "e2e-attach", "--detach"], env=env)
@@ -350,6 +359,7 @@ if saved:
     host_ssh("mv %s.e2e-saved %s" % (ALERTS_TOML, ALERTS_TOML))
 
 setup_checks()
+guided_checks()
 # M. Full screen (roadmap N2): a program on the alternate screen is reported
 #    as full screen, and host doctor says so.
 sid_fs = start("e2e-fullscreen", "/bin/bash", "-c", 'printf "\\033[?1049hFULL"; sleep 600')

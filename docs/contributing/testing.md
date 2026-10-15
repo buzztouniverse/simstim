@@ -35,6 +35,8 @@ It covers start, attach and detach, resize, byte-exact output, replay after a dr
 
 `test/e2e/agent_setup.py` checks setting up hosts and sessions: the agent checks, a secret that reaches the session's environment and no file, log, command line or unit on the host, setup scripts with and without trust, and `host doctor --fix` on a stale socket it makes. It uses a throwaway client config, so your own secrets and answers are never read. It installs no agent: it runs `agents install` only for an agent the host already has, which installs nothing. To run only these checks, set `E2E_ONLY=agent-setup`.
 
+`test/e2e/guided_setup.py` checks the guided setup: `setup --host <host> --agents shell --yes --no-login` connects the host, shows the checklist, installs nothing, asks nothing, and ends with the summary and the first session's command; `setup` without a terminal or flags, or with an unknown agent, refuses before it changes anything; and Ctrl+C at the first question stops it and says nothing was changed. It uses a throwaway client config with a copy of `hosts.toml`. To run only these checks, set `E2E_ONLY=guided-setup`.
+
 ## Benchmarks
 
 The attach pump has benchmarks at each step a byte takes: the host's output ring and screen model (`internal/ring`, `internal/host`), the frames (`internal/proto`), the client's catch-up and mode tracker (`internal/term`), the output frames through the client's attach (`internal/client`), and the input filter (`internal/keys`). `internal/term/termtest` makes the output they use: redraws shaped like a coding agent's.
