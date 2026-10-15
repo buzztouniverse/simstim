@@ -7,6 +7,7 @@ One task per page.
 | [Install](install.md) | Install, update or build the client |
 | [Add a host](add-a-host.md) | Connect any host you can reach with SSH |
 | [Get alerts](alerts.md) | Hear from a session that needs you, with the laptop shut: ntfy, webhooks, commands |
+| [Bring work to your laptop](pull.md) | Fetch a session's branch into your own clone |
 | [Worktrees](worktrees.md) | Give each task its own git worktree and branch |
 | [Ports](ports.md) | Open a web server that runs in a session |
 | [Keep your scrollback](scrollback.md) | Start agents inline, so your terminal keeps the conversation |

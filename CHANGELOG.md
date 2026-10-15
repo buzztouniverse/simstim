@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `pull <host>/<session>` (roadmap N7): fetches the branch a session's folder has checked out into a branch of the repository you are in, through the client's own SSH connection, without touching either working tree.
 - Keep your terminal's scrollback (roadmap N2): the agent table records each agent's inline mode (Claude Code's classic renderer, Codex's `--no-alt-screen`), `new --inline` or `agents.inline` in `config.toml` starts agents that way, and a session started inline comes back inline after a reboot. Each session reports whether it draws full screen (`full_screen` in `ls --json`), and `host doctor` names those sessions and how to start them inline.
 - `w` in the launcher goes to the next session that needs you, on any host, and says what it waits for; pressing it again goes to the one after (roadmap N3).
 - `go install github.com/iAmLakshya/simstim@latest` gives a working client: with no helpers inside it, it fetches its release's helper bundle (a new release asset, `helpers_<version>.tar.gz`), checks the release's SSH signature and the bundle's SHA-256, and caches it. Its version comes from Go's build information.

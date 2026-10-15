@@ -321,6 +321,26 @@ ok(rows.get(sid_fs, {}).get("full_screen") is True, "full screen: a program on t
 doc = subprocess.run([cli, "host", "doctor", HOST], capture_output=True, text=True).stdout
 ok("e2e-fullscreen" in doc and "full screen" in doc, "full screen: host doctor names the session")
 
+# N. pull (roadmap N7): a session's branch comes to a local repository over
+#    the client's SSH, and the local working tree is untouched.
+import tempfile
+host_ssh("rm -rf ~/e2e-pull && git init -q -b main ~/e2e-pull && cd ~/e2e-pull && "
+         "git -c user.name=e2e -c user.email=e2e@example.com commit -q --allow-empty -m base && git switch -q -c e2e-topic && "
+         "git -c user.name=e2e -c user.email=e2e@example.com commit -q --allow-empty -m 'from the session'")
+t = Term([cli, "new", HOST, "--name", "e2e-pull", "--dir", "~/e2e-pull", "--detach"], env=env)
+t.exit_code(30)
+ls = subprocess.run([cli, "ls", "--json"], capture_output=True, text=True).stdout
+sid_pull = [s["id"] for h in json.loads(ls) for s in (h["sessions"] or []) if s["name"] == "e2e-pull"][0]
+created.append(sid_pull)
+local = tempfile.mkdtemp()
+subprocess.run(["git", "init", "-q", "-b", "mine", local], check=True)
+r = subprocess.run([cli, "pull", HOST + "/" + sid_pull], cwd=local, capture_output=True, text=True, env=dict(os.environ, **env))
+log = subprocess.run(["git", "log", "--format=%s", "e2e-topic"], cwd=local, capture_output=True, text=True).stdout
+ok(r.returncode == 0 and "from the session" in log, "pull: the session's branch reaches the local repository (%s)" % (r.stderr or r.stdout).strip()[:80])
+r2 = subprocess.run([cli, "pull", HOST + "/" + sid_pull, "--into", "mine"], cwd=local, capture_output=True, text=True, env=dict(os.environ, **env))
+ok(r2.returncode != 0 and "checked out here" in r2.stderr, "pull: refuses to fetch into the branch checked out here")
+host_ssh("rm -rf ~/e2e-pull")
+
 # Clean up.
 for s in created:
     subprocess.run([cli, "kill", HOST + "/" + s], capture_output=True)

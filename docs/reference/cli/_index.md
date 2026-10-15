@@ -35,6 +35,7 @@ simstim [flags]
 * [simstim ls](ls.md)     - List sessions on every host
 * [simstim new](new.md)     - Start a session on a host, and attach to it
 * [simstim ports](ports.md)     - List the TCP ports a session's processes listen on
+* [simstim pull](pull.md)     - Bring a session's branch into the git repository you are in
 * [simstim rename](rename.md)     - Rename a session
 * [simstim send](send.md)     - Type text into a session without attaching, then press Enter
 * [simstim version](version.md)     - Print the version

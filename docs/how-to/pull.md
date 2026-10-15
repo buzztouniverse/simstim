@@ -1,0 +1,18 @@
+# Bring a session's work to your laptop
+
+When an agent has committed its work on the host, fetch its branch into your own clone of the repository:
+
+<!-- test: help (needs a session in a repository) -->
+```sh
+cd ~/src/app
+simstim pull my-server/auth-fix
+```
+
+`pull` asks the host which branch the session's folder has checked out, then runs `git fetch` through the client's own SSH connection, into a branch of the same name here. Neither working tree changes: review the branch, merge it or check it out as you like.
+
+- `--into review/auth-fix` fetches into another branch name.
+- `pull` stops if the local branch has commits that the session's branch does not. `--force` replaces it.
+- It will not fetch into the branch you have checked out.
+- Uncommitted changes in the session stay on the host; `pull` says how many there are. Ask the agent to commit them, or commit them yourself in the session.
+
+Sessions started with `--worktree` work best: each has a branch of its own ([worktrees](worktrees.md)).
