@@ -70,7 +70,7 @@ func (p *previewModal) view(m *Model) string {
 	if s == nil {
 		return ""
 	}
-	w, h := max(min(m.width-4, 132), 30), max(m.height-2, 8)
+	w := m.dialogWidth()
 	cw := w - 4
 	_, label := m.look(*s)
 	var facts []string
@@ -79,10 +79,10 @@ func (p *previewModal) view(m *Model) string {
 			facts = append(facts, f)
 		}
 	}
-	body := []string{sFaint.Render(trunc(strings.Join(facts, dot), cw)), strings.Repeat("─", cw)}
-	body = append(body, m.previewLines(cw, h-4)...)
-	hints := []hint{{"Enter", "attach"}, {"↑↓", "next"}, {"Esc", "close"}}
-	return box(w, h, s.Name, label.st.Render(label.s), hintsFor(hints, w), body, toneNormal)
+	body := []string{sFaint.Render(trunc(strings.Join(facts, dot), cw)), ""}
+	body = append(body, m.previewLines(cw, max(m.height-9, 3))...)
+	hints := []hint{{"enter", "attach"}, {"↑↓", "next"}, {"esc", "close"}}
+	return sheet(w, "Peek · "+s.Name, label.st.Render(label.s), hints, body, toneNormal)
 }
 
 // schedulePreview loads the preview of the selected session after a short

@@ -197,7 +197,17 @@ type demoConn struct {
 func (c *demoConn) Sessions(context.Context) ([]client.Session, error) {
 	c.be.mu.Lock()
 	defer c.be.mu.Unlock()
-	return append([]client.Session(nil), c.be.sessions[c.host]...), nil
+	out := append([]client.Session(nil), c.be.sessions[c.host]...)
+	now := time.Now()
+	for i := range out {
+		switch out[i].State {
+		case "working":
+			out[i].LastActivityAt = now // it keeps writing, so its trace is a wave
+		case "needs_input":
+			out[i].LastActivityAt = out[i].Since // it went quiet when it asked
+		}
+	}
+	return out, nil
 }
 
 func (c *demoConn) NewSession(_ context.Context, a client.NewArgs) (*client.Session, error) {
@@ -348,4 +358,32 @@ func demoScreen(s client.Session, cols, rows int) string {
 	at(rows, dim+left+strings.Repeat(" ", gap)+where+" "+reset)
 	fmt.Fprintf(&b, "\x1b[%d;5H", rows-1)
 	return b.String()
+}
+
+// demoTraces gives the sample sessions some recent output, so their traces
+// show at once: steady bursts for the working ones, and for the one that
+// asked a question, the work before it went quiet.
+func (b *demoBackend) demoTraces(now time.Time) map[sessKey][]time.Time {
+	out := map[sessKey][]time.Time{}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	for host, list := range b.sessions {
+		for _, s := range list {
+			var ev []time.Time
+			switch s.State {
+			case "working":
+				for t := 30 * time.Second; t > 0; t -= 2 * time.Second {
+					if (t/(6*time.Second))%3 != 2 { // a pause now and then
+						ev = append(ev, now.Add(-t))
+					}
+				}
+			case "needs_input":
+				for t := 30 * time.Second; t > 16*time.Second; t -= 2 * time.Second {
+					ev = append(ev, now.Add(-t))
+				}
+			}
+			out[sessKey{host, s.ID}] = ev
+		}
+	}
+	return out
 }

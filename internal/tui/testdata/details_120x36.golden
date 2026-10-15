@@ -1,17 +1,12 @@
 
+  ⢄⡠⠊ simstim  hosts                                                                             3 hosts · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
+  ▍ 1 ● atlas-dev  4 sessions · 1 needs you                                                             9ms  ⣀⣀⣀⣀⣀⣀⣀⣼
+    2 ◌ aws-gpu     offline                                                                                   ⣀⣀⣀⣀⣀⣀⣀⣀
+    3 ● gcp-dev     2 sessions                                                                          41ms  ⣀⣀⣀⣀⣀⣀⣀⣼
 
-
-
-            ╭─ atlas-dev ─────────────────────────────────────────────────────────────────────────── 9ms ─╮
-            │                                                                                              │
-            │ Route      atlas-dev                                                                        │
-            │ System     Debian 13 · amd64 · 4 CPUs · 8 GiB · 61 GiB free                                  │
-            │ Helper     simstim-host 0.1.0                                                                │
-            │ Agents     claude · codex · opencode · shell                                                 │
-            │ Limits     3.2 GiB per session · 4 sessions                                                  │
-            │                                                                                              │
-            ╰─────────────────────────────────────── t test · s shell · r reconnect · x remove · Esc back ─╯
+    ssh atlas-dev · Debian 13 · 4 CPUs · claude, codex, opencode, shell
 
 
 
@@ -30,7 +25,12 @@
 
 
 
+  ── atlas-dev ──────────────────────────────────────────────────────────────────── 9ms · 4 sessions · 1 needs you ──
 
+    Route      atlas-dev
+    System     Debian 13 · amd64 · 4 CPUs · 8 GiB · 61 GiB free
+    Helper     simstim-host 0.1.0
+    Agents     claude · codex · opencode · shell
+    Limits     3.2 GiB per session · 4 sessions
 
-
-
+    t test   s shell   r reconnect   x remove   esc back

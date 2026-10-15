@@ -1,36 +1,36 @@
 
-  ╭─ auth-refactor ──────────────────────────────────────────────────────────────────────────────────── needs input ─╮
-  │ claude · ~/src/app · 6.1 of 8 GiB                                                                                │
-  │ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────── │
-  │ ✻ Welcome back                                                                                                   │
-  │                                                                                                                  │
-  │ > Refactor the auth module to use the new token store                                                            │
-  │                                                                                                                  │
-  │ ● I'll start by reading the current implementation.                                                              │
-  │                                                                                                                  │
-  │   Read internal/auth/store.go (212 lines)                                                                        │
-  │   Read internal/auth/session.go (96 lines)                                                                       │
-  │                                                                                                                  │
-  │ ● Should I also migrate the old sessions table? (y/n)                                                            │
-  │                                                                                                                  │
-  │ >                                                                                                                │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  │                                                                                                                  │
-  ╰───────────────────────────────────────────────────────────────────────────── Enter attach · ↑↓ next · Esc close ─╯
+  ⢄⡠⠊ simstim  › atlas-dev                                                             9ms · 4 sessions · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ── Peek · auth-refactor ───────────────────────────────────────────────────────────────────────────── needs input ──
 
+    claude · ~/src/app · 6.1 of 8 GiB
+
+    ✻ Welcome back
+
+    > Refactor the auth module to use the new token store
+
+    ● I'll start by reading the current implementation.
+
+      Read internal/auth/store.go (212 lines)
+      Read internal/auth/session.go (96 lines)
+
+    ● Should I also migrate the old sessions table? (y/n)
+
+    >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    enter attach   ↑↓ next   esc close

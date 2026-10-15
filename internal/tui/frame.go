@@ -7,7 +7,7 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// tone colours a frame and its title.
+// tone colours a sheet's rule and title.
 type tone int
 
 const (
@@ -19,95 +19,76 @@ func (t tone) styles() (line, title lipgloss.Style) {
 	if t == toneDanger {
 		return sDanger, sErrHead
 	}
-	return sPlain, sTitle
+	return sFaint, sTitle
 }
 
-// box draws a notched frame exactly w cells wide and h rows high (docs/ux.md
-// 2): a rounded border in the terminal's own colour, the title set into the
-// top border, a fact at the top right, and key hints at the bottom right.
-// Each body line gets one cell of padding on both sides, so it should be w-4
-// cells wide; longer lines are cut.
-func box(w, h int, title, right, bottom string, body []string, t tone) string {
-	w, h = max(w, 8), max(h, 2)
-	line, _ := t.styles()
-	var b strings.Builder
-	b.WriteString(topBorder(w, title, right, t))
-	side := line.Render("│")
-	for i := range h - 2 {
-		l := ""
-		if i < len(body) {
-			l = body[i]
-		}
-		b.WriteString("\n" + side + " " + fit(l, w-4) + " " + side)
-	}
-	b.WriteString("\n" + bottomBorder(w, bottom, t))
-	return b.String()
-}
-
-func topBorder(w int, title, right string, t tone) string {
+// rule is a faint line w cells wide with a title set into it near the left
+// and a fact near the right: "── Title ──────── fact ──".
+func rule(w int, title, right string, t tone) string {
 	line, tst := t.styles()
-	inner := w - 2
-	rw := 0
 	if cells(right) == 0 {
 		right = ""
 	}
-	if right != "" {
-		right = trunc(right, max(inner/2-4, 0))
-		rw = cells(right) + 3 // " right ─"
-	}
+	out := line.Render("──")
+	used := 2
 	if title != "" {
-		title = trunc(title, max(inner-1-2-1-rw, 1))
-	}
-	out := line.Render("╭─")
-	used := 1
-	if title != "" {
-		out += tst.Render(" " + title + " ")
+		title = trunc(title, max(w-8-cells(right), 1))
+		out += " " + tst.Render(title) + " "
 		used += cells(title) + 2
 	}
-	out += line.Render(strings.Repeat("─", max(inner-used-rw, 0)))
+	rw := 0
 	if right != "" {
-		out += " " + right + " " + line.Render("─")
+		rw = cells(right) + 4 // " right ──"
 	}
-	return out + line.Render("╮")
+	out += line.Render(strings.Repeat("─", max(w-used-rw, 0)))
+	if right != "" {
+		out += " " + right + " " + line.Render("──")
+	}
+	return out
 }
 
-// bottomBorder carries hints or a fact, aligned to the right.
-func bottomBorder(w int, bottom string, t tone) string {
-	line, _ := t.styles()
-	inner := w - 2
-	if bottom == "" {
-		return line.Render("╰" + strings.Repeat("─", inner) + "╯")
+// sheet draws a dialog (docs/ux.md 2.4 to 2.12): it rises from the bottom
+// of the screen, full width, with its title in a rule across the top, its
+// body indented under it, and its keys on the last line. It has no side
+// borders; the dimmed list behind it is the frame.
+func sheet(w int, title, right string, hints []hint, body []string, t tone) string {
+	lines := []string{rule(w, title, right, t), ""}
+	for _, l := range body {
+		lines = append(lines, "  "+fit(l, w-4))
 	}
-	bottom = trunc(bottom, inner-4)
-	fill := inner - 3 - cells(bottom)
-	return line.Render("╰"+strings.Repeat("─", max(fill, 0))) + " " + bottom + " " + line.Render("─╯")
+	lines = append(lines, "", "  "+hintLine(hints, w-4))
+	for i, l := range lines {
+		lines[i] = fit(l, w) // opaque, so the list behind does not show through
+	}
+	return strings.Join(lines, "\n")
 }
 
 // hint is one key and what it does.
 type hint struct{ key, desc string }
 
-// hintLine draws hints the way a border shows them, "Enter attach · Esc
-// back": keys in the key colour, words and dots faint. When they do not fit
-// in w cells it drops them from the second-to-last backwards: the first
-// hints are the most useful, and the last is the way out.
+// hintLine draws hints as the footer shows them, "enter attach   n new":
+// keys in the accent colour, words faint, wide gaps instead of dots. When
+// they do not fit in w cells it drops them from the second-to-last
+// backwards: the first hints are the most useful, and the last is the way
+// out.
 func hintLine(hs []hint, w int) string {
 	hs = fitHints(hs, w)
 	parts := make([]string, len(hs))
 	for i, h := range hs {
 		parts[i] = sKey.Render(h.key) + sFaint.Render(" "+h.desc)
 	}
-	return strings.Join(parts, sFaint.Render(dot))
+	return strings.Join(parts, sep)
 }
 
-// welcomeLine draws hints the way the welcome screen shows them, "ctrl+o for
-// commands · ? for shortcuts": keys bold, words faint.
+// welcomeLine draws hints the way the welcome screen shows them: keys bold,
+// words faint.
 func welcomeLine(hs []hint, w int) string {
 	hs = fitHints(hs, w)
 	parts := make([]string, len(hs))
 	for i, h := range hs {
 		parts[i] = sBold.Render(h.key) + sFaint.Render(" "+h.desc)
 	}
-	return strings.Join(parts, sFaint.Render(dot))
+	return strings.Join(parts, sep)
 }
 
 func fitHints(hs []hint, w int) []hint {
@@ -116,7 +97,7 @@ func fitHints(hs []hint, w int) []hint {
 		n := 0
 		for i, h := range hs {
 			if i > 0 {
-				n += 3
+				n += len(sep)
 			}
 			n += cells(h.key) + 1 + cells(h.desc)
 		}
@@ -132,37 +113,31 @@ func fitHints(hs []hint, w int) []hint {
 	return hs
 }
 
-// hintsFor fits hints into the bottom border of a box w cells wide.
-func hintsFor(hs []hint, w int) string { return hintLine(hs, w-6) }
-
-// listRow draws one row of a list. A selected row is a bar in the title
-// colour with black text, bold kept: the one strong colour on the screen.
-// Keys keep their own colour on the bar, as Amp's do.
+// listRow draws one row of a list. The selected row is lifted: its faint
+// parts turn to normal, and the layout puts the marker in front of it.
 func listRow(selected bool, segs ...seg) string {
 	var b strings.Builder
 	for _, sg := range segs {
 		st := sg.st
-		if selected {
-			fg := colOnSel
-			if sg.st.GetForeground() == colKey {
-				fg = colKey
-			}
-			st = sPlain.Foreground(fg).Background(colTitle).Bold(sg.st.GetBold())
+		if selected && st.GetFaint() {
+			st = st.Faint(false)
 		}
 		b.WriteString(st.Render(sg.s))
 	}
 	return b.String()
 }
 
-// layer is a block drawn over the screen at a position.
-type layer struct {
-	s    string
-	x, y int
+// marker is the gutter in front of a row: the accent bar when selected.
+func marker(selected bool) string {
+	if selected {
+		return sAccent.Render(glyphMarker) + " "
+	}
+	return "  "
 }
 
-// dim quiets everything drawn so far, behind a dialog: the faint attribute
-// on every cell, so it works with any theme, bold removed, and backgrounds
-// dropped, so an old selection bar goes quiet too.
+// dim quiets everything drawn so far, behind a sheet: the faint attribute on
+// every cell, so it works with any theme, bold removed, and backgrounds
+// dropped.
 func dim(c *lipgloss.Canvas) {
 	b := c.Bounds()
 	for y := b.Min.Y; y < b.Max.Y; y++ {
@@ -176,4 +151,16 @@ func dim(c *lipgloss.Canvas) {
 			}
 		}
 	}
+}
+
+// trimBlank drops blank lines at the start and the end of a sheet's body:
+// the sheet adds its own.
+func trimBlank(body []string) []string {
+	for len(body) > 0 && strings.TrimSpace(body[0]) == "" {
+		body = body[1:]
+	}
+	for len(body) > 0 && strings.TrimSpace(body[len(body)-1]) == "" {
+		body = body[:len(body)-1]
+	}
+	return body
 }

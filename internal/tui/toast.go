@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"strings"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
@@ -108,27 +107,26 @@ func (m *Model) toastErr(err error) tea.Cmd {
 	return m.after(toastErrorLife, toastTickMsg{})
 }
 
-// noticeLine is one line of a notice, and how visible it is as it fades.
+// noticeLine is one line of a notice, how visible it is as it fades, and
+// when it came, for its slide.
 type noticeLine struct {
 	s     string
 	alpha float64
+	at    time.Time
 }
 
-// noticeLines draws the toasts as short lines under the launcher's box, the
-// newest last: a glyph and the text, or for an error a bold red "Error:" and
-// the step to try next (docs/ux.md 2.8). They fit in noticeRows.
+// noticeLines draws the toasts as short lines that rise above the bottom
+// rule, the newest lowest: a glyph and the text, or for an error a red cross
+// and the step to try next (docs/ux.md 2.8).
 func (m *Model) noticeLines(w int) []noticeLine {
 	var out []noticeLine
 	for _, t := range m.toasts.shown {
 		var lines []string
 		switch t.kind {
 		case toastError:
-			lines = errorBlock(t.text, "", w)
-			for _, l := range wrap(t.hint, w-7) {
-				lines = append(lines, strings.Repeat(" ", 7)+sLink.Render(l))
-			}
+			lines = errorBlock(t.text, t.hint, w)
 		default:
-			glyph, st, text := glyphInfo, sKey, sFaint
+			glyph, st, text := glyphInfo, sAccent, sFaint
 			switch t.kind {
 			case toastSuccess:
 				glyph, st, text = glyphOK, sSuccess, sPlain
@@ -145,29 +143,11 @@ func (m *Model) noticeLines(w int) []noticeLine {
 		}
 		a := m.noticeAlpha(t)
 		for _, l := range lines {
-			out = append(out, noticeLine{l, a})
+			out = append(out, noticeLine{l, a, t.at})
 		}
 	}
-	if len(out) > noticeRows {
-		out = out[len(out)-noticeRows:]
+	if len(out) > noteRows {
+		out = out[len(out)-noteRows:]
 	}
 	return out
-}
-
-// quitLayer is the popup of the Ctrl+C chord, docked at the bottom right:
-// what the next key does.
-func (m *Model) quitLayer() (layer, bool) {
-	if !m.quitArmed {
-		return layer{}, false
-	}
-	body := []string{
-		sKeyBold.Render("Ctrl+C") + " quit",
-		fitRight(sKeyBold.Render("Esc"), 6) + sFaint.Render(" cancel"),
-	}
-	w := 24
-	b := box(w, len(body)+2, "", "", "", body, toneNormal)
-	// The title is two styles, so it is set into the border here.
-	lines := strings.Split(b, "\n")
-	lines[0] = "╭─" + sTitle.Render(" Ctrl+C") + sFaint.Render(" then ") + strings.Repeat("─", w-16) + "╮"
-	return layer{s: strings.Join(lines, "\n"), x: max(m.width-w, 0), y: max(m.height-len(lines), 0)}, true
 }

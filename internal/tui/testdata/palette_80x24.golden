@@ -1,24 +1,24 @@
 
+  ⢄⡠⠊ simstim  › atlas-dev                     9ms · 4 sessions · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────
 
+  ▍ 1 ● auth-refact…  claude    ~/src/app         needs input     2m  ⣀⣀⣀⣀⣀⣀⣀⣀
+    2 ⠶ api-tests     codex     ~/src/api         working        14s  ⣀⣀⣀⣀⣀⣀⣀⣼
+    3 ○ notes         shell     ~                 idle            1h  ⣀⣀⣀⣀⣀⣀⣀⣀
+  ── Commands ────────────────────────────────────────────────────────────────
 
+    ❯ ses
 
-  ╭─ Commands ───────────────────────────────────────────────────────────────╮
-  │                                                                          │
-  │ > ses                                                                    │
-  │                                                                          │
-  │  session  new                                                         n  │
-  │  session  attach                                                  Enter  │
-  │  session  rename                                                      r  │
-  │  session  delete                                                      d  │
-  │  session  preview                                                 Space  │
-  │     view  all sessions                                                   │
-  │  session  copy attach command                                         y  │
-  │     host  test                                                           │
-  │  simstim  settings                                                       │
-  │     host  details                                                     i  │
-  ╰──────────────────────────────────────────────────────────────────────────╯
+    ▍ New session                                                          n
+      Attach session                                                   enter
+      Rename session                                                       r
+      Delete session                                                       d
+      Peek at the screen                                               space
+      All sessions
+      New session, with the form
+      Copy the attach command                                              y
+      Test host
+      Settings
+      Host details                                                         i
 
-
-
-
-
+    enter run   ↑↓ move   esc close

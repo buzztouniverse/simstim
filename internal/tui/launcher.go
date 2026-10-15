@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 
@@ -11,111 +12,159 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// The launcher (docs/ux.md 2.2 and 2.3) is one framed list in one column:
-// the hosts, or the sessions on one host. Its title sits in the top border,
-// its keys in the bottom border, one line about the selected row sits under
-// the list, and short notices appear under the box.
+// The launcher (docs/ux.md 2.2 and 2.3) is one list in one column, with no
+// box round it: a header with the brand and where you are, a rule, the
+// list, a line about the selected row, and at the bottom a rule, the prompt
+// line and the keys. Notices rise just above the bottom rule.
 
-// noticeRows are kept free under the box for notices, so the box never
-// moves when one appears.
-const noticeRows = 4
-
-// boxGeo is where the launcher's box was last drawn: for the motion effects
-// and for the mouse.
+// boxGeo is where the launcher's parts were last drawn: for the motion and
+// for the mouse.
 type boxGeo struct {
 	x, y, w, h   int
 	listY, listN int // the first list row on screen, and how many are drawn
 	top          int // the list index of the first row drawn
-	detailY      int // the detail line under the list, or 0
+	detailY      int // the line under the list, or 0
+	sel          int // the selected row, as drawn, or -1
+	from         int // the row the selection came from, as drawn, or -1
 }
 
-// boxW is the width of the launcher's box.
-func (m *Model) boxW() int { return max(min(m.width-4, 96), min(m.width, 32)) }
+const (
+	headerY  = 1
+	ruleY    = 2
+	listTop  = 4
+	footRows = 3 // the bottom rule, the prompt line and the keys
+	noteRows = 2 // notices above the bottom rule
+)
 
-// boxTop is the row the box starts on: a little way down, the same on
-// every screen, so moving between them does not shift it.
-func (m *Model) boxTop() int { return min(max(m.height/6, 1), 5) }
+// cw is the width of the launcher's column, and boxW the same: the old
+// name, kept for the sheets.
+func (m *Model) cw() int   { return max(min(m.width-4, 116), min(m.width, 30)) }
+func (m *Model) boxW() int { return m.cw() }
 
-// cw is the width of a row inside the box.
-func (m *Model) cw() int { return m.boxW() - 4 }
+// x0 is the left edge of the column.
+func (m *Model) x0() int { return max((m.width-m.cw())/2, 0) }
 
 // listRoom is how many rows the list may take.
-func (m *Model) listRoom() int {
-	room := m.height - m.boxTop() - noticeRows - 6 // borders, the blank rows, the detail line
-	if m.activeFilter().shown() {
-		room -= 2
-	}
-	if m.showHelp {
-		room -= len(m.helpLines(m.cw())) + 2
-	}
-	return max(room, 1)
-}
+func (m *Model) listRoom() int { return max(m.height-listTop-footRows-noteRows-2, 1) }
 
-func (m *Model) activeFilter() *filter {
-	if m.screen == scrHosts {
-		return &m.hostFilter
-	}
-	return &m.sessFilter
-}
-
-// listView is what one screen puts in the box.
+// listView is what one screen puts in the column.
 type listView struct {
-	title, right string
-	rows         []string // the list, or an empty state
-	listed       bool     // rows are list rows, not an empty state
-	top          int
+	crumb, facts string
+	rows         []string
+	listed       bool // rows are list rows, not an empty state
+	top, sel     int
 	detail       string
 	hints        []hint
 }
 
-// viewLauncher draws the box. It records where, in m.geo.
+// viewLauncher draws the launcher. It records where things are in m.geo.
 func (m *Model) viewLauncher() string {
-	w, cw := m.boxW(), m.cw()
+	cw, x := m.cw(), m.x0()
 	var v listView
-	if m.screen == scrHosts {
+	switch {
+	case m.prompt != nil && m.prompt.mode == promptSearch:
+		v = m.searchView(cw)
+	case m.screen == scrHosts:
 		v = m.hostsView(cw)
-	} else {
+	default:
 		v = m.sessionsView(cw)
 	}
 	switch {
 	case m.rename != nil:
-		v.hints = []hint{{"Enter", "rename"}, {"Esc", "cancel"}}
-	case m.activeFilter().typing:
-		v.hints = []hint{{"Enter", "keep filter"}, {"↑↓", "move"}, {"Esc", "clear"}}
-	}
-	all := []string{""}
-	if f := m.activeFilter(); f.shown() {
-		all = append(all, "> "+f.in.view(cw-2, f.typing), "")
-	}
-	listAt := len(all)
-	all = append(all, v.rows...)
-	detailAt := 0
-	if v.detail != "" {
-		all = append(all, "", v.detail)
-		detailAt = len(all) - 1
-	}
-	if m.showHelp {
-		all = append(all, "", strings.Repeat("─", cw))
-		all = append(all, m.helpLines(cw)...)
-	}
-	all = append(all, "")
-	b := strings.Split(box(w, len(all)+2, v.title, v.right, hintsFor(v.hints, w), all, toneNormal), "\n")
-
-	x, top := max((m.width-w)/2, 0), m.boxTop()
-	m.geo = boxGeo{x: x, y: top, w: w, h: len(b), listY: top + 1 + listAt, top: v.top}
-	if v.listed {
-		m.geo.listN = len(v.rows)
-	}
-	if detailAt > 0 {
-		m.geo.detailY = top + 1 + detailAt
+		v.hints = []hint{{"enter", "rename"}, {"esc", "cancel"}}
+	case m.prompt != nil && m.prompt.mode == promptSearch:
+		v.hints = []hint{{"enter", "attach"}, {"↑↓", "move"}, {"esc", "close"}}
+	case m.prompt != nil:
+		v.hints = []hint{{"enter", "start"}, {"tab", "complete"}, {"ctrl+enter", "detached"}, {"ctrl+f", "form"}, {"esc", "cancel"}}
 	}
 	lines := make([]string, m.height)
-	for i, l := range b {
-		if top+i < m.height {
-			lines[top+i] = strings.Repeat(" ", x) + l
+	put := func(y int, s string) {
+		if y >= 0 && y < m.height {
+			lines[y] = strings.Repeat(" ", x) + s
 		}
 	}
+	// The header: the logo, the name, where you are; facts on the right.
+	left := m.logo() + " " + m.brandName() + "  " + v.crumb
+	put(headerY, left+strings.Repeat(" ", max(cw-cells(left)-cells(v.facts), 1))+v.facts)
+	put(ruleY, sFaint.Render(strings.Repeat("─", m.ruleLen(cw))))
+
+	m.geo = boxGeo{x: x, y: listTop, w: cw, listY: listTop, top: v.top, sel: -1, from: -1}
+	for i, r := range v.rows {
+		if listTop+i >= m.height-footRows-noteRows {
+			break
+		}
+		put(listTop+i, m.slide(r, cw))
+	}
+	if v.listed {
+		m.geo.listN = len(v.rows)
+		if v.sel >= v.top && v.sel < v.top+len(v.rows) {
+			m.geo.sel = v.sel - v.top
+		}
+		if f := m.selFrom - v.top; f >= 0 && f < len(v.rows) && f != m.geo.sel {
+			m.geo.from = f
+		}
+	}
+	if v.detail != "" {
+		m.geo.detailY = listTop + len(v.rows) + 1
+		put(m.geo.detailY, m.slide(v.detail, cw))
+	}
+	// The bottom: a rule, the prompt line, the keys; while a session is
+	// being started, its choices just above the rule.
+	if q := m.quickHints(cw - 2); q != "" {
+		put(m.height-4, "  "+q)
+	}
+	put(m.height-3, sFaint.Render(strings.Repeat("─", cw)))
+	put(m.height-2, "  "+m.promptLine(cw-2))
+	put(m.height-1, "  "+m.footer(v.hints, cw-2))
+	m.geo.h = m.height - listTop
 	return strings.Join(lines, "\n")
+}
+
+// footer is the keys, or what the quit chord does next.
+func (m *Model) footer(hs []hint, w int) string {
+	if m.quitArmed {
+		return sDanger.Bold(true).Render("ctrl+c") + sFaint.Render(" again to quit, sessions keep running") + sep + sKey.Render("esc") + sFaint.Render(" stay")
+	}
+	return hintLine(hs, w)
+}
+
+// logo is the brand's signal: three braille cells of a small wave in the
+// brand gradient, moving with motion on.
+func (m *Model) logo() string {
+	t := 0.0
+	if m.motion {
+		t = m.since(m.epoch).Seconds()
+	}
+	cols := m.gradient(3)
+	var b strings.Builder
+	for c := range 3 {
+		r := 0
+		for dx := range 2 {
+			x := float64(c*2 + dx)
+			y := int(math.Round(1.5 + 1.5*math.Sin(x*0.9-t*4)))
+			r |= 1 << brailleBit[min(max(y, 0), 3)][dx]
+		}
+		st := sBrand.Bold(true)
+		if cols != nil {
+			st = lipgloss.NewStyle().Foreground(cols[c]).Bold(true)
+		}
+		b.WriteString(st.Render(string(rune(0x2800 + r))))
+	}
+	return b.String()
+}
+
+// brandName is the name in the brand gradient, bold.
+func (m *Model) brandName() string {
+	name := []rune(brand.Name)
+	cols := m.gradient(len(name))
+	if cols == nil {
+		return sBrand.Bold(true).Render(brand.Name)
+	}
+	var b strings.Builder
+	for i, r := range name {
+		b.WriteString(lipgloss.NewStyle().Foreground(cols[i]).Bold(true).Render(string(r)))
+	}
+	return b.String()
 }
 
 // gutter is the row's number, faint, for the first nine rows: 1–9 open them.
@@ -126,8 +175,8 @@ func gutter(n int) seg {
 	return seg{" ", sPlain}
 }
 
-// nameSegs is a name w cells wide, with the letters that match the filter
-// in the key colour.
+// nameSegs is a name w cells wide, with the letters that match q in the
+// accent colour.
 func nameSegs(name string, w int, st lipgloss.Style, q string) []seg {
 	name = trunc(name, w)
 	pad := seg{strings.Repeat(" ", max(w-cells(name), 0)), sPlain}
@@ -139,9 +188,9 @@ func nameSegs(name string, w int, st lipgloss.Style, q string) []seg {
 	for i, r := range []rune(name) {
 		s := st
 		if hit[i] {
-			s = sKeyBold
+			s = sKeyBold.Underline(true)
 		}
-		if n := len(out); n > 0 && out[n-1].st.GetForeground() == s.GetForeground() {
+		if n := len(out); n > 0 && out[n-1].st.GetUnderline() == s.GetUnderline() {
 			out[n-1].s += string(r)
 			continue
 		}
@@ -154,33 +203,38 @@ func nameSegs(name string, w int, st lipgloss.Style, q string) []seg {
 
 func (m *Model) hostsView(cw int) listView {
 	v := listView{
-		title: "Hosts", right: sFaint.Render(plural(len(m.hosts), "host", "hosts")),
-		hints: []hint{{"Enter", "open"}, {"n", "new session"}, {"a", "add host"}, {"Ctrl+O", "commands"}, {"?", "shortcuts"}},
+		crumb: sFaint.Render("hosts"),
+		facts: m.needFacts(sFaint.Render(plural(len(m.hosts), "host", "hosts"))),
+		hints: []hint{{"enter", "open"}, {"1–9", "jump"}, {"a", "add host"}, {"ctrl+o", "commands"}, {"?", "keys"}},
 	}
 	vh := m.visibleHosts()
-	if len(vh) == 0 {
-		v.rows = []string{sFaint.Render(trunc(fmt.Sprintf("Nothing matches '%s'.", m.hostFilter.query()), cw))}
-		return v
-	}
 	nameW := 8
 	for _, h := range vh {
 		nameW = max(nameW, cells(h.name()))
 	}
-	nameW = min(nameW, max(cw/3, 8))
-	v.listed, v.top = true, m.hostTop
+	nameW = min(nameW, max(cw/4, 8))
+	v.listed, v.top, v.sel = true, m.hostTop, m.hostSel
 	for i := m.hostTop; i < len(vh) && i < m.hostTop+m.listRoom(); i++ {
-		v.rows = append(v.rows, m.hostRow(vh[i], i+1, i == m.hostSel, cw, nameW))
+		v.rows = append(v.rows, marker(i == m.hostSel)+m.hostRow(vh[i], i+1, i == m.hostSel, cw-2, nameW))
 	}
 	if h := m.selectedHost(); h != nil {
-		v.detail = m.hostDetail(h, cw)
+		v.detail = "  " + m.hostDetail(h, cw-2)
 	}
 	return v
 }
 
-const hostRight = 8 // latency, or nothing
+// needFacts adds "1 needs you" to the facts, in yellow, when it is so.
+func (m *Model) needFacts(facts string) string {
+	if n := m.needYou(); n > 0 {
+		return facts + sFaint.Render(dot) + sWarning.Render(fmt.Sprintf("%d needs you", n))
+	}
+	return facts
+}
+
+const hostRight = 6 // latency, or nothing
 
 func (m *Model) hostRow(h *hostConn, n int, selected bool, cw, nameW int) string {
-	detailW := cw - 4 - nameW - 2 - 2 - hostRight - 1
+	detailW := cw - 4 - nameW - 2 - 2 - hostRight - 2 - traceCells
 	glyph := seg{glyphOnline, sSuccess}
 	nameSt := sBold
 	var detail []seg
@@ -188,14 +242,13 @@ func (m *Model) hostRow(h *hostConn, n int, selected bool, cw, nameW int) string
 	blank := seg{strings.Repeat(" ", hostRight), sPlain}
 	switch h.status {
 	case stConnecting:
-		glyph, right = seg{m.spinner(), sKey}, blank
+		glyph, right = seg{m.spinner(), sAccent}, blank
 		text := "connecting…"
 		if len(h.sessions) > 0 {
-			text = m.summaryText(h) + " · connecting…"
+			text = m.summaryText(h) + dot + "connecting…"
 		}
-		if selected {
-			detail = []seg{{text, sFaint}}
-		} else {
+		detail = []seg{{text, sFaint}}
+		if !selected {
 			detail = []seg{{m.shimmer(text), sPlain}}
 		}
 	case stOffline:
@@ -213,11 +266,27 @@ func (m *Model) hostRow(h *hostConn, n int, selected bool, cw, nameW int) string
 		used += cells(detail[i].s)
 	}
 	segs := []seg{gutter(n), {" ", sPlain}, glyph, {" ", sPlain}}
-	segs = append(segs, nameSegs(h.name(), nameW, nameSt, m.hostFilter.query())...)
+	segs = append(segs, nameSegs(h.name(), nameW, nameSt, "")...)
 	segs = append(segs, seg{"  ", sPlain})
 	segs = append(segs, detail...)
-	segs = append(segs, seg{strings.Repeat(" ", max(detailW-used, 0)), sPlain}, seg{"  ", sPlain}, right, seg{" ", sPlain})
+	segs = append(segs, seg{strings.Repeat(" ", max(detailW-used, 0)), sPlain}, seg{"  ", sPlain}, right, seg{"  ", sPlain},
+		seg{m.hostTrace(h), sPlain})
 	return listRow(selected, segs...)
+}
+
+// hostTrace is the trace of all of a host's sessions together.
+func (m *Model) hostTrace(h *hostConn) string {
+	k := sessKey{h.name(), ""}
+	var all []timeList
+	for _, s := range h.sessions {
+		all = append(all, m.traces[sessKey{h.name(), s.ID}])
+	}
+	m.traces[k] = mergeTimes(all)
+	st := sFaint
+	if h.online() && len(m.traces[k]) > 0 {
+		st = sAccent
+	}
+	return m.trace(k, st)
 }
 
 // summaryText is a host's sessions in a few words: "4 sessions".
@@ -271,55 +340,91 @@ func (m *Model) hostDetail(h *hostConn, cw int) string {
 // Sessions.
 
 func (m *Model) sessionsView(cw int) listView {
-	v := listView{hints: []hint{{"Enter", "attach"}, {"n", "new"}, {"Space", "preview"}, {"Esc", "hosts"}, {"?", "shortcuts"}}}
+	v := listView{hints: []hint{{"enter", "attach"}, {"space", "peek"}, {"r", "rename"}, {"esc", "hosts"}, {"ctrl+o", "commands"}, {"?", "keys"}}}
 	h := m.selectedHost()
 	if h == nil {
-		v.title, v.right = "All sessions", sFaint.Render(plural(len(m.hosts), "host", "hosts"))
+		v.crumb, v.facts = sFaint.Render("all sessions"), m.needFacts(sFaint.Render(plural(len(m.hosts), "host", "hosts")))
 	} else {
-		v.title, v.right = h.name(), m.hostState(h)
+		v.crumb = sFaint.Render("› ") + sBold.Render(m.decode(h.name(), m.revealAt))
+		v.facts = m.hostState(h)
 	}
 	rows := m.rows()
 	if sessionRows(rows) == 0 {
-		v.rows = m.emptyState(cw)
+		for _, l := range m.emptyState(cw - 2) {
+			v.rows = append(v.rows, "  "+l)
+		}
 		return v
 	}
-	cols := sessCols(cw)
+	cols := sessCols(cw - 2)
 	n := 0
 	for i := range m.sessTop {
 		if rows[i].kind == rowSession {
 			n++
 		}
 	}
-	v.listed, v.top = true, m.sessTop
+	v.listed, v.top, v.sel = true, m.sessTop, m.selIdx
 	for i := m.sessTop; i < len(rows) && i < m.sessTop+m.listRoom(); i++ {
 		if rows[i].kind == rowSession {
 			n++
 		}
-		v.rows = append(v.rows, m.sessRowView(rows[i], n, cols, i == m.selIdx))
+		v.rows = append(v.rows, marker(i == m.selIdx && rows[i].kind == rowSession)+m.sessRowView(rows[i], n, cols, i == m.selIdx, false))
 	}
 	if hc, s := m.selectedPair(); s != nil {
-		v.detail = m.sessionDetail(hc, *s, cw)
+		v.detail = "  " + m.sessionDetail(hc, *s, cw-2)
 	}
 	return v
 }
 
-// hostState is the fact at the top right of a host's sessions.
+// searchView lists the sessions of every host that match the search.
+func (m *Model) searchView(cw int) listView {
+	v := listView{crumb: sFaint.Render("› ") + sBold.Render("search"), facts: sFaint.Render("every host")}
+	rs := m.results()
+	p := m.prompt
+	p.sel = min(p.sel, max(len(rs)-1, 0))
+	if len(rs) == 0 {
+		v.rows = []string{"  " + sFaint.Render(trunc(fmt.Sprintf("Nothing matches '%s'.", p.in.value()), cw-2))}
+		return v
+	}
+	cols := sessCols(cw - 2)
+	room := m.listRoom()
+	top := max(0, p.sel-room+1)
+	v.listed, v.top, v.sel = true, top, p.sel
+	for i := top; i < len(rs) && i < top+room; i++ {
+		v.rows = append(v.rows, marker(i == p.sel)+m.sessRowView(rs[i], i+1, cols, i == p.sel, true))
+	}
+	if r := rs[p.sel]; true {
+		v.detail = "  " + m.sessionDetail(r.h, r.s, cw-2)
+	}
+	return v
+}
+
+// hostState is the fact at the right of a host's sessions.
 func (m *Model) hostState(h *hostConn) string {
 	switch h.status {
 	case stConnecting:
-		return sKey.Render(m.spinner()) + " " + m.shimmer("connecting")
+		return sAccent.Render(m.spinner()) + " " + m.shimmer("connecting")
 	case stOffline:
 		return sFaint.Render("offline")
 	case stFailed:
 		return sDanger.Render("not ready")
 	}
-	return sFaint.Render(fmtLatency(h.latency))
+	facts := sFaint.Render(fmtLatency(h.latency) + dot + plural(len(h.sessions), "session", "sessions"))
+	need := 0
+	for _, s := range h.sessions {
+		if s.State == "needs_input" {
+			need++
+		}
+	}
+	if need > 0 {
+		facts += sFaint.Render(dot) + sWarning.Render(fmt.Sprintf("%d needs you", need))
+	}
+	return facts
 }
 
 // Column widths of a session row.
 const (
 	colAgent = 8
-	colState = 13
+	colState = 12
 	colAge   = 4
 )
 
@@ -329,70 +434,86 @@ type sessColumns struct {
 }
 
 func sessCols(cw int) sessColumns {
-	fixed := 4 + 2 + colAgent + 2 + 2 + colState + 2 + colAge + 1
+	fixed := 4 + 2 + colAgent + 2 + 2 + colState + 2 + colAge + 2 + traceCells
 	rest := max(cw-fixed, 12)
 	c := sessColumns{name: min(max(rest*45/100, 10), 28)}
 	c.folder = rest - c.name
 	return c
 }
 
-func (m *Model) sessRowView(r sessRow, n int, c sessColumns, selected bool) string {
+func (m *Model) sessRowView(r sessRow, n int, c sessColumns, selected, withHost bool) string {
 	switch r.kind {
 	case rowHeader:
-		return " " + sBold.Render(r.h.name()) + "  " + m.hostState(r.h)
+		return sBold.Render(r.h.name()) + "  " + m.hostState(r.h)
 	case rowNote:
 		msg, _ := errText(r.h.err)
 		if msg == "" {
 			msg = "not ready"
 		}
-		return "   " + sDanger.Render(glyphFail) + " " + sFaint.Render(trunc(sentence(msg), c.name+c.folder+20))
+		return "  " + sDanger.Render(glyphFail) + " " + sFaint.Render(trunc(sentence(msg), c.name+c.folder+20))
 	}
 	s := r.s
 	glyph, label := m.look(s)
+	traceSt := label.st
 	if !r.h.loaded {
 		// Remembered from the last run: shown at once, quiet until the host
 		// answers.
-		glyph.st, label.st = sFaint, sFaint
+		glyph.st, label.st, traceSt = sFaint, sFaint, sFaint
 	}
-	name := nameSegs(s.Name, c.name, sBold, m.sessFilter.query())
+	q := ""
+	if m.prompt != nil && m.prompt.mode == promptSearch {
+		q = m.prompt.in.value()
+	}
+	name := nameSegs(s.Name, c.name, sBold, q)
 	if m.rename != nil && m.rename.key == r.key() {
 		name = []seg{{fit(m.rename.in.view(c.name, true), c.name), sPlain}}
-		selected = false
+	}
+	where := truncPath(homePath(r.h, s.Cwd), c.folder)
+	if withHost {
+		where = trunc(r.h.name()+":"+homePath(r.h, s.Cwd), c.folder)
 	}
 	segs := []seg{gutter(n), {" ", sPlain}, glyph, {" ", sPlain}}
 	segs = append(segs, name...)
 	segs = append(segs,
 		seg{"  ", sPlain},
 		seg{fit(s.Agent, colAgent), sFaint}, seg{"  ", sPlain},
-		seg{fit(truncPath(homePath(r.h, s.Cwd), c.folder), c.folder), sFaint}, seg{"  ", sPlain},
+		seg{fit(where, c.folder), sFaint}, seg{"  ", sPlain},
 		seg{fit(label.s, colState), label.st}, seg{"  ", sPlain},
-		seg{fitRight(fmtAge(m.now().Sub(since(s))), colAge), sFaint}, seg{" ", sPlain})
+		seg{fitRight(fmtAge(m.now().Sub(since(s))), colAge), sFaint}, seg{"  ", sPlain},
+		seg{m.trace(r.key(), traceSt), sPlain})
 	return listRow(selected, segs...)
 }
 
 // sessionDetail is the line under the sessions: what the selected one is
-// waiting for, where it runs, and its memory.
+// doing now, read from its screen, or what it waits for; then where it runs
+// and its memory.
 func (m *Model) sessionDetail(h *hostConn, s client.Session, cw int) string {
-	var parts []string
-	if s.State == "needs_input" && s.Reason != "" {
-		parts = append(parts, sWarning.Render(trunc(s.Reason, cw/2)))
+	var now string
+	switch a := m.activity[sessKey{h.name(), s.ID}]; {
+	case s.State == "needs_input" && s.Reason != "":
+		now = sWarning.Render("● " + s.Reason)
+	case a.text != "" && s.Alive:
+		now = sAccent.Render("▸ ") + m.decode(a.text, a.at)
 	}
+	var facts []string
 	for _, p := range []string{homePath(h, s.Cwd), fmtMemory(s.MemoryCurrent, s.MemoryMax), s.ID} {
 		if p != "" {
-			parts = append(parts, sFaint.Render(p))
+			facts = append(facts, p)
 		}
 	}
 	if !h.loaded {
-		parts = append(parts, sFaint.Render("last seen before this run"))
+		facts = append(facts, "last seen before this run")
 	}
-	return trunc(strings.Join(parts, sFaint.Render(dot)), cw)
+	if now == "" {
+		return sFaint.Render(trunc(strings.Join(facts, dot), cw))
+	}
+	right := sFaint.Render(trunc(strings.Join(facts, dot), cw/2))
+	room := cw - cells(right) - 3
+	return trunc(now, room) + strings.Repeat(" ", max(room-cells(trunc(now, room)), 0)+3) + right
 }
 
 // emptyState explains an empty sessions list, and what to do next.
 func (m *Model) emptyState(cw int) []string {
-	if q := m.sessFilter.query(); q != "" {
-		return []string{sFaint.Render(trunc(fmt.Sprintf("Nothing matches '%s'.", q), cw))}
-	}
 	h := m.selectedHost()
 	if h == nil {
 		loaded, connecting := false, false
@@ -403,11 +524,11 @@ func (m *Model) emptyState(cw int) []string {
 		var out []string
 		switch {
 		case loaded && m.hideExited:
-			out = append(out, sFaint.Render("No running sessions."), "", keyHint(optKey+"+E", "show ended sessions"))
+			out = append(out, sFaint.Render("No running sessions."), "", keyHint(optKey+"+e", "show ended sessions"))
 		case loaded:
-			out = append(out, sFaint.Render("No sessions yet."), "", keyHint("Esc", "pick a host, then n for a new session"))
+			out = append(out, sFaint.Render("No sessions yet."), "", keyHint("esc", "pick a host, then n for a new session"))
 		case connecting:
-			out = append(out, sKey.Render(m.spinner())+" "+m.shimmer("Connecting…"))
+			out = append(out, sAccent.Render(m.spinner())+" "+m.shimmer("Connecting…"))
 		}
 		for _, x := range m.hosts {
 			if x.status == stOffline || x.status == stFailed {
@@ -420,21 +541,20 @@ func (m *Model) emptyState(cw int) []string {
 	case h.status == stOffline || h.status == stFailed:
 		return m.hostError(h, cw)
 	case !h.loaded:
-		return []string{sKey.Render(m.spinner()) + " " + m.shimmer(trunc("Connecting to "+h.name()+"…", cw-2))}
+		return []string{sAccent.Render(m.spinner()) + " " + m.shimmer(trunc("Connecting to "+h.name()+"…", cw-2))}
 	case len(h.sessions) > 0 && m.hideExited:
-		return []string{sFaint.Render("No running sessions."), "", keyHint(optKey+"+E", "show ended sessions")}
+		return []string{sFaint.Render("No running sessions."), "", keyHint(optKey+"+e", "show ended sessions")}
 	default:
-		return []string{sFaint.Render(trunc("No sessions on "+h.name()+" yet.", cw)), "", keyHint("n", "new session")}
+		return []string{sFaint.Render(trunc("No sessions on "+h.name()+" yet.", cw)), "", keyHint("n", "start one from a single line, like: claude ~/src/app")}
 	}
 }
 
 // keyHint is the faint hint of an empty list: "n new session".
 func keyHint(key, desc string) string {
-	return sKey.Faint(true).Render(key) + sFaint.Render(" "+desc)
+	return sKey.Render(key) + sFaint.Render(" "+desc)
 }
 
-// hostError says why a host cannot be used, and what to try, the way Amp
-// prints an error: a bold red "Error:", the message, then the next step.
+// hostError says why a host cannot be used, and what to try.
 func (m *Model) hostError(h *hostConn, cw int) []string {
 	msg, hint := errText(h.err)
 	if msg == "" {
@@ -446,20 +566,24 @@ func (m *Model) hostError(h *hostConn, cw int) []string {
 	return append(errorBlock(msg, hint, cw), "", sFaint.Render("Retrying in the background."))
 }
 
-// errorBlock is an error and the step to try next, wrapped to w cells.
+// errorBlock is an error and the step to try next, wrapped to w cells: a red
+// cross and the message, then an arrow and the step.
 func errorBlock(msg, hint string, w int) []string {
 	var out []string
-	for i, l := range wrap(sentence(msg), w-7) {
-		lead := sErrHead.Render("Error:") + " "
+	for i, l := range wrap(sentence(msg), w-2) {
+		lead := sErrHead.Render(glyphFail) + " "
 		if i > 0 {
-			lead = strings.Repeat(" ", 7)
+			lead = "  "
 		}
 		out = append(out, lead+l)
 	}
 	if hint != "" {
-		out = append(out, "")
-		for _, l := range wrap(hint, w) {
-			out = append(out, sLink.Render(l))
+		for i, l := range wrap(hint, w-2) {
+			lead := sAccent.Render(glyphNext) + " "
+			if i > 0 {
+				lead = "  "
+			}
+			out = append(out, lead+sLink.Render(l))
 		}
 	}
 	return out

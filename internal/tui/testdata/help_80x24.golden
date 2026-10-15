@@ -1,24 +1,24 @@
 
+  ⢄⡠⠊ simstim  › atlas-dev                     9ms · 4 sessions · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────
 
+  ▍ 1 ● auth-refact…  claude    ~/src/app         needs input     2m  ⣀⣀⣀⣀⣀⣀⣀⣀
+    2 ⠶ api-tests     codex     ~/src/api         working        14s  ⣀⣀⣀⣀⣀⣀⣀⣼
+    3 ○ notes         shell     ~                 idle            1h  ⣀⣀⣀⣀⣀⣀⣀⣀
+    4 ✓ docs-pass     opencode  ~/src/docs        exited 0        3h  ⣀⣀⣀⣀⣀⣀⣀⣀
 
+    ~/src/app · 6.1 of 8 GiB · s4
 
-  ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
-  │                                                                          │
-  │ 1 ● auth-refactor    claude    ~/src/app            needs input      2m  │
-  │                                                                          │
-  │ ~/src/app · 6.1 of 8 GiB · s4                                            │
-  │                                                                          │
-  │ ──────────────────────────────────────────────────────────────────────── │
-  │ ↑↓ move                             a add host                           │
-  │ Esc back to hosts                   i host details                       │
-  │ n new session                       / filter                             │
-  │ Enter attach                        Alt+E show ended                     │
-  │ Space preview                       ? shortcuts                          │
-  │ r/F2 rename                         q quit                               │
-  │ d delete                            Ctrl+O commands                      │
-  │ y copy attach command               Ctrl+C Ctrl+C quit                   │
-  │                                                                          │
-  ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+  ── Keys ────────────────────────────────────────────────────────────────────
 
+    ↑↓ jk          move                 a              add host
+    1–9            open that row        i              host details
+    esc            back to hosts        /              search every host
+    n              new session          alt+e          show ended
+    enter          attach               ?              keys
+    space          peek at the screen   q              quit
+    r f2           rename               ctrl+o         commands
+    d              delete               ctrl+c ctrl+c  quit
+    y              copy the attach co…
 
-
+    esc close

@@ -10,27 +10,27 @@
 
 
 
-            ╭─ Add a host ─────────────────────────────────────────────────────────────────── step 2 of 4 ─╮
-            │                                                                                              │
-            │ Testing box                                                                                  │
-            │                                                                                              │
-            │ ✕ connect                                                                                    │
-            │                                                                                              │
-            │ Error: Cannot reach box: Permission denied (publickey).                                      │
-            │                                                                                              │
-            │ simstim host add box   (it can ask for passwords)                                            │
-            │                                                                                              │
-            ╰───────────────────────────────────────────────────────────────── Enter try again · Esc back ─╯
+
+                                                ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+                                            ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+                                      ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+                                          ⠈⠑⠢⢌⡑⠢⠤⠤⠒⠁    ⢈⠦⡊   ⠈⠢⢄ ⢀⣔⠕⠊
+                                              ⠈⠒⠢⢄⣀⣀⣀⡠⠤⠒⠁ ⠈⠢⢄⡀ ⣀⡠⠝⠉
+                                                             ⠈⠉
+
+                                                     s i m s t i m
+                                                  jack in to any host
+
+                                        a add a host   ctrl+o commands   ? keys
 
 
+  ── Add a host ─────────────────────────────────────────────────────────────────────────────────────── step 2 of 4 ──
 
+    Testing box
 
+    ✕ connect
 
+    ✕ Cannot reach box: Permission denied (publickey).
+    → simstim host add box   (it can ask for passwords)
 
-
-
-
-
-
-
-
+    enter try again   esc back

@@ -19,7 +19,7 @@ import (
 )
 
 // The golden screens are the same on every platform.
-func init() { optKey = "Alt" }
+func init() { optKey = "alt" }
 
 // now is the fixed clock of every test.
 var now = time.Date(2026, 10, 15, 12, 0, 0, 0, time.UTC)
@@ -465,6 +465,7 @@ func keyMsg(k string) tea.KeyPressMsg {
 		"ctrl+c":     {Code: 'c', Mod: tea.ModCtrl},
 		"ctrl+o":     {Code: 'o', Mod: tea.ModCtrl},
 		"ctrl+u":     {Code: 'u', Mod: tea.ModCtrl},
+		"ctrl+f":     {Code: 'f', Mod: tea.ModCtrl},
 		"alt+e":      {Code: 'e', Mod: tea.ModAlt},
 	}
 	if m, ok := special[k]; ok {

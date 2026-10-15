@@ -85,8 +85,8 @@ func TestQuit(t *testing.T) {
 	if hs.quit || !hs.m.quitArmed {
 		t.Fatal("one ctrl+c quit, or did not arm the chord")
 	}
-	if !strings.Contains(plainScreen(hs.m), "Ctrl+C then") {
-		t.Fatal("no popup for the chord")
+	if !strings.Contains(plainScreen(hs.m), "ctrl+c again to quit") {
+		t.Fatal("the footer does not say what the chord does")
 	}
 	hs.key("esc")
 	if hs.quit || hs.m.quitArmed {
@@ -139,21 +139,20 @@ func TestHostsThenSessions(t *testing.T) {
 func TestNewSessionAttaches(t *testing.T) {
 	hs := home(t, 80, 24)
 	hs.key("n")
-	d, ok := hs.m.modal.(*newSession)
-	if !ok {
-		t.Fatalf("n on a host opened %T", hs.m.modal)
+	p := hs.m.prompt
+	if p == nil || p.mode != promptNew || p.host != "atlas-dev" {
+		t.Fatalf("n opened %+v", p)
 	}
-	if d.agent() != "claude" {
-		t.Fatalf("default agent %q", d.agent())
+	hs.typeText("cod")
+	hs.key("tab") // completes the agent
+	if got := p.in.value(); got != "codex" {
+		t.Fatalf("tab completed to %q", got)
 	}
-	hs.key("right", "tab", "ctrl+u")
-	hs.typeText("~/src/api")
-	hs.key("tab")
-	hs.typeText("api-fix")
-	hs.key("tab", "right", "enter")
+	hs.typeText(" ~/src/api api-fix +wt")
+	hs.key("enter")
 	hasCall(t, hs.be, "new atlas-dev agent=codex cwd=~/src/api name=api-fix worktree=true size=80x24")
-	if hs.m.modal != nil {
-		t.Fatal("the dialog stayed open")
+	if hs.m.prompt != nil {
+		t.Fatal("the prompt stayed open")
 	}
 	if len(hs.be.attached) != 1 || hs.be.attached[0].Session != "n005" {
 		t.Fatalf("attached %+v", hs.be.attached)
@@ -170,8 +169,46 @@ func TestNewSessionAttaches(t *testing.T) {
 		t.Fatal("the agent was not remembered")
 	}
 	hs.key("n")
-	if d := hs.m.modal.(*newSession); d.agent() != "codex" {
-		t.Fatalf("the next dialog picked %q", d.agent())
+	if !strings.HasPrefix(hs.m.prompt.in.placeholder, "codex ") {
+		t.Fatalf("the next quick start suggests %q", hs.m.prompt.in.placeholder)
+	}
+}
+
+func TestNewSessionWithTheForm(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("n")
+	hs.typeText("codex ~/src/api")
+	hs.key("ctrl+f")
+	d, ok := hs.m.modal.(*newSession)
+	if !ok || hs.m.prompt != nil {
+		t.Fatalf("ctrl+f opened %T", hs.m.modal)
+	}
+	if d.agent() != "codex" || d.folder.value() != "~/src/api" {
+		t.Fatalf("the form did not take the line: %q %q", d.agent(), d.folder.value())
+	}
+	hs.key("tab", "tab")
+	hs.typeText("api-fix")
+	hs.key("tab", "right", "enter")
+	hasCall(t, hs.be, "new atlas-dev agent=codex cwd=~/src/api name=api-fix worktree=true size=80x24")
+	if hs.m.modal != nil || len(hs.be.attached) != 1 {
+		t.Fatal("the form did not start and attach")
+	}
+}
+
+func TestQuickStartCompletesFolders(t *testing.T) {
+	hs := home(t, 80, 24)
+	hs.key("n")
+	hs.typeText("claude ~/src/a")
+	p := hs.m.prompt
+	if g := hs.m.ghost(); g != "pi/" {
+		t.Fatalf("ghost %q, folders %v", g, p.folders)
+	}
+	hs.key("tab")
+	if got := p.in.value(); got != "claude ~/src/api/" {
+		t.Fatalf("tab completed to %q", got)
+	}
+	if a := quickArgs("shell ~/x my name +wt", []string{"claude", "shell"}, "claude"); a.Agent != "shell" || a.Cwd != "~/x" || a.Name != "my-name" || !a.Worktree {
+		t.Fatalf("quickArgs = %+v", a)
 	}
 }
 
@@ -191,12 +228,12 @@ func TestNewSessionError(t *testing.T) {
 	hs := home(t, 80, 24)
 	hs.be.state["atlas-dev"].newErr = &client.UserError{Msg: "codex is not installed on this host", Hint: "Install it on the host, then try again."}
 	hs.key("n", "enter")
-	d, ok := hs.m.modal.(*newSession)
-	if !ok || d.err == nil || d.starting {
-		t.Fatalf("the error is not in the dialog: %T %+v", hs.m.modal, d)
+	p := hs.m.prompt
+	if p == nil || p.err == nil || p.starting {
+		t.Fatalf("the error is not on the prompt: %+v", p)
 	}
 	out := plainScreen(hs.m)
-	if !strings.Contains(out, "Error: Codex is not installed on this host.") || !strings.Contains(out, "Install it on the host, then try again.") {
+	if !strings.Contains(out, "✕ Codex is not installed on this host.") || !strings.Contains(out, "→ Install it on the host, then try again.") {
 		t.Fatalf("the error or its next step is missing:\n%s", out)
 	}
 }
@@ -287,30 +324,36 @@ func TestCopyAttachCommand(t *testing.T) {
 	hasToast(t, hs.m, "Copied: "+brand.Name+" attach atlas-dev/auth-refactor.")
 }
 
-func TestFilter(t *testing.T) {
+func TestSearchEveryHost(t *testing.T) {
 	hs := home(t, 80, 24)
-	hs.key("ctrl+o")
-	hs.typeText("all sessions")
-	hs.key("enter")
-	if hs.m.screen != scrSessions || hs.m.cur != "" {
-		t.Fatal("the palette did not open the sessions of every host")
-	}
 	hs.key("/")
+	if hs.m.prompt == nil || hs.m.prompt.mode != promptSearch {
+		t.Fatal("/ did not open the search")
+	}
+	if n := len(hs.m.results()); n != 6 {
+		t.Fatalf("an empty search lists %d sessions, want all 6", n)
+	}
+	hs.typeText("gcp")
+	if n := len(hs.m.results()); n != 2 {
+		t.Fatalf("a host's name finds %d sessions, want its 2", n)
+	}
+	hs.key("ctrl+u")
 	hs.typeText("bench")
-	if n := sessionRows(hs.m.rows()); n != 1 || hs.m.sel.id != "g1" {
-		t.Fatalf("filter left %d rows, selected %v", n, hs.m.sel)
+	rs := hs.m.results()
+	if len(rs) != 1 || rs[0].s.ID != "g1" {
+		t.Fatalf("results %v", rs)
 	}
 	hs.key("enter")
-	if hs.m.sessFilter.typing || hs.m.sessFilter.query() != "bench" {
-		t.Fatal("enter did not keep the filter")
+	if len(hs.be.attached) != 1 || hs.be.attached[0].Session != "g1" || hs.m.cur != "gcp-dev" {
+		t.Fatal("enter did not attach the match")
 	}
-	hs.key("esc")
-	if hs.m.sessFilter.query() != "" || sessionRows(hs.m.rows()) != 6 {
-		t.Fatal("esc did not clear the filter")
+	hs.key("/", "esc")
+	if hs.m.prompt != nil {
+		t.Fatal("esc did not close the search")
 	}
 	hs.key("alt+e")
-	if n := sessionRows(hs.m.rows()); n != 4 {
-		t.Fatalf("alt+e left %d rows, want 4", n)
+	if n := sessionRows(hs.m.rows()); n != 1 {
+		t.Fatalf("alt+e left %d rows on gcp-dev, want 1", n)
 	}
 }
 
@@ -335,8 +378,8 @@ func TestPalette(t *testing.T) {
 	if len(items) == 0 || items[0].c.name() != "session: new" || items[0].reason != "aws-gpu is offline" {
 		t.Fatalf("first item %+v", items)
 	}
-	if !strings.Contains(plainScreen(hs.m), "new (unavailable)") {
-		t.Fatal("the command is not marked unavailable")
+	if !strings.Contains(plainScreen(hs.m), "New session · aws-gpu is offline") {
+		t.Fatalf("the command does not say why it cannot run:\n%s", plainScreen(hs.m))
 	}
 	hs.key("enter")
 	if hs.m.modal == nil {
@@ -358,20 +401,20 @@ func TestHelpComesFromTheRegistry(t *testing.T) {
 			hs.key("enter")
 		}
 		hs.key("?")
-		if !hs.m.showHelp || hs.m.modal != nil {
-			t.Fatal("? did not show the shortcuts in the box")
+		if _, ok := hs.m.modal.(*helpSheet); !ok {
+			t.Fatalf("? opened %T", hs.m.modal)
 		}
 		out := plainScreen(hs.m)
 		for _, c := range commands {
 			for _, b := range c.keys {
 				if !c.hidden && c.applies(hs.m, b) && !strings.Contains(out, keyName(b.key)) {
-					t.Errorf("screen %v: the shortcuts miss %s for %s", hs.m.screen, keyName(b.key), c.name())
+					t.Errorf("screen %v: the keys miss %s for %s", hs.m.screen, keyName(b.key), c.name())
 				}
 			}
 		}
 		hs.key("?")
-		if hs.m.showHelp {
-			t.Fatal("? did not hide the shortcuts")
+		if hs.m.modal != nil {
+			t.Fatal("? did not close the keys")
 		}
 	}
 }
@@ -418,7 +461,7 @@ func TestOfflineHostShowsTry(t *testing.T) {
 	hs := home(t, 80, 24)
 	hs.key("down", "enter")
 	out := plainScreen(hs.m)
-	for _, want := range []string{"Error: Cannot reach aws-gpu:", "ssh aws-gpu   (check that this works first)", "Retrying in the background."} {
+	for _, want := range []string{"✕ Cannot reach aws-gpu:", "→ ssh aws-gpu   (check that this works first)", "Retrying in the background."} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in:\n%s", want, out)
 		}
@@ -601,9 +644,9 @@ func TestFramesOnlyWhenSomethingMoves(t *testing.T) {
 	if d := hs.m.frameNeed(); d != 0 {
 		t.Fatalf("an idle screen ticks every %v", d)
 	}
-	hs.key("n") // a dialog opens: its border glows once round
+	hs.key("?") // a sheet rises
 	if d := hs.m.frameNeed(); d != fastFrame {
-		t.Fatalf("a dialog opening ticks at %v", d)
+		t.Fatalf("a sheet rising ticks at %v", d)
 	}
 }
 
@@ -646,19 +689,6 @@ func TestRunNeedsATerminal(t *testing.T) {
 	}
 }
 
-func TestHostFilterKeepsTheHost(t *testing.T) {
-	hs := home(t, 80, 24)
-	hs.key("/")
-	hs.typeText("gcp")
-	if h := hs.m.selectedHost(); h == nil || h.name() != "gcp-dev" {
-		t.Fatalf("the filter selected %v", h)
-	}
-	hs.key("esc")
-	if h := hs.m.selectedHost(); h == nil || h.name() != "gcp-dev" {
-		t.Fatalf("clearing the filter moved to %v", h)
-	}
-}
-
 func TestStaleListIsIgnored(t *testing.T) {
 	hs := home(t, 80, 24)
 	h := hs.m.hostByName("atlas-dev")
@@ -681,27 +711,28 @@ func TestMarkMotion(t *testing.T) {
 	if strings.Join(hs.m.markLines(), "\n") != still {
 		t.Fatal("the mark moved with motion off")
 	}
-	if got := ansi.Strip(hs.m.welcomeTitle()); got != "Welcome to "+brand.DisplayName {
+	spaced := strings.Join(strings.Split(brand.Name, ""), " ")
+	if got := ansi.Strip(hs.m.welcomeTitle()); got != spaced {
 		t.Fatalf("with motion off the title is whole at once, got %q", got)
 	}
 	hs.m.motion = true
 	hs.m.epoch = hs.clock
-	if got := ansi.Strip(hs.m.welcomeTitle()); strings.Contains(got, "Welcome") {
-		t.Fatalf("with motion on the title types in, got %q at once", got)
+	if got := ansi.Strip(hs.m.welcomeTitle()); got == spaced {
+		t.Fatalf("with motion on the title decodes, got %q at once", got)
 	}
 	a := strings.Join(hs.m.markLines(), "\n")
 	hs.clock = hs.clock.Add(800 * time.Millisecond)
 	if strings.Join(hs.m.markLines(), "\n") == a {
 		t.Fatal("the mark did not move with motion on")
 	}
-	if got := ansi.Strip(hs.m.welcomeTitle()); got != "Welcome to "+brand.DisplayName {
-		t.Fatalf("the title did not finish typing in 800 ms: %q", got)
+	if got := ansi.Strip(hs.m.welcomeTitle()); got != spaced {
+		t.Fatalf("the title did not finish decoding in 800 ms: %q", got)
 	}
 }
 
 func TestFolderCompletion(t *testing.T) {
 	hs := home(t, 80, 24)
-	hs.key("n", "tab")
+	hs.key("n", "ctrl+f", "tab")
 	d := hs.m.modal.(*newSession)
 	if !d.hints || len(d.suggest) == 0 || d.suggest[0] != "~/src/app" {
 		t.Fatalf("an empty folder should show recent folders as hints, got %v (hints %v)", d.suggest, d.hints)
@@ -726,7 +757,7 @@ func TestFolderCompletion(t *testing.T) {
 
 func TestOtherCommand(t *testing.T) {
 	hs := home(t, 80, 24)
-	hs.key("n")
+	hs.key("n", "ctrl+f")
 	d := hs.m.modal.(*newSession)
 	for d.agent() != otherAgent {
 		hs.key("right")
@@ -767,7 +798,7 @@ func TestPreviewOpensOnAKey(t *testing.T) {
 }
 
 func TestKeyNames(t *testing.T) {
-	for k, want := range map[string]string{"enter": "Enter", "ctrl+o": "Ctrl+O", "alt+e": optKey + "+E", "n": "n", "?": "?", "f2": "F2", "space": "Space"} {
+	for k, want := range map[string]string{"enter": "enter", "ctrl+o": "ctrl+o", "alt+e": optKey + "+e", "n": "n", "?": "?", "f2": "f2", "space": "space"} {
 		if got := keyName(k); got != want {
 			t.Errorf("keyName(%q) = %q, want %q", k, got, want)
 		}

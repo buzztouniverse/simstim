@@ -432,7 +432,6 @@ func (w *wizard) onMsg(m *Model, msg tea.Msg) tea.Cmd {
 		conn := w.conn
 		w.conn = nil
 		cmd := m.addHost(w.host, conn, w.info)
-		m.hostFilter = filter{}
 		if h := m.hostByName(w.host.Name); h != nil {
 			m.openHost(h)
 		}
@@ -452,21 +451,21 @@ func (w *wizard) view(m *Model) string {
 		body, hints = w.whereView(cw)
 	case wzTest:
 		body = append([]string{"", sBold.Render("Testing " + w.host.Name), ""}, w.checkLines(m, cw)...)
-		hints = []hint{{"Enter", "next"}, {"Esc", "back"}}
+		hints = []hint{{"enter", "next"}, {"esc", "back"}}
 		if w.err != nil {
-			hints = []hint{{"Enter", "try again"}, {"Esc", "back"}}
+			hints = []hint{{"enter", "try again"}, {"esc", "back"}}
 		}
 	case wzInstall:
 		title = fmt.Sprintf("Install %s on %s?", brand.HostBinary, w.host.Name)
 		body = w.installView(m, cw)
-		hints = []hint{{"Enter", "install"}, {"Esc", "back"}}
+		hints = []hint{{"enter", "install"}, {"esc", "back"}}
 	case wzReady:
 		body = w.readyView(m, cw)
-		hints = []hint{{"Enter", "start a session"}, {"Esc", "close"}}
+		hints = []hint{{"enter", "start a session"}, {"esc", "close"}}
 		if !w.saved {
-			hints = []hint{{"Esc", "back"}}
+			hints = []hint{{"esc", "back"}}
 			if w.err != nil {
-				hints = []hint{{"Enter", "try again"}, {"Esc", "back"}}
+				hints = []hint{{"enter", "try again"}, {"esc", "back"}}
 			}
 		}
 	}
@@ -475,7 +474,7 @@ func (w *wizard) view(m *Model) string {
 	}
 	body = append(body, "")
 	step := sFaint.Render(fmt.Sprintf("step %d of %d", int(w.step)+1, wizSteps))
-	return box(width, len(body)+2, title, step, hintsFor(hints, width), body, toneNormal)
+	return sheet(width, title, step, hints, trimBlank(body), toneNormal)
 }
 
 func (w *wizard) whereView(cw int) ([]string, []hint) {
@@ -504,7 +503,7 @@ func (w *wizard) whereView(cw int) ([]string, []hint) {
 		label(1, "Name")+w.in[1].view(fw, w.field == 1),
 		label(2, "SSH config")+w.in[2].view(fw, w.field == 2),
 	)
-	hints := []hint{{"↑↓", "pick from SSH config"}, {"Tab", "next field"}, {"Enter", "test"}, {"Esc", "cancel"}}
+	hints := []hint{{"↑↓", "pick from SSH config"}, {"tab", "next field"}, {"enter", "test"}, {"esc", "cancel"}}
 	if w.field != 0 {
 		hints[0] = hint{"↑↓", "field"}
 	}

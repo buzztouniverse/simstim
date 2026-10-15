@@ -69,7 +69,7 @@ func TestQuickOpen(t *testing.T) {
 	if len(hs.be.attached) != 1 || hs.be.attached[0].Session != "g1" {
 		t.Fatalf("1 attached %+v", hs.be.attached)
 	}
-	if !strings.Contains(plainScreen(hs.m), "1 ≈ bench") {
+	if !strings.Contains(plainScreen(hs.m), "1 "+glyphSpinStill+" bench") {
 		t.Fatal("rows do not show their numbers")
 	}
 }
@@ -93,9 +93,9 @@ func TestMouse(t *testing.T) {
 	}
 	hs.key("ctrl+o")
 	hs.m.render()
-	click(hs.m.modalGeo.x+10, hs.m.modalGeo.y+4) // the first command: session new
-	if _, ok := hs.m.modal.(*newSession); !ok {
-		t.Fatalf("a click on a palette row opened %T", hs.m.modal)
+	click(hs.m.modalGeo.x+10, hs.m.modalGeo.y+4) // the first command: new session
+	if hs.m.modal != nil || hs.m.prompt == nil || hs.m.prompt.mode != promptNew {
+		t.Fatalf("a click on a palette row ran nothing: modal %T, prompt %+v", hs.m.modal, hs.m.prompt)
 	}
 }
 
@@ -160,23 +160,27 @@ func TestTermColors(t *testing.T) {
 	}
 }
 
-func TestGlowTravels(t *testing.T) {
-	m := &Model{}
-	c := lipgloss.NewCanvas(20, 5)
-	b := box(20, 5, "", "", "", nil, toneNormal)
-	drawn := func() *lipgloss.Canvas {
-		c = lipgloss.NewCanvas(20, 5)
-		uvDraw(c, b)
-		return c
+func TestScanRuns(t *testing.T) {
+	m := &Model{motion: true, now: func() time.Time { return now }, epoch: now}
+	c := lipgloss.NewCanvas(40, 1)
+	uvDraw(c, sFaint.Render(strings.Repeat("─", 40)))
+	m.scan(c, 0, 0, 40)
+	lit := func() int {
+		n := 0
+		for x := range 40 {
+			if c.CellAt(x, 0).Style.Fg == colAccent {
+				n++
+			}
+		}
+		return n
 	}
-	m.applyGlow(drawn(), glow{w: 20, h: 5, pos: 0, strength: 1})
-	head, far := c.CellAt(0, 0).Style, c.CellAt(10, 4).Style
-	if head.Fg != lipgloss.BrightWhite || far.Attrs == 0 {
-		t.Fatalf("without blends the head is bright and the rest faint: head %+v, far %+v", head, far)
-	}
-	m.applyGlow(drawn(), glow{w: 20, h: 5, pos: 0.5, strength: 1})
-	if c.CellAt(0, 0).Style.Fg == lipgloss.BrightWhite {
-		t.Fatal("the glow did not travel")
+	first := lit()
+	m.now = func() time.Time { return now.Add(glowLap / 2) }
+	c = lipgloss.NewCanvas(40, 1)
+	uvDraw(c, sFaint.Render(strings.Repeat("─", 40)))
+	m.scan(c, 0, 0, 40)
+	if lit() == 0 || c.CellAt(20, 0).Style.Fg != colAccent {
+		t.Fatalf("half a lap in, the band is not in the middle (lit at start: %d)", first)
 	}
 }
 
@@ -191,5 +195,40 @@ func TestLifeFrames(t *testing.T) {
 	}
 	if len(seen) < 10 {
 		t.Fatalf("only %d different frames", len(seen))
+	}
+}
+
+func TestActivityLine(t *testing.T) {
+	screen := "\x1b[2J\x1b[H" +
+		"> Make the API tests pass\r\n\r\n" +
+		"  ran go test ./... (3 failed)\r\n" +
+		"∴ Working (14s · esc to interrupt)\r\n" +
+		"╭──────────────────────────╮\r\n" +
+		"│ >                        │\r\n" +
+		"╰──────────────────────────╯\r\n" +
+		"  ? for shortcuts      ~/src/api\r\n"
+	if got := activityLine(renderScreen([]byte(screen), 40, 10)); got != "∴ Working (14s · esc to interrupt)" {
+		t.Fatalf("activity %q", got)
+	}
+	if got := activityLine(renderScreen([]byte("\x1b[2J"), 40, 10)); got != "" {
+		t.Fatalf("a blank screen says %q", got)
+	}
+}
+
+func TestTraceRisesAndFalls(t *testing.T) {
+	m := &Model{now: func() time.Time { return now }, traces: map[sessKey][]time.Time{}}
+	k := sessKey{"h", "s"}
+	flat := ansi.Strip(m.trace(k, sPlain))
+	if flat != strings.Repeat("⣀", traceCells) {
+		t.Fatalf("a quiet session's trace is %q", flat)
+	}
+	m.traces[k] = []time.Time{now.Add(-time.Second), now}
+	busy := ansi.Strip(m.trace(k, sPlain))
+	if busy == flat || []rune(busy)[traceCells-1] == '⣀' {
+		t.Fatalf("output just now does not raise the end of the trace: %q", busy)
+	}
+	m.now = func() time.Time { return now.Add(time.Minute) }
+	if got := ansi.Strip(m.trace(k, sPlain)); got != flat {
+		t.Fatalf("a minute later the trace is %q, not flat", got)
 	}
 }

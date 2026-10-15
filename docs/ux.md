@@ -1,364 +1,311 @@
 # simstim UX
 
-**Status:** accepted, 15 October 2026. This design replaces the first one, which had one home screen with panes and a permanent preview. [Decision 0009](decisions/0009-light-launcher.md) gives the reasons.
+**Status:** accepted, 15 October 2026. This is the third design of the client's screens:
+- the first was one home screen with panes;
+- the second was a light launcher that followed Amp's CLI ([decision 0009](decisions/0009-light-launcher.md));
+- this one keeps that launcher's flow, with a look and motion of our own ([decision 0012](decisions/0012-own-look.md)).
 
 simstim has two kinds of screen, with opposite rules:
 
 | | The launcher | An attached session |
 | --- | --- | --- |
-| What | Hosts, sessions, dialogs, the palette, the add-host wizard | The agent's real TUI |
+| What | Hosts, sessions, search, the quick start, sheets, the add-host wizard | The agent's real TUI |
 | Who draws it | simstim, in the alternate screen | The agent, byte for byte |
 | Job | Start or join a session in a few keys, then get out of the way | Everything else |
-| Style | Amp's CLI, as observed: one framed list, calm and keyboard first | Untouched. Every row and column is the agent's. |
+| Look | Our own: a signal. One column, a cyan accent, live traces, sheets that rise from the bottom | Untouched. Every row and column is the agent's. |
 | Keys simstim reads | All of them | Only the detach key, and Ctrl+V when the clipboard holds an image |
 
-The look and the key flow follow Amp's CLI, measured cell by cell in [Amp's TUI, observed](research/amp-tui.md). It is clean-room: we match what we observed, and copy no code, prompts, logos or fonts.
+[Amp's CLI](research/amp-tui.md) was the baseline. We keep its good habits: colours from the terminal's palette, faint secondary text, a command palette, one list at a time. The rest is our own.
 
 ## 1. Principles
 
 1. **One job per screen.** Pick a host, then pick or start a session. Each screen is one list in one column. There are no sidebars, split panes, permanent previews or dashboards.
 2. **The session owns the terminal.** Once you attach, every row and column belongs to the agent. The client shows only two things of its own: the reconnect notice while the link is down, and system notifications (OSC 777), which draw nothing on the screen.
-3. **Amp's look.** It uses notched frames, a yellow title, blue keys, faint secondary text, borders in the text colour, and a yellow selection bar with black text.
-4. **The terminal's own colours.** Every colour is a palette slot or the terminal's default, so simstim matches your theme. Fixed RGB is kept for the brand only.
-5. **Few keys.** Enter goes forward, Esc goes back, `n` starts a session, `?` shows the keys, and Ctrl+O shows everything else.
-6. **Plain words.** Short labels, sentence case, no exclamation marks. Every error says what to try next.
-7. **Motion with a purpose.** Things move when they change, are busy or need you, smoothly and in the terminal's own colours, and never in the way of a key. One switch turns all motion off.
-8. **Fast paths.** The launcher draws at once from what it saw last time and opens where you left off, so `simstim` then Enter takes you back in. Numbers, the mouse and `attach -` shorten the common path further.
+3. **A signal, not a box.** No frame round the list. The look is a cyan accent, braille traces of each session's output, rules instead of boxes, and sheets that rise from the bottom. It reads like a console tuned to your sessions.
+4. **The terminal's own colours.** Every colour is a palette slot or the terminal's default, so simstim matches your theme. Fixed RGB is kept for the brand gradient.
+5. **Motion with a purpose.** Things move when they change, are busy or need you, smoothly and in your theme's colours. Motion never holds a key back for more than a moment, and one switch turns it off.
+6. **Fast paths.** The launcher draws at once and opens where you left off, so `simstim` then Enter takes you back in. A number opens a row, one line starts a session, and `/` searches every host.
+7. **Plain words.** Short labels in lower case for keys, sentence case for text, no exclamation marks. Every error says what to try next.
 
 ## 2. Screens
 
-The mockups are 80 columns wide and come from the golden tests in `internal/tui/testdata`. Wider terminals get a wider box, up to 96 columns, centred. The box starts a few rows down, at the same row on every screen, so moving between screens does not shift it.
+The mockups are 80 columns wide and come from the golden tests in `internal/tui/testdata`. The column grows with the terminal, up to 116 columns, centred.
 
 ### 2.1 First run
 
-With no hosts, the screen looks like Amp's welcome. Our own mark sits on the left, and a few lines sit beside it. In a narrow terminal the mark moves above the text.
+With no hosts, the screen is a centred welcome.
 
 ```
-          ⢀⡠⠤⣀  ⣀⣀⡀  ⢀⠔⠊⠉⠉⠒⢄⡀         Welcome to simstim
-        ⢀⠔⠁   ⢑⡜  ⠘⢄⠔⠁    ⢀⢤⣚⣢⣄⡀
-    ⠶⠶⣶⠪⢅    ⢠⠊⠈⢆ ⢠⠊⢆    ⣔⠕⠁  ⠈⠙⠳⠶    a to add a host (5 hosts in your SSH config)
-       ⠉⠢⡑⠢⠤⠒⠁  ⢀⢷⠁  ⠣⡀⢀⡮⠊            ctrl+o for commands · ? for shortcuts
-         ⠈⠑⠤⣀⣀⡠⠔⠁ ⠑⢄ ⣀⠜⠉
+                            ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+                        ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+                  ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+                      ⠈⠑⠢⢌⡑⠢⠤⠤⠒⠁    ⢈⠦⡊   ⠈⠢⢄ ⢀⣔⠕⠊
+                          ⠈⠒⠢⢄⣀⣀⣀⡠⠤⠒⠁ ⠈⠢⢄⡀ ⣀⡠⠝⠉
+
+                                 s i m s t i m
+                              jack in to any host
+
+                    a add a host   ctrl+o commands   ? keys
 ```
 
-- **The mark** is three strands of a signal, woven into a ribbon that pinches at both ends. It is drawn in braille, so the curves are smooth, and coloured in the brand gradient. With motion on, the strands flow, a pulse runs along the ribbon, and the strands are brighter where they cross.
-- **The title** is bold, in the brand gradient, and types itself in behind a cursor.
-- **The hints:** the keys are bold and the words are faint. The first hint says how many hosts your SSH config already has.
+The welcome plays as a short sequence:
+1. **The mark** opens out from its middle. It is three strands of a signal woven into a ribbon that pinches at both ends, drawn in braille, in the brand gradient. Then it flows, a pulse runs along it, and the strands are brighter where they cross.
+2. **The name** decodes out of braille noise, letter by letter.
+3. **The tagline**, then **the keys**, come in under it. The first key says how many hosts your SSH config already has.
 
-### 2.2 Hosts
+### 2.2 The launcher's layout
 
-The first screen once hosts exist. With exactly one host, simstim skips it and opens that host's sessions.
+Every list screen has the same parts, top to bottom:
 
 ```
-  ╭─ Hosts ──────────────────────────────────────────────────────── 3 hosts ─╮
-  │                                                                          │
-  │ 1 ● atlas-dev  4 sessions · 1 needs you                            9ms  │
-  │ 2 ◌ aws-gpu     offline                                                  │
-  │ 3 ● gcp-dev     2 sessions                                         41ms  │
-  │                                                                          │
-  │ ssh atlas-dev · Debian 13 · 4 CPUs · claude, codex, opencode, shell     │
-  │                                                                          │
-  ╰────────────────── Enter open · n new session · a add host · ? shortcuts ─╯
+  ⢄⡠⠊ simstim  › atlas-dev                     9ms · 4 sessions · 1 needs you   ← header
+  ────────────────────────────────────────────────────────────────────────────   ← rule
+
+  ▍ 1 ● auth-refact…  claude    ~/src/app         needs input     2m  ⣀⣀⣠⣴⣶⣦⣄⣀   ← the list
+    2 ⢼ api-tests     codex     ~/src/api         working        14s  ⣀⣴⣶⣦⣴⣶⣶⣼
+    3 ○ notes         shell     ~                 idle            1h  ⣀⣀⣀⣀⣀⣀⣀⣀
+    4 ✓ docs-pass     opencode  ~/src/docs        exited 0        3h  ⣀⣀⣀⣀⣀⣀⣀⣀
+
+    ● Do you want to proceed?              ~/src/app · 6.1 of 8 GiB · s4          ← the line under the list
+
+    ✓ Copied: simstim attach atlas-dev/auth-refactor.                            ← notices
+  ────────────────────────────────────────────────────────────────────────────   ← bottom rule
+    ❯ / search every host   n start a session                                     ← the prompt line
+    enter attach   space peek   r rename   esc hosts   ? keys                      ← the keys
+```
+
+- **The header** has three parts on the left: the logo (a three-cell braille wave), the name in the brand gradient, and where you are (`hosts`, `› atlas-dev`, `› search`). The facts sit on the right. A host's name decodes in when you open it.
+- **The rule** draws itself from the left when the launcher starts. While something is busy, such as a host connecting, a cyan band sweeps along it.
+- **Each row** has these columns:
+  - the marker: a cyan `▍` and a soft cyan tint on the selected row;
+  - its number, faint (1–9 open it);
+  - the state glyph and the name in bold;
+  - details, faint;
+  - at the right, the **trace**.
+- **The trace** is eight braille cells of the session's output over the last half minute. A busy agent draws a wave, a quiet one a flat line. It scrolls as time passes. It is coloured like the state: cyan for working, yellow for needs input, faint otherwise.
+- **The line under the list** is about the selected row.
+- **Notices** rise above the bottom rule.
+- **The prompt line** is where search and the quick start happen. When idle, it says how to use them.
+- **The keys** are in lower case, the key in cyan and its words faint, with wide gaps between them.
+
+### 2.3 Hosts
+
+```
+  ⢄⡠⠊ simstim  hosts                                     3 hosts · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────
+
+  ▍ 1 ● atlas-dev  4 sessions · 1 needs you                     9ms  ⣀⣀⣀⣀⣀⣀⣀⣼
+    2 ◌ aws-gpu     offline                                           ⣀⣀⣀⣀⣀⣀⣀⣀
+    3 ● gcp-dev     2 sessions                                  41ms  ⣀⣀⣀⣀⣀⣀⣀⣼
+
+    ssh atlas-dev · Debian 13 · 4 CPUs · claude, codex, opencode, shell
 ```
 
 - **Each row:**
-  - Its number, faint: 1–9 open the row at once.
-  - A state glyph: `●` green for online, the spinner while connecting, `◌` faint for offline, `✕` red for not ready.
-  - The name, in bold.
-  - A faint summary, in which the count that needs you is yellow.
-  - The round trip, faint, on the right.
-- **The selected row** is the selection bar. One faint line under the list says how the host is reached and what it runs.
-- **Keys:**
-  - Enter (or `l`, `→`, or its number) opens the host's sessions.
-  - `n` starts a session on the selected host.
-  - `a` adds a host, `i` shows its details, and `/` filters.
+  - The state: `●` green online, the spinner while connecting, `◌` faint offline, `✕` red not ready.
+  - The name, then a faint summary, in which the count that needs you is yellow.
+  - The round trip, then the trace of all the host's sessions together.
+- **The line under the list:** how the host is reached, and what it runs.
+- **Keys:** Enter (or `l`, `→`, or its number) opens the host's sessions. `n` starts a session there, `a` adds a host and `i` shows its details. With exactly one host, the launcher opens on its sessions.
 
-### 2.3 Sessions
-
-One host's sessions. The host's name is the title, and its round trip (or "offline") sits at the top right.
+### 2.4 Sessions
 
 ```
-  ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
-  │                                                                          │
-  │ 1 ● auth-refactor    claude    ~/src/app            needs input      2m  │
-  │ 2 ⢼ api-tests        codex     ~/src/api            working         14s  │
-  │ 3 ○ notes            shell     ~                    idle             1h  │
-  │ 4 ✓ docs-pass        opencode  ~/src/docs           exited 0         3h  │
-  │                                                                          │
-  │ Do you want to proceed? · ~/src/app · 6.1 of 8 GiB · s4                  │
-  │                                                                          │
-  ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+  ⢄⡠⠊ simstim  › atlas-dev                     9ms · 4 sessions · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────
+
+    1 ● auth-refact…  claude    ~/src/app         needs input     2m  ⣀⣀⣀⣀⣀⣀⣀⣀
+  ▍ 2 ⢼ api-tests     codex     ~/src/api         working        14s  ⣀⣀⣀⣀⣀⣀⣀⣼
+    3 ○ notes         shell     ~                 idle            1h  ⣀⣀⣀⣀⣀⣀⣀⣀
+    4 ✓ docs-pass     opencode  ~/src/docs        exited 0        3h  ⣀⣀⣀⣀⣀⣀⣀⣀
+
+    ▸ ∴ Working (14s · esc to interrupt)                      ~/src/api · s3
 ```
 
-- **Each row:**
-  - Its number, faint: 1–9 attach at once.
-  - The state glyph, then the name in bold. A working session's glyph is a tiny Game of Life in one braille cell; the dot of a session that needs you breathes.
-  - The agent and the folder, both faint.
-  - The state in its colour: needs input yellow, working blue, failed red, others faint.
-  - The time in that state, faint.
+- **Each row:** the number, the state glyph, the name, the agent and folder (faint), the state in its colour, the time in that state, and the trace.
+  - A working session's glyph is a tiny Game of Life in one braille cell.
+  - The dot of a session that needs you breathes.
 - **Order:** needs input, working, idle, then ended.
-- **The detail line** under the list is about the selected session: what it waits for (in yellow), its folder, its memory and its ID.
+- **The live activity line** says what the selected session is doing now:
+  - If it waits for you, its question, in yellow.
+  - Otherwise, the most telling line of its screen, after a cyan `▸`. That line is read from the session about every 1.5 s, and borders, prompts and the hints an agent always shows are skipped. It decodes in when it changes.
+  - Its folder, memory and ID sit at the right.
 - **Keys:**
-  - Enter (or its number) attaches. On an empty list, Enter starts a new session instead.
-  - `n` starts a session here.
-  - `r` renames in place: the name becomes a text field and the hints change to `Enter rename · Esc cancel`.
-  - `d` deletes, after a confirm.
-  - `y` copies the attach command.
-  - Space opens the preview.
-  - `/` filters, and Alt+E (Opt+E on a Mac) hides or shows ended sessions.
+  - Enter, or the row's number, attaches. On an empty list, Enter opens the quick start.
+  - `n` opens the quick start, `space` peeks at the screen, and `r` renames in place.
+  - `d` deletes after a confirm, `y` copies the attach command, and `alt+e` (`opt+e` on a Mac) hides or shows ended sessions.
   - Esc (or `h`, `←`) goes back to the hosts, on the same host.
+- **Before the host answers:**
+  - The launcher shows the sessions it remembers from the last run at once, quiet (faint), while the rule's scan says it is connecting.
+  - Enter attaches straight away.
+  - The line under the list says "last seen before this run" until the live list arrives ([decision 0011](decisions/0011-instant-launcher.md)).
+- **Offline:** a red `✕` and the message, then a cyan `→` and the step to try:
 
-**Empty:**
+  ```
+    ✕ Cannot reach aws-gpu: ssh: connect to host 198.51.100.4 port 22: Operation
+      timed out.
+    → ssh aws-gpu   (check that this works first)
+    Retrying in the background.
+  ```
 
-```
-  │ No sessions on gcp-dev yet.                                              │
-  │                                                                          │
-  │ n new session                                                            │
-```
+- **Every host:** `simstim flip`, or "All sessions" in the palette, lists every host's sessions in one list, under each host's name.
 
-**Offline**, in Amp's error form: a bold red "Error:", the message, then the next step in blue:
+### 2.5 Search every host
 
-```
-  ╭─ aws-gpu ────────────────────────────────────────────────────── offline ─╮
-  │                                                                          │
-  │ Error: Cannot reach aws-gpu: ssh: connect to host 198.51.100.4 port 22:      │
-  │        Operation timed out.                                              │
-  │                                                                          │
-  │ ssh aws-gpu   (check that this works first)                              │
-  │                                                                          │
-  │ Retrying in the background.                                              │
-```
-
-**Every host.** `simstim flip`, or "view: all sessions" in the palette, shows one list of every host's sessions. Each host's name is a bold line above its sessions.
-
-**Before the host answers.** The launcher remembers each host's sessions from the last run, and shows them at once, quiet (glyph and state faint), while SSH connects: the frame's border glows and the top right says "connecting". Enter attaches straight away. The detail line says "last seen before this run" until the live list arrives ([decision 0011](decisions/0011-instant-launcher.md)).
-
-### 2.4 New session
-
-`n`, or Enter on an empty list. It is a form dialog over the dimmed launcher.
+`/` from either list opens the prompt line in search mode. The list shows the sessions of every host that match. A result can match its name, agent, folder or ID, or its host's name. Matched letters are cyan and underlined.
 
 ```
-  ╭─ New session on atlas-dev ──────────────────────────────────────────────╮
-  │                                                                          │
-  │ Agent      claude  codex  opencode  shell  other…   not installed: gemi… │
-  │                                                                          │
-  │ Folder     ~/src/app                                                     │
-  │                                                                          │
-  │ Name       auth                                                          │
-  │                                                                          │
-  │ Worktree   ● this folder   ○ new worktree                                │
-  │                                                                          │
-  ╰──────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+  ⢄⡠⠊ simstim  › search                                             every host
+  ────────────────────────────────────────────────────────────────────────────
+
+  ▍ 1 ● auth-refact…  claude    atlas-dev:~/sr…  needs input     2m  ⣀⣀⣀⣀⣀⣀⣀⣀
+    2 ⢼ api-tests     codex     atlas-dev:~/sr…  working        14s  ⣀⣀⣀⣀⣀⣀⣀⣼
+  …
+    search ❯ te
+    enter attach   ↑↓ move   esc close
 ```
 
-- **Agent:** while the row has focus, the chosen agent is the selection bar. ←→ choose, and a letter jumps to an agent. The default is the agent used last on this host. Agents the host lacks are listed, faint. "other…" runs any command you type.
-- **Folder:** recent folders and repositories show under the field. Tab completes a typed path from the host.
-- **Name:** the folder's name by default.
-- **Worktree:** this folder, or a new git worktree.
-- **Enter** starts the session and attaches. Ctrl+Enter starts it and stays in the launcher. An error appears inside the dialog, in the "Error:" form.
+Enter attaches the selected result, and Esc closes the search.
 
-### 2.5 Confirm a delete
+### 2.6 Quick start
 
-A dialog in the danger tone: a red border and a red bold title.
+`n` opens the prompt line for a new session on the host in play. The whole session is one line: `claude ~/src/app auth`.
 
 ```
-  ╭─ Delete api-tests? ──────────────────────────────────────────────────────╮
-  │                                                                          │
-  │ This stops codex on atlas-dev and removes the session.                  │
-  │ The folder ~/src/api stays. Unsaved work in the agent is lost.           │
-  │                                                                          │
-  ╰──────────────────────────────────────────────── Enter delete · Esc keep ─╯
+    claude  codex  opencode  shell   ~/src/api/  ~/src/app/
+  ────────────────────────────────────────────────────────────────────────────
+    atlas-dev ❯ claude ~/src/api/
+    enter start   tab complete   ctrl+enter detached   ctrl+f form   esc cancel
 ```
 
-### 2.6 Preview
+- **The line:** an agent the host has, a folder (any word with a `/` or `~`), and the rest as the name. `+wt` asks for a new git worktree. Each part is optional: the agent defaults to the one used last on the host, and the folder to `~`.
+- **Completion:** a faint ghost after the cursor shows what Tab would add, either an agent's name or a folder on the host. The line above the rule lists the host's agents, with the one the line names lit, then the folders that match.
+- **Keys:**
+  - Enter starts the session and attaches, and `ctrl+enter` starts it detached.
+  - `ctrl+f` opens the full form (2.7) with the line filled in.
+  - While the session starts, the line shimmers "Starting claude on atlas-dev…". An error appears above the rule.
 
-Space opens the selected session's last screen in a dialog over the dimmed list. It loads when it opens, and refreshes while it stays open. It is never a permanent pane.
+### 2.7 Sheets
 
-```
-  ╭─ auth-refactor ──────────────────────────────────────────── needs input ─╮
-  │ claude · ~/src/app · 6.1 of 8 GiB                                        │
-  │ ──────────────────────────────────────────────────────────────────────── │
-  │ (the session's screen, as the terminal would show it)                    │
-  ╰───────────────────────────────────── Enter attach · ↑↓ next · Esc close ─╯
-```
-
-Inside the preview, ↑↓ move to the next session, Enter attaches, and Esc or Space closes it.
-
-### 2.7 Command palette and shortcuts
-
-**Ctrl+O** opens the palette, laid out like Amp's.
+Every dialog is a sheet. It rises from the bottom of the screen over the dimmed list, full width, with no side borders. Its title is in cyan, set into a rule across its top, its body is indented, and its keys are on its last line. A sheet's facts sit at the right of its rule.
 
 ```
-  ╭─ Commands ───────────────────────────────────────────────────────────────╮
-  │                                                                          │
-  │ > ses                                                                    │
-  │                                                                          │
-  │  session  new                                                         n  │
-  │  session  attach                                                  Enter  │
-  │  session  rename                                                      r  │
-  │  session  delete                                                      d  │
-  │  session  preview                                                 Space  │
-  ╰──────────────────────────────────────────────────────────────────────────╯
+  ── New session on atlas-dev ───────────────────────────────────────────────
+
+    Agent      claude  codex  opencode  shell  other…   not installed: gemi…
+    Folder     ~/src/app
+    Name       auth
+    Worktree   ● this folder   ○ new worktree
+
+    enter start   tab next   ctrl+enter start detached   esc cancel
 ```
 
-- **Layout:** a blank row, the filter line, a blank row, then the rows. There are no hints in the bottom border.
-- **Each row:** the noun, faint and aligned right; two spaces; the verb in bold; the key on the right in bold blue.
-- **The selected row** is the selection bar.
-- **Commands that cannot run** stay listed as "(unavailable)", in faint bold. Enter on one says why, in a notice.
+| Sheet | Opens on | What it holds |
+| --- | --- | --- |
+| New session | `ctrl+f` in the quick start, or the palette | Agent (the chosen one lit while the row has focus), folder with completion from the host, name, and worktree. "other…" runs any command you type. |
+| Delete | `d` | Red rule and title: "Delete api-tests?", what stops and what stays |
+| Peek | `space` | The session's last screen, refreshed while open; ↑↓ move to the next session, Enter attaches |
+| Commands | `ctrl+o` | The palette: a filter, then every command as plain words ("New session", "Peek at the screen") with its key in cyan. A command that cannot run says why, faint. |
+| Keys | `?` | Every key that works here, in two columns, built from the live registry |
+| Host details | `i` | Route, system, helper, agents, limits; `t` test, `s` shell, `r` reconnect, `x` remove |
+| Add a host | `a` | The wizard (2.10) |
 
-**`?`** shows the shortcuts inside the list's own box, under a rule, the way Amp shows them inside its prompt box. Press `?` again to hide them. They are built from the live registry, so a rebound key shows its new name.
+A click outside the palette, the peek, the host details or a confirm closes it.
 
-```
-  │ ──────────────────────────────────────────────────────────────────────── │
-  │ ↑↓ move                             a add host                           │
-  │ Esc back to hosts                   i host details                       │
-  │ n new session                       / filter                             │
-  │ Enter attach                        Alt+E show ended                     │
-```
+### 2.8 Notices and quitting
 
-### 2.8 Notices and the quit chord
+- **Notices** are short lines that slide in from the left above the bottom rule, and fade:
+  - success is a green `✓` and the text;
+  - information is a cyan `•`;
+  - an error is a red `✕`, then a cyan `→` and the step to try.
 
-**Notices** are short lines under the box. They are not framed and not in a corner, and they read like the lines of Amp's transcript. They go away after 4 s, or 8 s for an error, and at most four lines show at once.
-
-```
-  ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
-    ✓ Copied: simstim attach atlas-dev/auth-refactor.
-    Error: Cannot reach aws-gpu: timed out.
-           ssh aws-gpu
-```
-
-**Ctrl+C** opens Amp's chord popup at the bottom right. A second Ctrl+C quits. Any other key, Esc included, cancels. `q` quits at once. Quitting never stops a session.
-
-```
-                                                        ╭─ Ctrl+C then ────────╮
-                                                        │ Ctrl+C quit          │
-                                                        │    Esc cancel        │
-                                                        ╰──────────────────────╯
-```
+  They last 4 s, or 8 s for an error, and two lines show at once.
+- **Quitting:** `ctrl+c` turns the keys line into "ctrl+c again to quit, sessions keep running   esc stay". A second `ctrl+c` quits, and any other key stays. `q` quits at once. Quitting never stops a session.
 
 ### 2.9 Attached
 
 The agent owns the whole terminal: every row and every column. There is no border, status bar, sidebar or session list.
 
+- **Jack in:** with motion on, an attach starts with a 0.17 s sweep. The other rows fade, and a cyan line runs down from the chosen row. Then the terminal is the agent's.
 - **Size:** the agent's PTY is the terminal's size, and follows every resize.
 - **Window title:** the agent's own. simstim saves the title before attaching and puts it back on detach.
-- **Detach:** Ctrl+\ goes back to the launcher, on the same session. Press it twice quickly to send it to the agent.
-- **Lost connection.** This is the only thing the client draws on the screen:
+- **Detach:** Ctrl+\ goes back to the launcher, on the same session, and the rows fade back in. Press it twice quickly to send it to the agent.
+- **Lost connection** is the only thing the client draws on the screen:
   - At once, the title shows `⧗ reconnecting · atlas-dev/s4`, and an OSC 9;4 progress mark appears.
-  - After 3 s, one faint line is drawn on the bottom row:
+  - After 3 s, one faint line is drawn on the bottom row: ` simstim · connection lost · reconnecting · keys are not sent · ctrl+\ to leave`.
+  - On reconnect, a replay or a snapshot redraws the agent's screen over the line, and the title comes back. A notice follows in the launcher.
+- **System notifications** (OSC 777) tell you when another session needs you or ends, and when an image upload fails. They draw nothing on the screen.
 
-    ```
-     simstim · connection lost · reconnecting · keys are not sent · ctrl+\ to leave
-    ```
+### 2.10 Add a host
 
-  - On reconnect, a replay or a snapshot redraws the agent's screen over the line, and the title comes back. A notice follows in the launcher: "Reconnected to atlas-dev (missed 2.1 MiB, replayed)."
-- **System notifications** (OSC 777) tell you when another session needs you or ends, and when an image upload fails. They appear outside the terminal, so nothing on the screen changes.
-
-### 2.10 Host details
-
-`i`, or "host: details" in the palette.
-
-```
-  ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
-  │                                                                          │
-  │ Route      atlas-dev                                                    │
-  │ System     Debian 13 · amd64 · 4 CPUs · 8 GiB · 61 GiB free              │
-  │ Helper     simstim-host 0.1.0                                            │
-  │ Agents     claude · codex · opencode · shell                             │
-  │ Limits     3.2 GiB per session · 4 sessions                              │
-  │                                                                          │
-  ╰─────────────────── t test · s shell · r reconnect · x remove · Esc back ─╯
-```
-
-### 2.11 Fast paths
-
-- **Where you left off.** The launcher opens on the sessions of the host you last attached to, with that session selected. `simstim` then Enter takes you back in. Esc goes to the hosts.
-- **At once.** It draws the sessions it remembers before any host answers, and replaces them when the host does.
-- **Numbers.** 1–9 open the row with that number.
-- **The mouse.** A click selects a row; a click on the selected row opens it. The wheel moves the selection. In the palette a click runs a command. A click outside the palette, the preview, the host details or a confirm closes it.
-- **The tab title** counts the sessions that need you: `● 1 · simstim · homelab`. You can see it from another tab.
-- **When nobody is looking.** If a session starts to need you while the terminal is in the background, the launcher sends a desktop notification (OSC 777).
-- **From the shell.** `simstim attach -` attaches to the last session.
-
-### 2.12 Add a host
-
-`a`, from any screen. It is a dialog with one step per screen; the step count sits at the top right, and Esc goes back one step.
-
-```
-  ╭─ Add a host ─────────────────────────────────────────────── step 1 of 4 ─╮
-  │                                                                          │
-  │ Where does it live?                                                      │
-  │                                                                          │
-  │ SSH target   het                                                         │
-  │              From your SSH config: hetzner-1  (1 found)                  │
-  │ Name         het                                                         │
-  │ SSH config   optional: an extra SSH config file                          │
-  │                                                                          │
-  ╰───── ↑↓ pick from SSH config · Tab next field · Enter test · Esc cancel ─╯
-```
-
-The steps:
+`a`, from any screen: a sheet with one step per screen, the step count at the right of its rule. Esc goes back one step.
 
 1. **Where.** A target from `~/.ssh/config` (↑↓ pick, and typing filters), a name, and an optional extra SSH config file.
 2. **Test.** Each check shows the spinner, then `✓` or `✕` with the time it took. A failure shows the error and its next step.
-3. **Install the helper.** This is the consent screen. It says what is installed, where it goes and what else changes (linger, terminfo), and that nothing listens on the network.
+3. **Install the helper.** This is the consent screen. It says what is installed and where, what else changes (linger, terminfo), and that nothing listens on the network.
 4. **Ready.** The agents found, the system, and the memory cap per session. Enter starts a session on the new host, whose sessions are now open.
+
+### 2.11 Fast paths
+
+- **Where you left off.** The launcher opens on the sessions of the host you last attached to, with that session selected. `simstim` then Enter takes you back in.
+- **At once.** It draws the sessions it remembers before any host answers.
+- **Numbers.** 1–9 open the row with that number.
+- **Search and quick start.** `/` finds a session on any host; `n` starts one from a single line.
+- **The mouse.** Click a row to select it, and click the selected row to open it. The wheel moves the selection, and a click on a palette row runs it.
+- **The tab title** counts the sessions that need you: `● 1 · simstim · homelab`.
+- **When nobody is looking.** If a session starts to need you while the terminal is in the background, the launcher sends a desktop notification.
+- **From the shell.** `simstim attach -` attaches to the last session.
 
 ## 3. Keymap
 
-These keys work in the launcher. You can rebind any key in `config.toml`, and `simstim config keymap` prints the effective map.
+These keys work in the launcher. You can rebind any key in `config.toml`, and `simstim config keymap` prints the effective map. On screen, keys are written in lower case, as you type them: `enter`, `esc`, `ctrl+o`, `space`, `opt+e` on a Mac.
 
 | Key | Where | Action |
 | --- | --- | --- |
 | `↑` `↓` or `j` `k` | Lists | Move |
 | `1`–`9` | Lists | Open the row with that number: a host's sessions, or attach |
 | Click, wheel | Lists, palette | Select, open the selected row, move; run a palette command |
-| `Enter`, `l`, `→` | Hosts | Open the host's sessions |
-| `Esc`, `h`, `←` | Sessions | Back to the hosts |
-| `Enter` | Sessions | Attach, or start a session on an empty list |
-| `n` | Anywhere | New session on the host in play |
-| `a` | Anywhere | Add a host |
-| `i` | Anywhere | Host details |
-| `Space` | Sessions | Preview |
-| `r`, `F2` | Sessions | Rename |
+| `enter`, `l`, `→` | Hosts | Open the host's sessions |
+| `esc`, `h`, `←` | Sessions | Back to the hosts |
+| `enter` | Sessions | Attach, or open the quick start on an empty list |
+| `n` | Anywhere | Quick start on the host in play |
+| `/` | Anywhere | Search every host |
+| `space` | Sessions | Peek at the screen |
+| `r`, `f2` | Sessions | Rename |
 | `d` | Sessions | Delete, with a confirm |
 | `y` | Sessions | Copy the attach command |
-| `/` | Lists | Filter as you type; Enter keeps the filter, Esc clears it |
-| `Alt+E` (`Opt+E`) | Sessions | Hide or show ended sessions |
-| `Ctrl+Enter`, `Alt+Enter`, `Ctrl+J` | New-session dialog | Start detached |
-| `Ctrl+O` | Anywhere | Command palette |
-| `?` | Anywhere | Show or hide the shortcuts |
-| `Esc` | Dialogs | Back or cancel |
-| `q`, or `Ctrl+C` `Ctrl+C` | Anywhere | Quit. Sessions keep running. |
-| `Ctrl+\` | Attached | Detach. Press it twice to send it to the agent. |
-| `Ctrl+V` | Attached | Paste an image if the clipboard holds one; otherwise the key passes through |
-
-On screen, keys are written as Amp writes them: `Enter`, `Esc`, `Ctrl+O`, `Space`, single letters in lower case, and `Opt` for Alt on a Mac.
+| `alt+e` (`opt+e`) | Sessions | Hide or show ended sessions |
+| `a` | Anywhere | Add a host |
+| `i` | Anywhere | Host details |
+| `tab`, `ctrl+enter`, `ctrl+f` | Quick start | Complete; start detached; open the form |
+| `ctrl+o` | Anywhere | Commands |
+| `?` | Anywhere | Keys |
+| `esc` | Sheets, prompt | Back or cancel |
+| `q`, or `ctrl+c` `ctrl+c` | Anywhere | Quit. Sessions keep running. |
+| `ctrl+\` | Attached | Detach. Press it twice to send it to the agent. |
+| `ctrl+v` | Attached | Paste an image if the clipboard holds one; otherwise the key passes through |
 
 ## 4. Visual language
 
 ### 4.1 Palette
 
-Every token is a terminal palette slot, the terminal's default colour, or the faint attribute. So in 256- and 16-colour terminals the launcher looks the same as in truecolour; it is your theme that decides the actual colours. Amp works the same way ([research](research/amp-tui.md#2-palette)).
-
-The truecolour column gives the colours in the reference theme: the owner's Ghostty theme, which the README images also use.
+Every token is a terminal palette slot, the terminal's default colour, or the faint attribute. So the launcher looks the same in 256- and 16-colour terminals as in truecolour: your theme decides the colours. The truecolour column gives the colours in the reference theme, the owner's Ghostty theme, which the README images use.
 
 | Token | Sent as | Truecolour (reference theme) | 256 colours | 16 colours | Used for |
 | --- | --- | --- | --- | --- | --- |
-| text | default foreground | `#BFBDB6` | default | default | Body text, names, borders |
-| background | default background | `#0B0E14` | default | default | Never painted |
-| faint | SGR 2 on the text | `#656565` (half way to the background) | SGR 2 | SGR 2 | Hint words, agents, folders, ages, empty states, the dimmed backdrop |
-| title | slot 3, bold | `#F9AF4F` | 3 | yellow | Titles in borders, the chord title |
-| selection | background slot 3, text slot 0 | `#F9AF4F` behind `#1E232B` | 3 and 0 | yellow and black | The selected row, the chosen agent |
-| key | slot 4 | `#53BDFA` | 4 | blue | Keys (bold in lists and popups), the next step after an error, the spinner, working |
+| text | default foreground | `#BFBDB6` | default | default | Names, body text |
+| background | default background | `#0B0E14` | default | default | Never painted, except the tint |
+| faint | SGR 2 on the text | `#656565` (half way to the background) | SGR 2 | SGR 2 | Details, words in the keys, rules, the dimmed backdrop |
+| accent | slot 6 | `#90E1C6` | 6 | cyan | Keys, sheet titles, the marker, working, the prompt, links, the scan |
+| tint | the accent mixed 13 % into the background | `#1C292B` | none | none | The selected row (truecolour only: elsewhere the marker shows it) |
 | success | slot 2 | `#7FD962` | 2 | green | `✓`, an online host |
-| warning | slot 3 | `#F9AF4F` | 3 | yellow | Needs input |
-| danger | slot 1 | `#EA6C73` | 1 | red | "Error:", failed states, the delete dialog's frame |
+| warning | slot 3 | `#F9AF4F` | 3 | yellow | Needs input, its question, its trace |
+| danger | slot 1 | `#EA6C73` | 1 | red | `✕`, failed states, the delete sheet |
 | cursor | reverse video | `#BFBDB6` block | reverse | reverse | Text fields |
 
 ### 4.2 The brand
 
-One fixed gradient, from deep teal to electric cyan, colours the welcome mark and the welcome title. On a light background the teal is deeper, so it keeps its contrast. The terminal's colour support decides what you see:
+One fixed gradient, from deep teal to electric cyan, colours the welcome mark, the name in the header and on the welcome screen, and the logo. On a light background the teal is deeper, so it keeps its contrast.
 
 | | Dark background | Light background |
 | --- | --- | --- |
@@ -366,57 +313,60 @@ One fixed gradient, from deep teal to electric cyan, colours the welcome mark an
 | 256 colours (nearest index) | 30 (`#008787`) to 45 (`#00D7FF`) | 23 (`#005F5F`) to 31 (`#0087AF`) |
 | 16 colours | cyan (slot 6), no gradient | cyan (slot 6), no gradient |
 
-### 4.3 Type, frames and spacing
+### 4.3 Type and layout
 
-- **Bold:** titles, names in lists, verbs in the palette, keys in lists and popups, and keys in the welcome hints.
-- **Faint:** everything secondary (see the palette).
-- **Frames:** rounded light lines (`╭╮╰╯─│`), in the text colour, or red in the danger tone.
-  - The title sits in the top border at the left, and a fact at the right.
-  - Key hints sit in the bottom border at the right, with a space each side and one `─` before the corner.
+- **Bold:** names, the selected command, the brand. **Faint:** everything secondary. **Underline:** matched letters in search.
+- **No boxes.** Rules (`──`) divide the screen, and a sheet's title sits in its rule. The list has no frame.
 - **Spacing:**
-  - One cell of padding inside each side of a frame, and a blank row inside the top and the bottom.
-  - Two spaces between the columns of a row.
-  - In the palette, a blank row above and below the filter line.
-- **Truncation:** `…`. Paths are shortened in the middle and keep whole folders, `/home/dev/…/auth`; names are cut at the end.
-- **Dialogs:** centred over the launcher, which is dimmed by setting the faint attribute on every cell, so the effect works with any theme. One dialog shows at a time.
+  - A two-cell gutter holds the marker.
+  - The number and the glyph each take one cell, with one space after each.
+  - Columns are two spaces apart, and hints three.
+- **Truncation:** `…`. Paths keep whole folders, `/home/dev/…/auth`; names are cut at the end.
+- **Sheets** rise over the list, which is dimmed with the faint attribute, so the effect works with any theme. One sheet shows at a time.
 
 ### 4.4 Glyphs
 
 | Glyph | Meaning |
 | --- | --- |
+| `▍` cyan | The selected row |
+| `⢄⡠⠊` | The logo: a small braille wave |
 | `●` green / yellow | An online host / a session that needs input (it breathes) |
-| `∼ ≈ ≋` | The spinner: connecting, starting |
-| `⢼` braille | A working session: a tiny Game of Life on the cell's eight dots |
+| `⢼` braille, cyan | A working session: a tiny Game of Life on the cell's eight dots |
+| `⠁⠂⠄⡀⢀⠠⠐⠈` | The spinner: one dot running round a braille cell |
+| `⣀⣀⣴⣶⣦⣀` | A trace: output over the last half minute |
 | `○` | Idle |
 | `✓` green | Done, exited 0, a check passed |
-| `✕` red | Failed, exited with an error, a host that is not ready |
+| `✕` red | Failed, an error, a host that is not ready |
+| `→` cyan | The step to try next |
+| `▸` cyan | What the selected session is doing now |
 | `◌` | Offline, lost |
-| `•` | An information notice |
-| ` · ` | Between hints and between facts |
-| `>` | The filter line |
+| `❯` | The prompt |
 
-### 4.5 Motion
+### 4.5 Motion and sequences
 
-Motion is there to show change, work in progress and things that need you. It is never decoration that a key has to wait for: keys act at once, whatever is moving.
+Motion is there to show change, work in progress and things that need you. Keys act at once, whatever is moving. The one exception is the jack-in, which holds them for 0.17 s.
 
-| What moves | When | How |
+| Sequence | When | What happens |
 | --- | --- | --- |
-| The welcome mark | On the first-run screen | The strands flow and a pulse runs along the ribbon, at 30 fps |
-| The welcome title | When the first-run screen opens | Types in, one letter every 38 ms, behind a cursor |
-| List rows | When a list appears (start, hosts to sessions and back) | Fade in one after another: 22 ms apart, 140 ms each |
-| A frame's border | While it is busy: a host connecting, a session starting, the wizard's checks | A soft glow travels round it, once every 1.6 s; the rest of the border dims |
-| A dialog's border | When it opens, and the quit chord's popup | One lap of the glow in 0.5 s, fading as it goes |
-| Notices | When they come and go | Fade in over 150 ms, and out over the last 300 ms |
-| "Connecting…", "Starting…" | While they are true | A brighter band sweeps across the faint text |
-| A session that needs you | While it waits | Its dot breathes, one breath every 1.6 s |
-| A working session | While it works | Its braille glyph runs a tiny Game of Life |
-| The spinner | Connecting, starting | A small wave, `∼ ≈ ≋`, every 200 ms |
+| Boot | The launcher opens | The header rule draws from the left (0.26 s); the rows fade in one after another (22 ms apart, 140 ms each), then the line under them |
+| Slide | Into a host's sessions, or back | The list slides in, from the right going deeper and from the left coming back (0.18 s), and fades in; the host's name decodes in the header |
+| Glide | The selection moves | The marker moves at once; the row's tint fades over from the old row (0.11 s) |
+| Decode | A host's name, the welcome's name, a new activity line | Each letter settles out of braille noise (0.42 s) |
+| Rise | A sheet opens | It slides up from the bottom edge (0.16 s) over the dimming list |
+| Scan | A host connecting, a session starting, the wizard at work | A cyan band sweeps along the header rule, once every 1.6 s |
+| Jack in | An attach | The other rows fade and a cyan line runs down from the chosen row (0.17 s), then the agent takes over |
+| Notices | When they come and go | Slide in from the left over 150 ms and fade; fade out over the last 300 ms |
+| Shimmer | "Connecting…", "Starting…" | A brighter band sweeps across the faint text |
+| Breath | A session needs you | Its dot breathes, once every 1.6 s |
+| Life | A session works | Its braille glyph runs a tiny Game of Life |
+| Trace | Output | Each row's trace scrolls with time |
+| Welcome | The first-run screen | The ribbon opens out, flows and pulses (30 fps); the name decodes; the tagline and keys arrive |
 
-**Colour.** To blend smoothly, the launcher asks the terminal for its real colours: the default foreground and background (OSC 10 and 11) and the 16 palette slots (OSC 4), as Amp does. Fades and glows then mix those colours in truecolour, so they match your theme. Without truecolour, or before the terminal answers, the same motion uses steps of faint, normal and bold instead.
+**Colour.** To blend smoothly, the launcher asks the terminal for its real colours: the default foreground and background (OSC 10 and 11) and the 16 palette slots (OSC 4). Fades, the tint and the scan then mix those colours in truecolour, so they match your theme. Without truecolour, or before the terminal answers, the same motion uses steps of faint, normal and bold, and the marker alone shows the selection.
 
-**Cost.** One frame tick runs only while something moves: 30 fps for the welcome mark, glows and fades, 10 fps for breathing dots and working glyphs. When nothing moves, nothing repaints.
+**Cost.** One frame tick runs only while something moves: 30 fps for sequences, the scan and the welcome, and 10 fps for spinners, breathing dots, working glyphs and scrolling traces. When nothing moves, nothing repaints.
 
-**One switch.** `ui.motion = auto | on | off`. `auto` turns motion off inside SSH sessions, in Emacs and JetBrains terminals, and when `NO_COLOR` or `TERM=dumb` is set. With motion off every animation draws one still frame: the spinner shows `≈` and a working session shows `≈`.
+**One switch.** `ui.motion = auto | on | off`. `auto` turns motion off inside SSH sessions, in Emacs and JetBrains terminals, and when `NO_COLOR` or `TERM=dumb` is set. With motion off, every sequence is its last frame. Traces still show what happened, but they move only when the list refreshes.
 
 ### 4.6 Capability probe
 
@@ -431,18 +381,18 @@ It shows what the agent will get through the pass-through.
 
 ## 5. Feedback
 
-**Notices** (section 2.8):
+**Notices** (2.8):
 - "Detached. auth-refactor keeps running on atlas-dev."
 - "Reconnected to atlas-dev."
 - "Copied: simstim attach atlas-dev/auth-refactor."
 
-A repeat of a notice extends it instead of adding a line.
+A repeat extends the notice instead of adding a line.
 
 **Errors:**
 
 - Every error has a message and one next step.
-- In the launcher and in dialogs it shows as a bold red "Error:" and the message, with the next step in blue.
-- On the command line it prints the same way:
+- In the launcher and in sheets, an error is a red `✕` and the message, then a cyan `→` and the step.
+- On the command line it prints as a bold red `Error:` and the message, a blank line, then the step:
 
   ```
   Error: cannot reach atlas-dev through the jump host bastion.
@@ -450,7 +400,7 @@ A repeat of a notice extends it instead of adding a line.
   Try: simstim host test atlas-dev --verbose
   ```
 
-**Empty states:** a faint statement, a blank row, then a faint hint with its key in blue. "No sessions on gcp-dev yet." / "n new session". "Nothing matches 'xyz'."
+**Empty states:** a faint statement, a blank row, then a hint whose key is cyan. "No sessions on gcp-dev yet." / "n start one from a single line, like: claude ~/src/app". "Nothing matches 'xyz'."
 
 **Copy rules:**
 
@@ -471,7 +421,7 @@ The launcher is the home, and every action also has a command, for scripts and t
 | `simstim host start\|stop\|status <name>` | Runs the host's provider script |
 | `simstim new <host> [--agent claude] [--dir ~/src/app] [--name x] [--worktree [--base ref]] [--detach] [-- cmd…]` | Starts a session, and attaches unless `--detach` |
 | `simstim ls [--host h] [--json]` | Lists sessions, with their state and where the state came from |
-| `simstim attach <host>/<session>` | Attaches directly. Good for a Ghostty keybinding. `simstim attach -` attaches to the last session. |
+| `simstim attach <host>/<session>`, `attach -` | Attaches directly; `-` is the last session. Good for a Ghostty keybinding. |
 | `simstim flip [<host>/<session>]` | A quick switch: the sessions of every host in one list, then attach |
 | `simstim send <host>/<session> <text> [--no-enter]` | Types text into a session without attaching |
 | `simstim rename <host>/<session> <name>`, `kill <host>/<session>` | Renames; stops and removes (keeping a worktree that has work) |

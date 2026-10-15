@@ -254,6 +254,7 @@ func (m *Model) onConn(msg tea.Msg) tea.Cmd {
 		}
 		h.err = nil
 		cmd := m.alertNew(h, msg.list)
+		m.noteActivity(h, msg.list)
 		h.sessions, h.loaded = msg.list, true
 		m.syncSel()
 		if m.want.host == h.name() {

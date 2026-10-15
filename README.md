@@ -4,7 +4,7 @@
 
 simstim runs Claude Code, Codex, opencode, Gemini CLI, Amp or a plain shell in a session on a host you own: a VPS, a cloud VM or a homelab machine. Close the laptop, change networks, switch devices: the session keeps running. Come back, and you flip straight back in. Your terminal draws the agent's real screen, byte for byte, so keys, colours, scrollback, clipboard and notifications work as they do locally.
 
-![The launcher: the sessions on one host, each with its state, agent, folder and age, and the keys in the bottom border](docs/images/sessions.svg)
+![The launcher: the sessions on one host, each with its state, agent, folder, age and a trace of its output](docs/images/sessions.svg)
 
 > **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet. See [the status](docs/status.md).
 
@@ -46,7 +46,7 @@ just build        # builds the host helpers, then the client, into ./bin
 
 ```sh
 simstim host add my-vps                          # a Host from ~/.ssh/config: checks it, installs the helper
-simstim                                          # the launcher: Enter on a host, then Enter on a session (or n)
+simstim                                          # the launcher: Enter on a host, then Enter on a session; n to start one
 simstim new my-vps --agent claude --dir ~/src/app --worktree
 simstim attach my-vps/app                        # attach from a script or a terminal keybinding
 ```
@@ -67,29 +67,37 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 
 ## Screens
 
-The launcher does one thing: it starts or joins a session in a few keys, then gets out of the way. Each screen is one list in one column. Enter goes forward, Esc goes back, 1–9 open a row, and each box lists its keys on its bottom edge. It opens where you left off and draws at once, so `simstim` then Enter takes you back into your last session. The look starts from Amp's CLI, with smooth motion in your terminal's own colours ([UX](docs/ux.md)). `simstim demo` opens these screens with sample data, so you can try them before you add a host.
+The launcher does one thing: it starts or joins a session in a few keys, then gets out of the way. It is one list in one column. Enter goes forward, Esc goes back, a number opens a row, `/` searches every host, and `n` starts a session from one line. It opens where you left off and draws at once, so `simstim` then Enter takes you back into your last session. The look is its own: a cyan accent, a live trace of each session's output, and sheets that rise from the bottom, with smooth motion in your terminal's own colours ([UX](docs/ux.md)). `simstim demo` opens these screens with sample data.
 
-**Hosts.** Each host with its state, its sessions, and how many need you. Enter opens one.
+**Sessions.** Each session's state, agent, folder and a trace of its recent output. The line under the list says what the selected one is doing now, or what it is waiting for.
 
-![The hosts list: three hosts, one offline, with session counts and round-trip times](docs/images/hosts.svg)
+![The sessions on one host: a cyan marker on the selected row, a braille trace of output on each row, and the question the session waits for under the list](docs/images/sessions.svg)
 
-**New session.** `n` picks the agent, then the folder, with Tab completion from the host. A session can get its own git worktree.
+**Hosts.** Each host with its state, its sessions, how many need you, and the trace of all its output.
 
-![The new-session dialog: agent choice, a folder with completions from the host, a name, and a worktree option](docs/images/new-session.svg)
+![The hosts list: three hosts, one offline, with session counts, round-trip times and traces](docs/images/hosts.svg)
 
-**Commands.** Ctrl+O lists every action and its key. Type to filter.
+**Quick start.** `n`, then one line: `claude ~/src/app auth`. Tab completes the agent and the folder from the host; `ctrl+f` opens the full form.
 
-![The command palette, listing session, host and view commands with their keys](docs/images/commands.svg)
+![The quick-start line: the host's agents above the prompt, and a folder being completed](docs/images/new-session.svg)
 
-**Attached.** The agent owns every row and column of your terminal. There is no frame or status bar. Ctrl+\ brings the launcher back.
+**Search every host.** `/` finds a session on any host by name, agent, folder or host.
+
+![Search across hosts, with the matched letters highlighted](docs/images/search.svg)
+
+**Commands.** `ctrl+o` lists every action in plain words, with its key.
+
+![The command palette, rising from the bottom over the dimmed list](docs/images/commands.svg)
+
+**Attached.** The agent owns every row and column of your terminal. There is no frame or status bar. `ctrl+\` brings the launcher back.
 
 ![An attached session: a made-up agent's screen from the demo, filling the whole terminal](docs/images/attached.svg)
 
 **Add a host.** The wizard offers the hosts in your `~/.ssh/config`, tests the connection, and installs the helper with your consent.
 
-![Step 1 of the add-host wizard, offering hosts from the SSH config](docs/images/add-host.svg)
+![Step 1 of the add-host wizard, rising from the bottom](docs/images/add-host.svg)
 
-The images use a dark Ghostty theme. In your terminal, the screens use your own colour palette. `just screenshots` makes them again from the demo.
+The images use a dark Ghostty theme and show still frames. In your terminal, the screens use your own colours, and they move. `just screenshots` makes the images again from the demo.
 
 ## Docs
 

@@ -292,8 +292,8 @@ func (d *newSession) view(m *Model) string {
 	case d.err != nil:
 		body = append(append(body, errorLines(d.err, cw)...), "")
 	}
-	hints := []hint{{"Enter", "start"}, {"Tab", "next"}, {"Ctrl+Enter", "start detached"}, {"Esc", "cancel"}}
-	return box(w, len(body)+2, "New session on "+d.host, "", hintsFor(hints, w), body, toneNormal)
+	hints := []hint{{"enter", "start"}, {"tab", "next"}, {"ctrl+enter", "start detached"}, {"esc", "cancel"}}
+	return sheet(w, "New session on "+d.host, "", hints, trimBlank(body), toneNormal)
 }
 
 // worktreeRow is a choice of two: the folder itself, or a new git worktree.
@@ -382,7 +382,7 @@ func (c *confirm) view(m *Model) string {
 	if c.danger {
 		t = toneDanger
 	}
-	return box(w, len(body)+2, c.title, "", hintsFor([]hint{c.yes, c.no}, w), body, t)
+	return sheet(w, c.title, "", []hint{c.yes, c.no}, trimBlank(body), t)
 }
 
 func deleteDialog(h *hostConn, s client.Session) *confirm {
@@ -399,7 +399,7 @@ func deleteDialog(h *hostConn, s client.Session) *confirm {
 	}
 	return &confirm{
 		title: "Delete " + s.Name + "?", lines: lines, danger: true,
-		yes: hint{"Enter", "delete"}, no: hint{"Esc", "keep"},
+		yes: hint{"enter", "delete"}, no: hint{"esc", "keep"},
 		run: func(m *Model) tea.Cmd { return m.deleteSession(host, s) },
 	}
 }
@@ -411,7 +411,7 @@ func removeHostDialog(h client.Host) *confirm {
 			fmt.Sprintf("This removes %s from the hosts on this computer.", h.Name),
 			"Its sessions and the helper stay on the host, and keep running.",
 		},
-		danger: true, yes: hint{"Enter", "remove"}, no: hint{"Esc", "keep"},
+		danger: true, yes: hint{"enter", "remove"}, no: hint{"esc", "keep"},
 		run: func(m *Model) tea.Cmd { return m.saveHosts(h, true) },
 	}
 }
@@ -479,8 +479,8 @@ func (d *details) view(m *Model) string {
 		body = append(body, field("Status", sFaint.Render(sentence(msg))))
 	}
 	body = append(body, "")
-	hints := []hint{{"t", "test"}, {"s", "shell"}, {"r", "reconnect"}, {"x", "remove"}, {"Esc", "back"}}
-	return box(w, len(body)+2, h.name(), m.hostState(h), hintsFor(hints, w), body, toneNormal)
+	hints := []hint{{"t", "test"}, {"s", "shell"}, {"r", "reconnect"}, {"x", "remove"}, {"esc", "back"}}
+	return sheet(w, h.name(), m.hostState(h), hints, trimBlank(body), toneNormal)
 }
 
 // fetchFolders asks the host for completions of the folder field.

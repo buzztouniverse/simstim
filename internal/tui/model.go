@@ -65,10 +65,8 @@ type Model struct {
 	selIdx     int
 	autoSel    bool // the selection was not picked by the user, so it stays on top
 	sessTop    int
-	hostFilter filter
-	sessFilter filter
 	hideExited bool
-	showHelp   bool
+	prompt     *promptState // the search or quick-start line, when open
 
 	preview previewState
 
@@ -83,9 +81,18 @@ type Model struct {
 	revealAt time.Time
 	modalAt  time.Time
 	quitAt   time.Time
+	slideAt  time.Time
+	slideDir int // +1 into a host's sessions, -1 back to the hosts
+	selAt    time.Time
+	selFrom  int // the row the selection left, for its glide
+	jacking  *jackIn
 	ticking  bool
-	geo      boxGeo // where the launcher's box was last drawn
-	modalGeo boxGeo // and the dialog on top
+
+	traces     map[sessKey][]time.Time // moments of output, for each row's trace
+	activity   map[sessKey]activity    // what each session is doing, from its screen
+	activityAt time.Time               // when an activity line last changed
+	geo        boxGeo                  // where the launcher's box was last drawn
+	modalGeo   boxGeo                  // and the dialog on top
 
 	// attach is kept for the whole run, so attaching to the same session
 	// again continues from the byte the terminal already shows.
@@ -98,16 +105,6 @@ type Model struct {
 	exec  func(tea.ExecCommand, tea.ExecCallback) tea.Cmd
 	after func(d time.Duration, msg tea.Msg) tea.Cmd
 }
-
-// filter is a filter-as-you-type over a list.
-type filter struct {
-	typing bool
-	in     input
-}
-
-func (f *filter) query() string { return strings.TrimSpace(f.in.value()) }
-
-func (f *filter) shown() bool { return f.typing || f.query() != "" }
 
 // renameState is the inline rename of a session row.
 type renameState struct {
@@ -126,6 +123,8 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 		autoSel:   true,
 		attach:    &client.AttachState{},
 		lastAgent: map[string]string{},
+		traces:    map[sessKey][]time.Time{},
+		activity:  map[sessKey]activity{},
 		conns:     newConnSet(),
 		exec:      tea.Exec,
 		after: func(d time.Duration, msg tea.Msg) tea.Cmd {
@@ -145,6 +144,11 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 		m.hosts = append(m.hosts, &hostConn{host: h})
 	}
 	m.restore(o.Switcher)
+	if d, ok := be.(interface {
+		demoTraces(time.Time) map[sessKey][]time.Time
+	}); ok {
+		m.traces = d.demoTraces(m.now())
+	}
 	switch {
 	case o.Switcher && len(m.hosts) > 0:
 		m.screen, m.cur = scrSessions, ""
@@ -175,6 +179,7 @@ func (m *Model) Init() tea.Cmd {
 		queryPalette(),
 		m.after(refreshEvery, refreshTickMsg{}),
 		m.after(latencyEvery, latencyTickMsg{}),
+		m.after(activityEvery, activityTickMsg{}),
 	}
 	for _, h := range m.hosts {
 		cmds = append(cmds, m.dial(h))
@@ -199,8 +204,10 @@ type (
 	foldersMsg struct {
 		host, prefix string
 		res          client.FoldersResult
+		quick        bool // for the quick-start line
 	}
-	startedMsg struct {
+	activityTickMsg struct{}
+	startedMsg      struct {
 		host   string
 		s      *client.Session
 		err    error
@@ -223,6 +230,7 @@ type (
 // Update handles one message. It never blocks: everything slow is a command.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	before, modal, scr, cur, armed := m.sel, m.modal, m.screen, m.cur, m.quitArmed
+	selIdx, hostSel := m.selIdx, m.hostSel
 	cmd := m.update(msg)
 	if m.sel != before {
 		cmd = tea.Batch(cmd, m.schedulePreview())
@@ -233,7 +241,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.modalAt = m.now()
 	}
 	if m.screen != scr || m.cur != cur {
-		m.revealAt = m.now()
+		m.revealAt, m.slideAt, m.slideDir = m.now(), m.now(), 1
+		if m.screen == scrHosts {
+			m.slideDir = -1
+		}
+	} else if m.sel != before || m.hostSel != hostSel {
+		m.selAt, m.selFrom = m.now(), selIdx
+		if m.screen == scrHosts {
+			m.selFrom = hostSel
+		}
 	}
 	if m.quitArmed && !armed {
 		m.quitAt = m.now()
@@ -270,6 +286,13 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 	case animTickMsg:
 		m.ticking = false
 		return nil
+	case jackMsg:
+		return m.onJack()
+	case activityMsg:
+		m.onActivity(msg)
+		return nil
+	case activityTickMsg:
+		return tea.Batch(m.after(activityEvery, activityTickMsg{}), m.readActivity())
 	case tea.KeyPressMsg:
 		return m.onKey(msg)
 	case tea.MouseClickMsg:
@@ -324,7 +347,10 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 		}
 		return nil
 	case foldersMsg:
-		if d, ok := m.modal.(*newSession); ok && d.host == msg.host {
+		if p := m.prompt; msg.quick && p != nil && p.host == msg.host && p.asked == msg.prefix {
+			p.folders = msg.res.Matches
+		}
+		if d, ok := m.modal.(*newSession); ok && d.host == msg.host && !msg.quick {
 			d.setSuggestions(msg.prefix, msg.res)
 		}
 		return nil
@@ -387,19 +413,7 @@ func (m *Model) needSpin() bool {
 
 // Hosts and sessions as shown.
 
-func (m *Model) visibleHosts() []*hostConn {
-	q := m.hostFilter.query()
-	if q == "" {
-		return m.hosts
-	}
-	var out []*hostConn
-	for _, h := range m.hosts {
-		if _, ok := fuzzy(q, h.name()); ok {
-			out = append(out, h)
-		}
-	}
-	return out
-}
+func (m *Model) visibleHosts() []*hostConn { return m.hosts }
 
 // selectedHost is the host in play: the one picked in the hosts list, or
 // the one whose sessions are shown. It is nil on the list of every host.
@@ -432,13 +446,9 @@ type sessRow struct {
 func (r sessRow) key() sessKey { return sessKey{r.h.name(), r.s.ID} }
 
 func (m *Model) sessionsOf(h *hostConn) []client.Session {
-	q := m.sessFilter.query()
 	var out []client.Session
 	for _, s := range h.sessions {
 		if m.hideExited && ended(s) {
-			continue
-		}
-		if q != "" && !matchSession(q, s) {
 			continue
 		}
 		out = append(out, s)
@@ -477,9 +487,9 @@ func (m *Model) rows() []sessRow {
 			for _, s := range list {
 				out = append(out, sessRow{kind: rowSession, h: h, s: s})
 			}
-		case h.status == stFailed && m.sessFilter.query() == "":
+		case h.status == stFailed:
 			out = append(out, sessRow{kind: rowHeader, h: h}, sessRow{kind: rowNote, h: h})
-		case h.status == stOffline && m.sessFilter.query() == "":
+		case h.status == stOffline:
 			out = append(out, sessRow{kind: rowHeader, h: h})
 		}
 	}
@@ -646,7 +656,7 @@ func (m *Model) openHost(h *hostConn) {
 	if h != nil {
 		m.cur = h.name()
 	}
-	m.sessFilter, m.showHelp = filter{}, false
+	m.prompt = nil
 	m.selIdx, m.sessTop, m.autoSel = 0, 0, true
 	m.sel = sessKey{}
 	m.syncSel()
@@ -655,8 +665,7 @@ func (m *Model) openHost(h *hostConn) {
 // backToHosts returns to the hosts list, on the host that was open.
 func (m *Model) backToHosts() {
 	cur := m.cur
-	m.screen, m.sel, m.sessFilter, m.rename = scrHosts, sessKey{}, filter{}, nil
-	m.hostFilter = filter{}
+	m.screen, m.sel, m.rename, m.prompt = scrHosts, sessKey{}, nil, nil
 	for i, h := range m.visibleHosts() {
 		if h.name() == cur {
 			m.hostSel = i

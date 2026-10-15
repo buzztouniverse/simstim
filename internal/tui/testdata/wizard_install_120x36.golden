@@ -10,27 +10,27 @@
 
 
 
-            ╭─ Install simstim-host on raspberry? ─────────────────────────────────────────── step 3 of 4 ─╮
-            │                                                                                              │
-            │ simstim needs a small helper on the host to keep sessions alive.                             │
-            │                                                                                              │
-            │   What    simstim-host 0.1.0-test, about 9 MB, SHA-256 checked                               │
-            │   Where   ~/.local/share/simstim/bin/0.1.0-test/                                             │
-            │   Also    turn on linger, install this terminal's terminfo                                   │
-            │                                                                                              │
-            │ Nothing listens on the network, and nothing runs until you start a session.                  │
-            │                                                                                              │
-            ╰─────────────────────────────────────────────────────────────────── Enter install · Esc back ─╯
 
+                                                ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+                                            ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+                                      ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+                                          ⠈⠑⠢⢌⡑⠢⠤⠤⠒⠁    ⢈⠦⡊   ⠈⠢⢄ ⢀⣔⠕⠊
+                                              ⠈⠒⠢⢄⣀⣀⣀⡠⠤⠒⠁ ⠈⠢⢄⡀ ⣀⡠⠝⠉
+                                                             ⠈⠉
 
+                                                     s i m s t i m
+                                                  jack in to any host
 
+                                        a add a host   ctrl+o commands   ? keys
 
+  ── Install simstim-host on raspberry? ─────────────────────────────────────────────────────────────── step 3 of 4 ──
 
+    simstim needs a small helper on the host to keep sessions alive.
 
+      What    simstim-host 0.1.0-test, about 9 MB, SHA-256 checked
+      Where   ~/.local/share/simstim/bin/0.1.0-test/
+      Also    turn on linger, install this terminal's terminfo
 
+    Nothing listens on the network, and nothing runs until you start a session.
 
-
-
-
-
-
+    enter install   esc back

@@ -28,7 +28,6 @@ const (
 	revealFade  = 140 * time.Millisecond // each row's fade in
 	noticeIn    = 150 * time.Millisecond
 	noticeOut   = 300 * time.Millisecond
-	sweepTime   = 520 * time.Millisecond // one lap of the glow when a dialog opens
 	glowLap     = 1600 * time.Millisecond
 	breathe     = 1600 * time.Millisecond
 	shimmerLap  = 1400 * time.Millisecond
@@ -152,18 +151,35 @@ func (m *Model) frameNeed() time.Duration {
 	if !m.motion {
 		return 0
 	}
+	recent := func(t time.Time, d time.Duration) bool { return m.since(t) < d }
 	switch {
 	case len(m.hosts) == 0 && m.modal == nil:
-		return fastFrame // the welcome mark
-	case m.since(m.revealAt) < revealFade+revealStep*20,
-		m.since(m.modalAt) < sweepTime,
+		return fastFrame // the welcome's ribbon
+	case recent(m.epoch, time.Second),
+		recent(m.revealAt, decodeTime+revealStep*20),
+		recent(m.slideAt, slideTime),
+		recent(m.selAt, glideTime),
+		recent(m.modalAt, sheetTime),
+		recent(m.activityAt, decodeTime),
+		m.jacking != nil,
 		m.glowing(),
 		m.noticeMoving():
 		return fastFrame
-	case m.needSpin():
+	case m.needSpin(), m.tracing():
 		return slowFrame
 	}
 	return 0
+}
+
+// tracing reports whether a trace on screen is still scrolling: some session
+// put out output within the trace's window.
+func (m *Model) tracing() bool {
+	for _, ev := range m.traces {
+		if n := len(ev); n > 0 && m.since(ev[n-1]) < traceWindow {
+			return true
+		}
+	}
+	return false
 }
 
 // startTimers keeps one frame tick running while anything moves. Idle screens
@@ -185,72 +201,38 @@ func isLine(s string) bool {
 	return strings.ContainsAny(s, "╭╮╰╯─│") && len([]rune(s)) == 1
 }
 
-// glow lights a frame's border with a soft head that travels round it. pos
-// is where the head is, 0 to 1 round the frame from the top left; strength
-// fades it out. The rest of the border dims while it glows, as a busy frame.
-type glow struct {
-	x, y, w, h int
-	pos        float64
-	strength   float64
-}
-
-func (m *Model) applyGlow(c *lipgloss.Canvas, g glow) {
-	if g.w < 2 || g.h < 2 || g.strength <= 0 {
+// scan runs a bright band along a rule while something is busy: a host
+// connecting, a session starting, the wizard at work.
+func (m *Model) scan(c *lipgloss.Canvas, x, y, w int) {
+	if !m.motion || w < 4 {
 		return
 	}
-	per := 2*(g.w-1) + 2*(g.h-1)
-	head := g.pos * float64(per)
-	at := func(i int) (int, int) {
-		switch {
-		case i < g.w-1:
-			return g.x + i, g.y
-		case i < g.w-1+g.h-1:
-			return g.x + g.w - 1, g.y + i - (g.w - 1)
-		case i < 2*(g.w-1)+g.h-1:
-			return g.x + g.w - 1 - (i - (g.w - 1 + g.h - 1)), g.y + g.h - 1
-		default:
-			return g.x, g.y + g.h - 1 - (i - (2*(g.w-1) + g.h - 1))
-		}
-	}
+	lap := float64(m.since(m.epoch)%glowLap) / float64(glowLap)
+	head := -glowSpread + lap*(float64(w)+2*glowSpread)
 	smooth := m.smooth()
 	var base, hi rgb
 	if smooth {
 		fg, _ := m.colors.resolve(nil, true)
-		bg, _ := m.colors.resolve(nil, false)
-		base = mix(fg, bg, 0.55)
-		hi = rgb{255, 255, 255}
-		if !m.dark {
-			hi = mix(fg, rgb{}, 0.5)
+		base = mix(fg, bg(m), 0.5)
+		hi, _ = m.colors.resolve(colAccent, true)
+		if hi == (rgb{}) {
+			hi = fg
 		}
 	}
-	for i := range per {
-		x, y := at(i)
-		cell := c.CellAt(x, y)
+	for i := range w {
+		cell := c.CellAt(x+i, y)
 		if cell == nil || !isLine(cell.Content) {
 			continue
 		}
-		d := math.Abs(float64(i) - head)
-		d = math.Min(d, float64(per)-d)
-		k := g.strength * math.Exp(-(d/glowSpread)*(d/glowSpread))
-		if smooth {
-			col := base
-			if cell.Style.Fg != nil { // a tone keeps its colour under the glow
-				if t, ok := m.colors.resolve(cell.Style.Fg, true); ok {
-					col = mix(t, bg(m), 0.35)
-				}
-			}
-			cell.Style.Fg = mix(col, hi, k).color()
-			cell.Style.Attrs &^= uv.AttrFaint
-			continue
-		}
+		d := (float64(i) - head) / glowSpread
+		k := math.Exp(-d * d)
 		switch {
-		case k > 0.55:
-			cell.Style.Fg = lipgloss.BrightWhite
-			cell.Style.Attrs = cell.Style.Attrs&^uv.AttrFaint | uv.AttrBold
-		case k > 0.2:
+		case smooth:
+			cell.Style.Fg = mix(base, hi, k).color()
 			cell.Style.Attrs &^= uv.AttrFaint
-		default:
-			cell.Style.Attrs |= uv.AttrFaint
+		case k > 0.5:
+			cell.Style.Fg = colAccent
+			cell.Style.Attrs &^= uv.AttrFaint
 		}
 	}
 }
@@ -439,26 +421,6 @@ func (m *Model) glowing() bool {
 		}
 	}
 	return true // nothing has answered yet
-}
-
-// glowAt is the glow for a frame drawn at x, y, w×h: a lap when a dialog
-// opens, then a steady travel while busy.
-func (m *Model) glowAt(x, y, w, h int, busy bool, opened time.Time) (glow, bool) {
-	if !m.motion {
-		return glow{}, false
-	}
-	g := glow{x: x, y: y, w: w, h: h}
-	if s := m.since(opened); s < sweepTime {
-		p := float64(s) / float64(sweepTime)
-		g.pos, g.strength = ease(p), 1-p*p
-		return g, true
-	}
-	if busy {
-		g.pos = float64(m.since(m.epoch)%glowLap) / float64(glowLap)
-		g.strength = 1
-		return g, true
-	}
-	return glow{}, false
 }
 
 func (m *Model) noticeMoving() bool {

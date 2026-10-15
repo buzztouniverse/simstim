@@ -40,7 +40,27 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - Sessions are capped with `MemoryMax` only; `MemoryHigh` made a runaway process hang (decision 0008).
 - Commits carry no sign-off or attribution lines, and contributions are covered by Apache-2.0 section 5 (decision 0010, which replaces the DCO).
-- The home screen is now a light launcher in the style of Amp's CLI (decision 0009). It has one column and one list: the hosts, then Enter for a host's sessions. The panes and the permanent preview are gone. The look is measured from Amp: notched frames, yellow titles, blue keys, faint secondary text and a yellow selection bar, all from the terminal's palette. Ctrl+C opens a chord popup, and a second Ctrl+C quits.
-- The launcher moves, in the terminal's own colours: a woven braille mark and a title that types in on the welcome screen, rows that fade in as a list appears, a glow that travels round a busy frame and sweeps round a dialog as it opens, notices that fade in and out, a shimmer on "Connecting…", a breathing dot for a session that needs you and a tiny Game of Life for one that works. It asks the terminal for its colours (OSC 4, 10 and 11) to blend smoothly, and falls back to faint and bold steps. One frame tick runs only while something moves, and `ui.motion = off` stills it all.
-- The launcher is faster to use (decision 0011). It remembers each host's sessions and draws them at once, before SSH answers, and opens on the session you last attached to, so `simstim` then Enter takes you back in. `attach -` does the same from the shell. Rows have numbers (1–9 open them), the mouse selects, opens and scrolls, a line under the list tells you about the selected row, a filter highlights the letters it matched, the tab title counts the sessions that need you, and a desktop notification goes out when one starts to need you while the terminal is in the background.
+- The home screen is now a light launcher (decisions 0009 and 0012). It has one column and one list: the hosts, then Enter for a host's sessions. The panes and the permanent preview are gone. The look is its own:
+  - a header with an animated braille logo and the name in the brand gradient, and rules instead of boxes;
+  - a cyan accent, and a cyan marker and tint on the selected row;
+  - a braille trace of each session's recent output;
+  - lower-case keys;
+  - sheets that rise from the bottom for every dialog.
+
+  Amp's CLI was the baseline, measured in docs/research/amp-tui.md: colours from the terminal's palette, faint secondary text and a command palette.
+- The launcher moves, in the terminal's own colours:
+  - on the welcome screen, a woven braille ribbon that opens out and flows, and a name that decodes out of noise;
+  - a boot sequence, screens that slide, and a selection that glides;
+  - host names and activity that decode in;
+  - a scan along the header rule while something is busy, and a short jack-in sweep before an attach;
+  - notices that slide and fade, a shimmer on work in progress, a breathing dot for a session that needs you, and a tiny Game of Life for one that works.
+
+  It asks the terminal for its colours (OSC 4, 10 and 11) to blend smoothly, and falls back to faint and bold steps. One frame tick runs only while something moves, and `ui.motion = off` stills it all.
+- The launcher is faster to use (decision 0011):
+  - it remembers each host's sessions and draws them at once, before SSH answers, and opens on the session you last attached to;
+  - `attach -` does the same from the shell;
+  - `/` searches the sessions of every host, and `n` starts a session from one line (`claude ~/src/app auth`) with completion;
+  - a live activity line says what the selected session is doing now, read from its screen;
+  - rows have numbers (1–9 open them), and the mouse selects, opens and scrolls;
+  - the tab title counts the sessions that need you, and a desktop notification goes out when one starts to need you while the terminal is in the background.
 - While attached, the client draws nothing of its own. It sets no window title, and a failed upload is now a system notification instead of a line on the bottom row. The reconnect notice is the one exception. End-to-end checks prove that the agent's PTY is the terminal's size, and that the screen is the session's bytes alone.

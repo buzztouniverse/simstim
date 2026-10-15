@@ -37,7 +37,8 @@ shot() {
 
 shot hosts
 shot sessions '\r'
-shot new-session '\r' 'n' '\t' '/src/a'
+shot new-session '\r' 'n' 'claude ~/src/a'
+shot search '/' 'te'
 shot commands '\r' '\x0f'
 shot attached '\r' '\r'
 shot add-host 'a'

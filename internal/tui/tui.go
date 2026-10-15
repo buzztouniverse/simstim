@@ -13,7 +13,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -93,68 +92,67 @@ func (m *Model) needYou() int {
 	return n
 }
 
-// render draws the whole screen: the launcher or the first-run screen with
-// their motion, a dialog over a dimmed backdrop, the notices and the quit
-// popup.
+// render draws the whole screen: the launcher or the first-run screen and
+// their motion, then a sheet over a dimmed backdrop.
 func (m *Model) render() string {
 	if m.width <= 0 || m.height <= 0 {
 		return ""
 	}
 	c := lipgloss.NewCanvas(m.width, m.height)
 	if len(m.hosts) == 0 {
-		uv.NewStyledString(m.viewFirstRun()).Draw(c, c.Bounds())
+		drawAt(c, m.viewFirstRun(), 0, 0)
 	} else {
-		uv.NewStyledString(m.viewLauncher()).Draw(c, c.Bounds())
+		drawAt(c, m.viewLauncher(), 0, 0)
 		g := m.geo
-		for i := range g.listN { // rows fade in, one after another, then the detail line
-			m.fade(c, g.x+2, g.listY+i, g.w-4, 1, m.rowAlpha(i))
+		// The selection's tint glides from the row it left.
+		if g.sel >= 0 {
+			m.tint(c, g.x, g.listY+g.sel, g.w, m.glide())
+		}
+		if g.from >= 0 {
+			m.tint(c, g.x, g.listY+g.from, g.w, 1-m.glide())
+		}
+		// Rows fade in, one after another, then the line under them.
+		for i := range g.listN {
+			m.fade(c, g.x, g.listY+i, g.w, 1, m.rowAlpha(i))
 		}
 		if g.detailY > 0 {
-			m.fade(c, g.x+2, g.detailY, g.w-4, 1, m.rowAlpha(g.listN+1))
+			m.fade(c, g.x, g.detailY, g.w, 1, m.rowAlpha(g.listN+1))
 		}
-		if gl, ok := m.glowAt(g.x, g.y, g.w, g.h, m.modal == nil && m.glowing(), time.Time{}); ok {
-			m.applyGlow(c, gl)
+		if m.modal == nil && m.glowing() {
+			m.scan(c, g.x, ruleY, g.w)
 		}
+		// Notices rise above the bottom rule, sliding in from the left.
+		notes := m.noticeLines(g.w - 4)
+		for i, n := range notes {
+			y := m.height - footRows - len(notes) + i
+			dx := 0
+			if m.motion {
+				dx = int((1 - ease(float64(m.since(n.at))/float64(noticeIn))) * 6)
+			}
+			drawAt(c, n.s, g.x+2+dx, y)
+			m.fade(c, g.x+2, y, g.w-2, 1, n.alpha)
+		}
+		m.sweep(c, g, g.sel)
 	}
 	if m.modal != nil {
 		dim(c)
-	}
-	if len(m.hosts) > 0 {
-		for i, n := range m.noticeLines(m.cw()) {
-			x, y := m.geo.x+2, m.geo.y+m.geo.h+1+i
-			if y >= m.height {
-				break
-			}
-			uv.NewStyledString(n.s).Draw(c, uv.Rect(x, y, m.width-x, 1))
-			m.fade(c, x, y, cells(n.s), 1, n.alpha)
-		}
-	}
-	if m.modal != nil {
-		// A dialog sits in the launcher's column, from the box's top row.
 		b := m.modal.view(m)
 		bw, bh := lipgloss.Size(b)
-		x, y := max((m.width-bw)/2, 0), m.boxTop()
-		if len(m.hosts) == 0 || y+bh > m.height {
-			y = max((m.height-bh)/2, 0)
+		x, y := m.x0(), m.height-bh+m.sheetRise(bh)
+		if len(m.hosts) == 0 {
+			x = max((m.width-bw)/2, 0)
 		}
-		uv.NewStyledString(b).Draw(c, uv.Rect(x, y, bw, bh))
-		busy := false
-		if b, ok := m.modal.(interface{ busy() bool }); ok {
-			busy = b.busy()
-		}
-		if gl, ok := m.glowAt(x, y, bw, bh, busy, m.modalAt); ok {
-			m.applyGlow(c, gl)
-		}
+		y = max(y, 0)
+		drawAt(c, b, x, y)
 		m.modalGeo = boxGeo{x: x, y: y, w: bw, h: bh}
 	}
-	if q, ok := m.quitLayer(); ok {
-		qw, qh := lipgloss.Size(q.s)
-		uv.NewStyledString(q.s).Draw(c, uv.Rect(q.x, q.y, qw, qh))
-		if gl, ok := m.glowAt(q.x, q.y, qw, qh, false, m.quitAt); ok {
-			m.applyGlow(c, gl)
-		}
-	}
 	return c.Render()
+}
+
+// drawAt draws a block of text on the canvas with its top left at x, y.
+func drawAt(c *lipgloss.Canvas, s string, x, y int) {
+	w, h := lipgloss.Size(s)
+	uv.NewStyledString(s).Draw(c, uv.Rect(x, y, w, h))
 }
 
 // Attach.
@@ -216,6 +214,7 @@ func (m *Model) attachTo(h *hostConn, id, name string) tea.Cmd {
 }
 
 func (m *Model) onAttachDone(msg attachDoneMsg) tea.Cmd {
+	m.revealAt = m.now() // the rows fade back in
 	var cmds []tea.Cmd
 	if h := m.hostByName(msg.host); h != nil {
 		cmds = append(cmds, m.listSessions(h))

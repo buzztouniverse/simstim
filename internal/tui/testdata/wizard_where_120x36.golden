@@ -11,26 +11,26 @@
 
 
 
-            ╭─ Add a host ─────────────────────────────────────────────────────────────────── step 1 of 4 ─╮
-            │                                                                                              │
-            │ Where does it live?                                                                          │
-            │                                                                                              │
-            │ SSH target   het                                                                             │
-            │              From your SSH config: hetzner-1  (1 found)                                      │
-            │ Name         het                                                                             │
-            │ SSH config   optional: an extra SSH config file                                              │
-            │                                                                                              │
-            ╰───────────────────────── ↑↓ pick from SSH config · Tab next field · Enter test · Esc cancel ─╯
+                                                ⣀⡠⠤⢄⡀   ⣀⣀⣀    ⢀⠤⠒⠊⠉⠉⠉⠑⠢⠤⡀
+                                            ⢀⡠⠒⠉    ⠈⢑⢔⠉   ⠑⢄⡠⠒⠁       ⣀⢤⣚⣓⣦⣤⣀
+                                      ⠶⠶⠶⢶⡒⠪⢅⡀     ⢀⠔⠁ ⠑⢄  ⡠⠊⠑⡄     ⢀⠔⡩⠊⠁   ⠈⠉⠛⠓⠶⠶
+                                          ⠈⠑⠢⢌⡑⠢⠤⠤⠒⠁    ⢈⠦⡊   ⠈⠢⢄ ⢀⣔⠕⠊
+                                              ⠈⠒⠢⢄⣀⣀⣀⡠⠤⠒⠁ ⠈⠢⢄⡀ ⣀⡠⠝⠉
+                                                             ⠈⠉
+
+                                                     s i m s t i m
+                                                  jack in to any host
+
+                             a add a host (3 in your SSH config)   ctrl+o commands   ? keys
 
 
+  ── Add a host ─────────────────────────────────────────────────────────────────────────────────────── step 1 of 4 ──
 
+    Where does it live?
 
+    SSH target   het
+                 From your SSH config: hetzner-1  (1 found)
+    Name         het
+    SSH config   optional: an extra SSH config file
 
-
-
-
-
-
-
-
-
+    ↑↓ pick from SSH config   tab next field   enter test   esc cancel

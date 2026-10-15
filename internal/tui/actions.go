@@ -90,6 +90,9 @@ func (m *Model) onStarted(msg startedMsg) tea.Cmd {
 			d.starting, d.err = false, msg.err
 			return nil
 		}
+		if p := m.prompt; p != nil && p.starting {
+			p.starting, p.err = false, msg.err
+		}
 		return m.toastErr(msg.err)
 	}
 	if d != nil {
@@ -107,8 +110,11 @@ func (m *Model) onStarted(msg startedMsg) tea.Cmd {
 	}
 	m.sel, m.autoSel = sessKey{h.name(), msg.s.ID}, false
 	m.syncSel()
+	if p := m.prompt; p != nil && p.starting {
+		m.prompt = nil
+	}
 	if msg.attach {
-		return m.attachTo(h, msg.s.ID, msg.s.Name)
+		return m.jack(h, msg.s.ID, msg.s.Name)
 	}
 	return tea.Batch(m.toast(toastSuccess, fmt.Sprintf("Started %s on %s.", msg.s.Name, h.name())), m.listSessions(h))
 }
@@ -116,8 +122,8 @@ func (m *Model) onStarted(msg startedMsg) tea.Cmd {
 func (m *Model) attachSelected() tea.Cmd {
 	h, s := m.selectedPair()
 	if s == nil {
-		if sessionRows(m.rows()) == 0 && m.sessFilter.query() == "" {
-			return m.openNewSession()
+		if sessionRows(m.rows()) == 0 {
+			return m.openQuickStart()
 		}
 		return nil
 	}
@@ -127,7 +133,7 @@ func (m *Model) attachSelected() tea.Cmd {
 			Hint: "Press d to remove it, or n to start a new one.",
 		})
 	}
-	return m.attachTo(h, s.ID, s.Name)
+	return m.jack(h, s.ID, s.Name)
 }
 
 func (m *Model) copyAttach() tea.Cmd {

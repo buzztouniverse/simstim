@@ -1,18 +1,12 @@
 
+  ⢄⡠⠊ simstim  hosts                                     3 hosts · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────
 
+  ▍ 1 ● atlas-dev  4 sessions · 1 needs you                     9ms  ⣀⣀⣀⣀⣀⣀⣀⣼
+    2 ◌ aws-gpu     offline                                           ⣀⣀⣀⣀⣀⣀⣀⣀
+    3 ● gcp-dev     2 sessions                                  41ms  ⣀⣀⣀⣀⣀⣀⣀⣼
 
-
-  ╭─ New session on atlas-dev ──────────────────────────────────────────────╮
-  │                                                                          │
-  │ Agent      claude  codex  opencode  shell  other…   not installed: gemi… │
-  │                                                                          │
-  │ Folder     ~/src/app                                                     │
-  │                                                                          │
-  │ Name       auth                                                          │
-  │                                                                          │
-  │ Worktree   ● this folder   ○ new worktree                                │
-  │                                                                          │
-  ╰──────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+    ssh atlas-dev · Debian 13 · 4 CPUs · claude, codex, opencode, shell
 
 
 
@@ -22,3 +16,9 @@
 
 
 
+
+
+    claude  codex  opencode  shell   ~/src/api/  ~/src/app/
+  ────────────────────────────────────────────────────────────────────────────
+    atlas-dev ❯ claude ~/src/api/
+    enter start   tab complete   ctrl+enter detached   esc cancel

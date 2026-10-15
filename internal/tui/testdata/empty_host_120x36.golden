@@ -1,15 +1,10 @@
 
+  ⢄⡠⠊ simstim  › gcp-dev                                                                             41ms · 0 sessions
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
+    No sessions on gcp-dev yet.
 
-
-
-            ╭─ gcp-dev ───────────────────────────────────────────────────────────────────────────── 41ms ─╮
-            │                                                                                              │
-            │ No sessions on gcp-dev yet.                                                                  │
-            │                                                                                              │
-            │ n new session                                                                                │
-            │                                                                                              │
-            ╰───────────────────────────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+    n start one from a single line, like: claude ~/src/app
 
 
 
@@ -34,3 +29,8 @@
 
 
 
+
+
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    ❯ / search every host   n start a session
+    enter attach   space peek   r rename   esc hosts   ctrl+o commands   ? keys

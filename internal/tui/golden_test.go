@@ -100,10 +100,21 @@ func TestGolden(t *testing.T) {
 		}},
 		{"new_session", func(t *testing.T, w, h int) *Model {
 			hs := home(t, w, h)
-			hs.key("n", "tab")
-			hs.typeText("/src/app")
-			hs.key("tab")
-			hs.typeText("auth")
+			hs.key("n")
+			hs.typeText("claude ~/src/a")
+			return hs.m
+		}},
+		{"new_session_form", func(t *testing.T, w, h int) *Model {
+			hs := home(t, w, h)
+			hs.key("n")
+			hs.typeText("codex ~/src/app auth")
+			hs.key("ctrl+f")
+			return hs.m
+		}},
+		{"search", func(t *testing.T, w, h int) *Model {
+			hs := home(t, w, h)
+			hs.key("/")
+			hs.typeText("te")
 			return hs.m
 		}},
 		{"new_session_error", func(t *testing.T, w, h int) *Model {
@@ -123,7 +134,7 @@ func TestGolden(t *testing.T) {
 			hs.typeText("auth-v2")
 			return hs.m
 		}},
-		{"filter_empty", func(t *testing.T, w, h int) *Model {
+		{"search_empty", func(t *testing.T, w, h int) *Model {
 			hs := sessions(t, w, h)
 			hs.key("/")
 			hs.typeText("xyz")

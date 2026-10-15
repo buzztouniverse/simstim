@@ -1,17 +1,13 @@
 
+  ⢄⡠⠊ simstim  › atlas-dev                     9ms · 4 sessions · 1 needs you
+  ────────────────────────────────────────────────────────────────────────────
 
+    1 ● auth-refact…  claude    ~/src/app         needs input     2m  ⣀⣀⣀⣀⣀⣀⣀⣀
+  ▍ 2 ⠶ api-tests     codex     ~/src/api         working        14s  ⣀⣀⣀⣀⣀⣀⣀⣼
+    3 ○ notes         shell     ~                 idle            1h  ⣀⣀⣀⣀⣀⣀⣀⣀
+    4 ✓ docs-pass     opencode  ~/src/docs        exited 0        3h  ⣀⣀⣀⣀⣀⣀⣀⣀
 
-
-  ╭─ Delete api-tests? ──────────────────────────────────────────────────────╮
-  │                                                                          │
-  │ This stops codex on atlas-dev and removes the session.                  │
-  │ The folder ~/src/api stays. Unsaved work in the agent is lost.           │
-  │                                                                          │
-  ╰──────────────────────────────────────────────── Enter delete · Esc keep ─╯
-  │                                                                          │
-  │ ~/src/api · s3                                                           │
-  │                                                                          │
-  ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+    ~/src/api · s3
 
 
 
@@ -20,5 +16,9 @@
 
 
 
+  ── Delete api-tests? ───────────────────────────────────────────────────────
 
+    This stops codex on atlas-dev and removes the session.
+    The folder ~/src/api stays. Unsaved work in the agent is lost.
 
+    enter delete   esc keep

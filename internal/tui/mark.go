@@ -17,9 +17,10 @@ import (
 // off it is one still frame.
 
 const (
-	markW     = 30
+	markW     = 44
 	markH     = 7
 	markPulse = 2600 * time.Millisecond // one pulse along the ribbon
+	markGrow  = 900 * time.Millisecond  // the ribbon opening out from its middle
 )
 
 type strand struct{ amp, wave, speed, phase float64 }
@@ -45,11 +46,19 @@ func (m *Model) markLines() []string {
 		dots[i] = make([]bool, dw)
 	}
 	mid := float64(dh-1) / 2
+	grow := 1.0
+	if m.motion {
+		grow = ease(float64(m.since(m.epoch)) / float64(markGrow))
+	}
 	for _, s := range strands {
 		prev := -1
 		for x := range dw {
 			u := (float64(x) + 0.5) / float64(dw)
-			env := math.Pow(math.Sin(math.Pi*u), 1.2)
+			if math.Abs(u-0.5) > grow/2 {
+				prev = -1
+				continue // not yet open this far
+			}
+			env := math.Pow(math.Sin(math.Pi*u), 1.2) * grow
 			y := int(math.Round(mid + s.amp*env*(float64(dh)/2-1)*math.Sin(2*math.Pi*u*s.wave+s.speed*t+s.phase)))
 			y = min(max(y, 0), dh-1)
 			dots[y][x] = true
@@ -99,28 +108,19 @@ func (m *Model) markLines() []string {
 	return out
 }
 
-// welcomeTitle is "Welcome to <name>" in the brand gradient, bold. With
-// motion on it types itself in, behind a cursor.
+// welcomeTitle is the name, letter-spaced, in the brand gradient, bold. With
+// motion on it decodes out of braille noise after the ribbon opens.
 func (m *Model) welcomeTitle() string {
-	text := []rune("Welcome to " + brand.DisplayName)
-	shown := len(text)
-	if m.motion {
-		shown = min(int(m.since(m.epoch)/typeEvery), len(text))
-	}
+	spaced := strings.Join(strings.Split(brand.Name, ""), " ")
+	text := []rune(m.decode(spaced, m.epoch.Add(markGrow/3)))
 	cols := m.gradient(len(text))
 	var b strings.Builder
-	for i, r := range text[:shown] {
-		st := sBold
-		switch {
-		case cols != nil:
-			st = st.Foreground(cols[i])
-		case i >= len(text)-len([]rune(brand.DisplayName)):
-			st = sBrand.Bold(true)
+	for i, r := range text {
+		st := sBrand.Bold(true)
+		if cols != nil {
+			st = lipgloss.NewStyle().Foreground(cols[i]).Bold(true)
 		}
 		b.WriteString(st.Render(string(r)))
-	}
-	if shown < len(text) {
-		b.WriteString(sBrand.Render("▌") + strings.Repeat(" ", len(text)-shown-1))
 	}
 	return b.String()
 }

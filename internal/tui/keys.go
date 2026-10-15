@@ -10,12 +10,13 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// onKey routes a key: the quit chord, then the dialog on top, an inline
-// rename, a filter being typed, then the moves and the command registry.
+// onKey routes a key: the quit chord, a jack-in under way, then the sheet on
+// top, the prompt line, an inline rename, then the numbers, the moves and the
+// command registry.
 func (m *Model) onKey(k tea.KeyPressMsg) tea.Cmd {
 	ks := k.String()
 	if m.quitArmed {
-		// Ctrl+C then: Ctrl+C quits, anything else cancels.
+		// ctrl+c again quits, anything else cancels.
 		m.quitArmed = false
 		if ks == "ctrl+c" {
 			return tea.Quit
@@ -26,14 +27,17 @@ func (m *Model) onKey(k tea.KeyPressMsg) tea.Cmd {
 		m.quitArmed = true
 		return nil
 	}
+	if m.jacking != nil {
+		return nil // a few frames until the session takes over
+	}
 	if m.modal != nil {
 		return m.modal.key(m, k)
 	}
+	if m.prompt != nil {
+		return m.promptKey(k)
+	}
 	if m.rename != nil {
 		return m.renameKey(k)
-	}
-	if f := m.typingFilter(); f != nil {
-		return m.filterKey(f, k)
 	}
 	if len(m.hosts) > 0 && len(ks) == 1 && ks >= "1" && ks <= "9" {
 		return m.quickOpen(int(ks[0] - '0'))
@@ -68,76 +72,15 @@ func (m *Model) navKey(ks string) bool {
 			return false
 		}
 		m.openHost(m.selectedHost())
-	case "left", "h":
+	case "left", "h", "esc":
 		if m.screen != scrSessions {
 			return false
 		}
 		m.backToHosts()
-	case "esc":
-		switch {
-		case m.activeFilter().query() != "":
-			m.clearFilter()
-		case m.showHelp:
-			m.showHelp = false
-		case m.screen == scrSessions:
-			m.backToHosts()
-		}
 	default:
 		return false
 	}
 	return true
-}
-
-func (m *Model) typingFilter() *filter {
-	if f := m.activeFilter(); f.typing {
-		return f
-	}
-	return nil
-}
-
-func (m *Model) filterKey(f *filter, k tea.KeyPressMsg) tea.Cmd {
-	keep := m.selectedHost()
-	switch k.String() {
-	case "esc":
-		*f = filter{}
-	case "enter":
-		f.typing = false
-		return nil
-	case "up", "down":
-		f.typing = false
-		m.navKey(k.String())
-		return nil
-	default:
-		if !f.in.key(k) {
-			return nil
-		}
-		keep = nil // the query changed: the best match goes on top
-	}
-	m.refilter(keep)
-	return nil
-}
-
-// clearFilter drops the filter of the list on screen, and keeps the host
-// that was selected.
-func (m *Model) clearFilter() {
-	keep := m.selectedHost()
-	*m.activeFilter() = filter{}
-	m.refilter(keep)
-}
-
-// refilter puts the selection back after the filter changed: on keep if it
-// is still listed, else on the first row.
-func (m *Model) refilter(keep *hostConn) {
-	if m.screen == scrHosts {
-		m.hostSel = 0
-		for i, h := range m.visibleHosts() {
-			if h == keep {
-				m.hostSel = i
-			}
-		}
-	}
-	m.autoSel = true
-	m.syncSel()
 }
 
 // onPaste handles a paste: into a field being typed, or, if it is a session
@@ -149,12 +92,11 @@ func (m *Model) onPaste(text string) tea.Cmd {
 			p.paste(text)
 		}
 		return nil
+	case m.prompt != nil:
+		m.prompt.in.insert(text)
+		return nil
 	case m.rename != nil:
 		m.rename.in.insert(text)
-		return nil
-	case m.typingFilter() != nil:
-		m.typingFilter().in.insert(text)
-		m.syncSel()
 		return nil
 	}
 	id := strings.TrimSpace(text)
