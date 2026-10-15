@@ -79,8 +79,9 @@ func (t *Transport) Run(ctx context.Context, remote string, stdin io.Reader) ([]
 	return out, nil
 }
 
-// Start serves the bridge on the returned process's stdin and stdout.
-func (t *Transport) Start(_ context.Context, remote string) (client.Proc, error) {
+// Start serves the bridge on the returned process's stdin and stdout. When
+// ctx ends, the bridge is killed, as an SSH transport kills ssh.
+func (t *Transport) Start(ctx context.Context, remote string) (client.Proc, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.remotes = append(t.remotes, remote)
@@ -94,8 +95,10 @@ func (t *Transport) Start(_ context.Context, remote string) (client.Proc, error)
 		t.open = map[*bridgeProc]bool{}
 	}
 	t.open[p] = true
-	go func() { //nolint:contextcheck // RunBridge has no context: like the real bridge, it runs until its input closes
+	stop := context.AfterFunc(ctx, p.Kill)
+	go func() { //nolint:contextcheck // RunBridge has no context: like the real bridge, it runs until its input closes, and ctx closes it through Kill
 		p.err = host.RunBridge(inR, outW)
+		stop()
 		_ = outW.Close()
 		_ = inR.Close()
 		t.mu.Lock()

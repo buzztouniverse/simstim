@@ -243,3 +243,30 @@ func TestBridgeAlerts(t *testing.T) {
 		t.Error("a broken request was taken")
 	}
 }
+
+// The test transport kills a bridge when the context given to Start ends, as
+// client.Transport asks and as the SSH transport does.
+func TestTransportStartEndsWithItsContext(t *testing.T) {
+	h := hosttest.New(t)
+	_, tr := h.ClientHost("box")
+	ctx, cancel := context.WithCancel(context.Background())
+	p, err := tr.Start(ctx, "bridge")
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- p.Wait() }()
+	cancel()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Error("Wait = nil, want the error of a killed bridge")
+		}
+	case <-time.After(5 * time.Second):
+		p.Kill()
+		t.Fatal("the bridge kept running after the context of Start ended")
+	}
+	if n := tr.Open(); n != 0 {
+		t.Errorf("%d bridges open, want 0", n)
+	}
+}
