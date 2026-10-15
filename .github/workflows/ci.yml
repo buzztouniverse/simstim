@@ -45,6 +45,31 @@ jobs:
         run: scripts/check-name.sh
       - name: Private-detail check
         run: scripts/check-private.sh
+      - name: Generated docs are current
+        run: |
+          go run ./cmd/docgen
+          if [ -n "$(git status --porcelain docs/reference)" ]; then
+            git status --short docs/reference
+            echo "::error::docs/reference is stale. Run just docs and commit the result."
+            exit 1
+          fi
+
+  docs-impact:
+    # A pull request that changes commands, config, keys or agents must change
+    # the docs and the CHANGELOG too, unless it is labelled "no docs needed".
+    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'no docs needed')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Docs ship with the change
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: scripts/check-docs-impact.sh "$BASE" HEAD
 
   windows:
     # The client also runs on Windows (with Windows OpenSSH); hosts are Linux.

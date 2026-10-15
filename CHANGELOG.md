@@ -6,6 +6,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- Reference docs generated from the code (`just docs`, with `cmd/docgen`): every command and flag, `config.toml` and `hosts.toml` from the settings structs' comments, the launcher's keys from its command registry, and the agent table. CI fails when they are stale. Releases now include man pages and shell completions.
+- A docs-impact check: CI fails a pull request that changes commands, config, keys or agents without changing the docs and the CHANGELOG, unless it is labelled "no docs needed".
 - Antigravity CLI (`agy`) in the agent table: Google moved Gemini CLI's consumer users to it on 18 June 2026.
 - A support level for each agent: Claude Code and Codex are first-class (tested end to end on every release, with status hooks and resume), opencode, Antigravity CLI and the shell are supported, and the rest are best effort. The README lists them.
 - A roadmap that scores every candidate feature by demand, impact and effort ([docs/roadmap.md](docs/roadmap.md)). Next and later items are GitHub issues, eleven of them good first issues, and the labels are kept as code in `.github/labels.yml` (synced by `scripts/sync-labels.sh` and the Labels workflow).

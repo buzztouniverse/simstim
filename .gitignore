@@ -3,6 +3,7 @@
 # Pinned developer tools (scripts/setup.sh)
 /.tools/
 /dist/
+/build/
 *.test
 *.out
 coverage.*

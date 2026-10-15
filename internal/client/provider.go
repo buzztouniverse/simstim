@@ -24,8 +24,13 @@ import (
 // Actions: start, stop, status. status prints {"state": "running"} or
 // {"state": "stopped"}. A non-zero exit is an error; stderr is shown to the user.
 type Provider struct {
-	Script       string `toml:"script"`
-	WakeOnAttach bool   `toml:"wake_on_attach,omitempty"`
+	// Script names a program that starts, stops and reports on the host. It gets
+	// the action as its argument and a JSON job on stdin (see
+	// examples/providers).
+	Script string `toml:"script"`
+	// WakeOnAttach starts the host through the script when it does not answer
+	// and you attach or start a session.
+	WakeOnAttach bool `toml:"wake_on_attach,omitempty"`
 }
 
 // ProviderStatus is the answer to the status action.

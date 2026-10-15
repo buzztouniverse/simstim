@@ -2,6 +2,7 @@
 
 | Page | What it covers |
 | --- | --- |
+| [Reference](reference/_index.md) | Every command, the configuration, the keys and the agent table, generated from the code |
 | [Roadmap](roadmap.md) | Every candidate feature, scored by demand, impact and effort: now, next and later |
 | [Design](explanation/design.md) | Why it exists, goals, non-goals, principles, risks |
 | [Architecture](explanation/architecture.md) | Components, flows, protocol, files and paths, providers |

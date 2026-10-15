@@ -116,3 +116,11 @@ test-install:
 # Score the pushed repository with OpenSSF Scorecard (needs the scorecard CLI and `gh auth login`).
 scorecard:
     GITHUB_AUTH_TOKEN=$(gh auth token) scorecard --repo={{module}} --format=default
+
+# Write the reference docs from the code (docs/reference). CI fails if they are stale.
+docs:
+    go run ./cmd/docgen
+
+# Write man pages and shell completions into build/ (the release build does this too).
+man:
+    go run ./cmd/docgen -out docs/reference -man build/man -completions build/completions

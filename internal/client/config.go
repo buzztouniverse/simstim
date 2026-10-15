@@ -19,31 +19,62 @@ import (
 
 // Host is one saved host.
 type Host struct {
-	// Name is how the user refers to the host.
+	// Name names the host in commands, as in `attach <name>/<session>`.
 	Name string `toml:"name"`
-	// SSH is the ssh destination: a Host alias from an SSH config, or user@host[:port].
+	// SSH says how to reach the host: a Host alias from your SSH config, or
+	// user@host[:port].
 	SSH string `toml:"ssh"`
-	// SSHConfig is an extra SSH config file to include, for example a repo's own config.
+	// SSHConfig adds an SSH config file to read as well, for example a repo's
+	// own.
 	SSHConfig string `toml:"ssh_config,omitempty"`
-	// Labels are free-form, for example provider = "gcp".
+	// Labels tags the host with key-value pairs of your own, for example
+	// provider = "gcp".
 	Labels map[string]string `toml:"labels,omitempty"`
-	// Provider is an optional script that starts and stops the host.
+	// Provider names a script that starts and stops the host. Optional.
 	Provider *Provider `toml:"provider,omitempty"`
 }
 
-// Settings are the user's preferences.
+// Settings are the user's preferences, from config.toml. The comments on its
+// fields are the config reference: cmd/docgen turns them into
+// docs/reference/config.md.
 type Settings struct {
+	// UI holds the launcher's look and feel.
 	UI struct {
+		// Motion turns the launcher's animation on or off: "auto" (off inside
+		// SSH sessions, Emacs and JetBrains terminals, and with NO_COLOR or
+		// TERM=dumb), "on" or "off".
 		Motion string `toml:"motion"`
 	} `toml:"ui"`
+	// Attach holds what happens while you are attached to a session.
 	Attach struct {
-		DetachKey     string `toml:"detach_key"`
+		// DetachKey leaves the session and keeps it running. Press it twice to
+		// send it to the agent.
+		DetachKey string `toml:"detach_key"`
+		// ImagePasteKey uploads the image on the clipboard to the host and
+		// pastes its path. Without an image, the key goes to the agent.
 		ImagePasteKey string `toml:"image_paste_key"`
-		Scrollback    string `toml:"scrollback"`
+		// Scrollback says what happens to the terminal's scrollback when you
+		// attach again: "keep" replays what you missed after what you saw,
+		// "clear" starts from a clean screen.
+		Scrollback string `toml:"scrollback"`
 	} `toml:"attach"`
-	// Keymap rebinds home-screen commands by name ("session: delete"). A value is
-	// a key, a list of keys, or "" to unbind.
+	// Keymap rebinds launcher commands by name ("session: delete"). A value is
+	// a key, a list of keys, or "" to unbind. `config keymap` lists the names.
 	Keymap map[string]any `toml:"keymap"`
+}
+
+// DefaultSettings are the settings with nothing in config.toml.
+func DefaultSettings() Settings {
+	var s Settings
+	s.UI.Motion = "auto"
+	s.Attach.DetachKey = "ctrl+\\"
+	// Windows Terminal keeps Ctrl+V for itself.
+	s.Attach.ImagePasteKey = "ctrl+v"
+	if runtime.GOOS == "windows" {
+		s.Attach.ImagePasteKey = "alt+v"
+	}
+	s.Attach.Scrollback = "keep"
+	return s
 }
 
 type hostsFile struct {
@@ -137,21 +168,18 @@ func ValidHostName(n string) bool { return hostNameRE.MatchString(n) }
 func LoadSettings() Settings {
 	var s Settings
 	_, _ = toml.DecodeFile(settingsPath(), &s)
+	d := DefaultSettings()
 	if s.UI.Motion == "" {
-		s.UI.Motion = "auto"
+		s.UI.Motion = d.UI.Motion
 	}
 	if s.Attach.DetachKey == "" {
-		s.Attach.DetachKey = "ctrl+\\"
+		s.Attach.DetachKey = d.Attach.DetachKey
 	}
 	if s.Attach.ImagePasteKey == "" {
-		// Windows Terminal keeps Ctrl+V for itself.
-		s.Attach.ImagePasteKey = "ctrl+v"
-		if runtime.GOOS == "windows" {
-			s.Attach.ImagePasteKey = "alt+v"
-		}
+		s.Attach.ImagePasteKey = d.Attach.ImagePasteKey
 	}
 	if s.Attach.Scrollback == "" {
-		s.Attach.Scrollback = "keep"
+		s.Attach.Scrollback = d.Attach.Scrollback
 	}
 	return s
 }
