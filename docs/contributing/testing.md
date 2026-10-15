@@ -33,6 +33,16 @@ A container made with `host create docker` runs the suite too, over `docker exec
 
 It covers start, attach and detach, resize, byte-exact output, replay after a dropped link, a simulated laptop sleep, the memory cap, snapshots after the ring wraps, a crashed shadow terminal, image paste and file drops, worktrees, ports, rename and delete. Host reboots are tested by hand, with the host owner's agreement.
 
+## Time to first agent
+
+`scripts/time-to-agent.sh <ssh target> [ssh config] [agent]` measures the path in [getting started](../tutorials/getting-started.md) on a host you can already reach: it builds a snapshot release, signs it with a throwaway key, serves it on localhost, and times `install.sh`, `host add` and `new --agent` in a throwaway config folder, until the agent's state is known.
+
+| Date | Client | Host | install | host add | agent running | Total |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-15 | macOS, Apple silicon | Debian 13 VM, over a jump host on WiFi | 0.1 s | 1.8 s | 0.2 s (Claude Code) | 2.2 s |
+
+The release is served locally, so the download is not in the time: a client archive is about 11 MB, a few seconds on a home connection. The rest of the five minutes is typing three commands, and the agent's own login.
+
 ## Seeing a screen
 
 `test/ttyshot` runs a program in a pseudo-terminal, sends keys from a script, and prints the screen it ends on, or draws it as SVG:

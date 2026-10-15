@@ -5,8 +5,10 @@
 # 203.0.113.0/24), example.com and the users "me", "you" and "dev".
 #
 # A maintainer can add words of their own (machine names, a homelab's name)
-# to private/deny.txt, one extended regex per line. That file is git-ignored,
-# so the words never enter the repo. CI runs without it.
+# to private/deny.txt, one extended regex per line. A line that starts with
+# "!" is a form that is fine after all, such as a public address that holds
+# a denied word. That file is git-ignored, so the words never enter the repo.
+# CI runs without it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -24,10 +26,14 @@ patterns=(
     # Email addresses.
     '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'
 )
+more_allow=""
 if [ -f private/deny.txt ]; then
     while IFS= read -r line; do
-        case "$line" in '' | '#'*) continue ;; esac
-        patterns+=("$line")
+        case "$line" in
+        '' | '#'*) continue ;;
+        '!'*) more_allow+="|${line#!}" ;;
+        *) patterns+=("$line") ;;
+        esac
     done <private/deny.txt
 fi
 
@@ -35,6 +41,7 @@ fi
 # the bots' addresses, and another project's public contact addresses that an
 # old version of a research note quoted.
 allow='/Users/(me|you|runner|shared)([/" ]|$)|/home/(me|you|u|dev|user|runner|linuxbrew|admin|ubuntu|debian|vscode|node)([/" .:;)\<&]|$)|example-tailnet\.ts\.net|@([A-Za-z0-9-]+\.)*(example|example\.(com|org|net)|openssh\.com|users\.noreply\.github\.com)([^A-Za-z0-9.-]|$)|git@github\.com|noreply@|user@UID|@v[0-9]|@sha256|@latest|[a-z]+@herdr\.dev'
+allow+="$more_allow"
 
 # --history checks every version of every file in every commit, plus the
 # commit messages: run it before the repository goes public.
