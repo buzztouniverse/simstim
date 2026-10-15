@@ -3,14 +3,39 @@
 ## Start here
 
 ```sh
+simstim doctor
 simstim doctor terminal
 simstim host test my-server
 simstim host doctor my-server
 ```
 
+- `doctor` checks this computer: `ssh`, the config files, and the commands of your [secrets](secrets.md).
 - `doctor terminal` asks your terminal what it supports: the keyboard protocol, colours, synchronized output.
 - `host test` says whether the host answers, and how fast.
 - `host doctor` checks the host: the helper, systemd and linger, the agents, and memory.
+
+## Let the doctor fix it
+
+Both doctors can fix the common problems they find. Each fix is shown first, with what it does and the command it runs, and runs only when you say yes:
+
+<!-- test: help (it changes the host) -->
+```sh
+simstim host doctor my-server --fix
+simstim doctor --fix
+```
+
+| Doctor | Fixes |
+| --- | --- |
+| `host doctor --fix` | Linger off, so sessions stop when you log out: turns it on with `loginctl`, without sudo. |
+| | The unit that restores sessions after a reboot is missing, out of date or off: writes and enables it. |
+| | Ghostty's terminfo is missing: compiles this computer's `xterm-ghostty` entry into `~/.terminfo` on the host. Run it from Ghostty, which has the entry. |
+| | The `current` helper link is broken, so hooks and the restore unit cannot find the helper: points it at the helper in use. |
+| | Session sockets with no session behind them: removes them. |
+| | Old helper versions that nothing uses: removes them, keeping the newest three and every one a session runs. |
+| `doctor --fix` | SSH configs generated for hosts you removed: removes them. |
+| | ControlMaster sockets whose SSH master died, which can make connections hang: removes them. |
+
+The doctor never uses sudo. When a fix needs root, for example linger on some hosts, it prints the command for you to run. `--yes` applies every fix without asking.
 
 ## Common problems
 
@@ -21,7 +46,7 @@ simstim host doctor my-server
 | A key does nothing in the agent | `simstim doctor keys` shows what your terminal sends. Some terminals keep keys for themselves. |
 | An agent is "not installed" | `simstim agents install <agent> --host my-server` runs its installer in a session ([install agents](install-agents.md)). An agent installed by hand must be on your `PATH` in a login shell. |
 | An agent asks you to log in | Run its own login in a session; `host doctor` prints the command. |
-| Sessions stop when you log out | Linger is off: `host doctor` says so. Run `loginctl enable-linger` on the host. |
+| Sessions stop when you log out | Linger is off: `host doctor` says so, and `host doctor --fix` turns it on. |
 | The screen looks wrong after attaching | Detach and attach again. If it stays wrong, open an issue with your terminal's name and version. |
 
 ## Logs

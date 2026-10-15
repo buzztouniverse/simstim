@@ -6,10 +6,23 @@ title: "simstim doctor"
 
 Check this machine and its terminal
 
+## Synopsis
+
+Checks this computer: ssh, the config files and the secrets' commands. With --fix it
+offers to fix what it can: SSH configs it generated for hosts you removed, and
+ControlMaster sockets whose master died. Each fix is shown before it runs.
+`host doctor <name>` checks a host.
+
+```text
+simstim doctor [flags]
+```
+
 ## Options
 
 ```text
+      --fix    offer to fix the problems found, one by one
   -h, --help   help for doctor
+  -y, --yes    with --fix, apply every fix without asking
 ```
 
 ## SEE ALSO

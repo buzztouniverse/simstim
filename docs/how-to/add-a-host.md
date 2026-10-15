@@ -42,4 +42,4 @@ simstim host test my-server
 simstim host doctor my-server
 ```
 
-`host doctor` lists what the host has and what is missing: systemd, linger, the agents and the helper.
+`host doctor` lists what the host has and what is missing: systemd, linger, the agents and the helper. `host doctor --fix` offers to fix what it can ([troubleshoot](troubleshoot.md#let-the-doctor-fix-it)).

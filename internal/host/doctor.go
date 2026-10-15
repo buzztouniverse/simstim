@@ -107,14 +107,20 @@ func Setup(a SetupArgs) SetupResult {
 			res.Steps = append(res.Steps, Check{Name: "linger", OK: true, Detail: "already on"})
 		} else {
 			u, _ := user.Current()
+			detail := "turned on"
 			err := exec.Command("loginctl", "enable-linger", u.Username).Run()
 			if err != nil {
+				// sudo -n never asks for a password: it works only where sudo
+				// needs none, and the step says that it was used.
 				err = exec.Command("sudo", "-n", "loginctl", "enable-linger", u.Username).Run()
+				detail = "turned on with sudo -n loginctl enable-linger " + u.Username
 			}
 			ok := err == nil && lingerOn()
-			res.Steps = append(res.Steps, Check{Name: "linger", OK: ok,
-				Detail: map[bool]string{true: "turned on", false: "could not turn it on"}[ok],
-				Fix:    "sudo loginctl enable-linger " + u.Username})
+			if !ok {
+				detail = "could not turn it on"
+			}
+			res.Steps = append(res.Steps, Check{Name: "linger", OK: ok, Detail: detail,
+				Fix: "sudo loginctl enable-linger " + u.Username})
 		}
 	}
 	if a.Linger {
@@ -125,18 +131,7 @@ func Setup(a SetupArgs) SetupResult {
 			res.Steps = append(res.Steps, Check{Name: "terminfo " + name, OK: true, Detail: "already installed"})
 			continue
 		}
-		f, err := os.CreateTemp("", "terminfo-*")
-		if err == nil {
-			_, _ = f.WriteString(src)
-			f.Close()
-			home, _ := os.UserHomeDir()
-			out, terr := exec.Command("tic", "-x", "-o", filepath.Join(home, ".terminfo"), f.Name()).CombinedOutput()
-			os.Remove(f.Name())
-			err = terr
-			if err != nil {
-				err = fmt.Errorf("%w: %s", err, strings.TrimSpace(string(out)))
-			}
-		}
+		err := installTerminfo(src)
 		ok := err == nil && HasTerminfo(name)
 		d := "installed"
 		if !ok {
@@ -145,4 +140,21 @@ func Setup(a SetupArgs) SetupResult {
 		res.Steps = append(res.Steps, Check{Name: "terminfo " + name, OK: ok, Detail: d})
 	}
 	return res
+}
+
+// installTerminfo compiles a terminfo source into ~/.terminfo.
+func installTerminfo(src string) error {
+	f, err := os.CreateTemp("", "terminfo-*")
+	if err != nil {
+		return fmt.Errorf("write the terminfo source: %w", err)
+	}
+	_, _ = f.WriteString(src)
+	f.Close()
+	defer os.Remove(f.Name())
+	home, _ := os.UserHomeDir()
+	out, err := exec.Command("tic", "-x", "-o", filepath.Join(home, ".terminfo"), f.Name()).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("tic: %w: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }

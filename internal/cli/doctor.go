@@ -14,7 +14,35 @@ import (
 )
 
 func doctorCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "doctor", Short: "Check this machine and its terminal"}
+	var fix, yes bool
+	cmd := &cobra.Command{
+		Use:   "doctor",
+		Short: "Check this machine and its terminal",
+		Long: "Checks this computer: ssh, the config files and the secrets' commands. With --fix it\n" +
+			"offers to fix what it can: SSH configs it generated for hosts you removed, and\n" +
+			"ControlMaster sockets whose master died. Each fix is shown before it runs.\n" +
+			"`host doctor <name>` checks a host.",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			fmt.Println("This computer:")
+			printChecks(os.Stdout, client.LocalChecks())
+			fixes := client.LocalFixes(false, nil)
+			if !fix {
+				for _, f := range fixes {
+					fmt.Printf("  ✕ %s\n", f.Problem)
+				}
+				if len(fixes) > 0 {
+					fmt.Printf("\nTry: %s doctor --fix\n", brand.Name)
+				}
+				return nil
+			}
+			return offerFixes(os.Stdin, os.Stdout, fixes, yes, func(ids []string) ([]client.Fix, error) {
+				return client.LocalFixes(true, ids), nil
+			})
+		},
+	}
+	cmd.Flags().BoolVar(&fix, "fix", false, "offer to fix the problems found, one by one")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "with --fix, apply every fix without asking")
 	cmd.AddCommand(&cobra.Command{
 		Use:   "terminal",
 		Short: "Ask this terminal what it supports (keys, colours, synchronized output…)",

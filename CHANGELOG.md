@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `host doctor --fix` and `doctor --fix`: the doctors offer to fix what they find, one fix at a time, each shown with what it does and the command it runs. On a host: linger off, the restore unit missing or stale, Ghostty's terminfo missing (sent from the laptop), a broken `current` helper link, stale session sockets, and old helper versions nothing uses (the newest three stay). On the laptop: SSH configs generated for removed hosts, and ControlMaster sockets whose master died. Nothing uses sudo; a fix that needs root is printed instead. `doctor` on its own now checks the laptop: `ssh`, the config files (unknown keys too) and the secrets' commands.
 - Per-session secrets: `[secrets]` in `config.toml` names each variable and a command that prints it on the laptop, such as `op read …` or `security find-generic-password … -w`. `new --secret NAME` (repeatable) and a host's `secrets` list in `hosts.toml` ask for them. The client runs each command at the start, with a 60 s limit, and sends the values over the SSH connection; the host keeps only the names, and the session's holder puts the values in the agent's environment and nowhere else: no file, log, `ls --json`, error message or command line. After a host restart the agent starts without them, and its terminal and the launcher say so. Tests check every one of those places. See [docs/how-to/secrets.md](docs/how-to/secrets.md).
 - `agents install <agent> [--host <host>]`: runs the agent's official installer, kept with its source in the agent table, in a session on the host, so you see its output and can answer its questions; then it says how to log in with the agent's own login, in a session. `agents ls` lists the install commands. `host add` and `host doctor` check each first-class and supported agent: installed, on `PATH` in a login shell, and logged in, read from the agent's own status command, credentials file or key variable ("unknown" when it has none). See [docs/how-to/install-agents.md](docs/how-to/install-agents.md).
 - Benchmarks for each step of the attach pump, and `just bench` (`scripts/bench.sh`), which compares them with a base commit on the same machine and fails on a slowdown over 10 %; CI runs it on pull requests.
@@ -71,6 +72,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- Host setup says when it turned on linger with `sudo -n` (which never asks for a password), instead of using sudo without a word.
 - The keys sheet fits an 80-column terminal: "next waiting session" and "copy attach command" are shorter, here and in the command palette.
 - `host start`, `host stop` and `host status` drive a created host through its provider, as well as hosts with a provider script. `forward` says plainly that it needs SSH on hosts reached through `docker exec` or E2B. `host rm` on a created host says that its machine is kept.
 - `go install github.com/iAmLakshya/simstim@latest` installs the client under its own name: its main moved to the root of the module, and the command tree to `internal/cli`.

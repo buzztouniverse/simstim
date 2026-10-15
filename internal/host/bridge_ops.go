@@ -1,12 +1,15 @@
 package host
 
 import (
+	"encoding/json"
+
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/proto"
 )
 
 // moreFeatures are the features that set hosts and sessions up: the requests
 // in this file, and the secrets of a new session (secrets.go).
-var moreFeatures = []string{"agents.check", "secrets"}
+var moreFeatures = []string{"agents.check", "doctor.fix", "secrets"}
 
 func init() { Features = append(Features, moreFeatures...) }
 
@@ -16,6 +19,15 @@ func (b *bridge) handleMore(req proto.Request) bool {
 	switch req.Op {
 	case "agents.check":
 		b.reply(req.ID, AgentChecks(), nil)
+	case "doctor.fix":
+		var a api.FixArgs
+		if len(req.Args) > 0 {
+			if err := json.Unmarshal(req.Args, &a); err != nil {
+				b.reply(req.ID, nil, UserError("bad_request", "the fix request is not valid JSON", "Update the client."))
+				return true
+			}
+		}
+		b.reply(req.ID, Fixes(a), nil)
 	default:
 		return false
 	}

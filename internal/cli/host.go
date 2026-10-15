@@ -256,11 +256,15 @@ func hostTestCmd() *cobra.Command {
 }
 
 func hostDoctorCmd() *cobra.Command {
-	var asJSON bool
+	var asJSON, fix, yes bool
 	cmd := &cobra.Command{
 		Use:   "doctor <name>",
-		Short: "Check a host's setup",
-		Args:  cobra.ExactArgs(1),
+		Short: "Check a host's setup, and with --fix fix what it can",
+		Long: "Checks a host: systemd and linger, the restore unit, terminfo, memory caps and the\n" +
+			"agents. With --fix it offers to fix linger, the restore unit, Ghostty's terminfo, a\n" +
+			"broken current helper link, stale session sockets and old helper versions. Each fix\n" +
+			"is shown and explained before it runs; one that needs root is printed for you.",
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := client.FindHost(args[0])
 			if err != nil {
@@ -298,10 +302,15 @@ func hostDoctorCmd() *cobra.Command {
 			fmt.Println("Agents:")
 			printAgentChecks(os.Stdout, h.Name, d.AgentChecks)
 			printScrollback(ctx, conn)
-			return nil
+			if !fix {
+				return nil
+			}
+			return fixHost(cmd.Context(), conn, h, yes)
 		},
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print JSON")
+	cmd.Flags().BoolVar(&fix, "fix", false, "offer to fix the problems found, one by one")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "with --fix, apply every fix without asking")
 	return cmd
 }
 

@@ -19,7 +19,7 @@ Add, create, list, test and remove hosts
 * [simstim host alerts](host_alerts.md)     - Show where a host sends alerts about its sessions, and the last deliveries
 * [simstim host create](host_create.md)     - Make a new host with a provider (lima, docker, e2b), install the helper and connect
 * [simstim host destroy](host_destroy.md)     - Delete a host made by `host create`: its VM, container or sandbox, and every session on it
-* [simstim host doctor](host_doctor.md)     - Check a host's setup
+* [simstim host doctor](host_doctor.md)     - Check a host's setup, and with --fix fix what it can
 * [simstim host idle](host_idle.md)     - Set how long a created host may idle before it stops, for example 30m, or never
 * [simstim host ls](host_ls.md)     - List hosts
 * [simstim host restore](host_restore.md)     - Start again the sessions a host restart stopped (the host also does this at boot)

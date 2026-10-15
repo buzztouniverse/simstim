@@ -104,6 +104,21 @@ func withLabel(l map[string]string, k, v string) map[string]string {
 // restoreUnit is the systemd user unit that runs restore at boot.
 func restoreUnit() string { return brand.Name + "-restore.service" }
 
+// restoreUnitText is the restore unit's file.
+func restoreUnitText() string {
+	return fmt.Sprintf(`[Unit]
+Description=Restore %s sessions after a restart
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=%s restore
+
+[Install]
+WantedBy=default.target
+`, brand.DisplayName, currentHelper())
+}
+
 // InstallRestoreUnit writes and enables the boot-time restore unit.
 func InstallRestoreUnit() Check {
 	c := Check{Name: "restore after restart"}
@@ -117,17 +132,7 @@ func InstallRestoreUnit() Check {
 		c.Detail = err.Error()
 		return c
 	}
-	unit := fmt.Sprintf(`[Unit]
-Description=Restore %s sessions after a restart
-After=default.target
-
-[Service]
-Type=oneshot
-ExecStart=%s restore
-
-[Install]
-WantedBy=default.target
-`, brand.DisplayName, currentHelper())
+	unit := restoreUnitText()
 	path := filepath.Join(dir, restoreUnit())
 	if old, err := os.ReadFile(path); err != nil || string(old) != unit {
 		if err := os.WriteFile(path, []byte(unit), 0o644); err != nil {
