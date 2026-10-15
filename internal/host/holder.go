@@ -84,6 +84,9 @@ type Holder struct {
 	hookBusy    bool
 	lastTurnEnd time.Time
 	notifyMsg   string
+	// The shadow terminal, for snapshots and query answers; nil if unavailable.
+	vt     *VT
+	ptyOut chan []byte // ordered writes to the PTY from the shadow terminal
 	// From screen rules.
 	scr       *screenModel
 	ruleState string
@@ -124,6 +127,7 @@ func RunHolder(id string) error {
 		os.Remove(paths.Socket(id))
 		return err
 	}
+	h.startVT()
 	go h.acceptLoop()
 	go h.readLoop()
 	go h.waitLoop()
@@ -245,6 +249,9 @@ func (h *Holder) output(data []byte) {
 	defer h.mu.Unlock()
 	off := h.ring.End()
 	h.ring.Write(data)
+	if h.vt != nil {
+		h.vt.Feed(off, data)
+	}
 	payload := proto.EncodeOutput(off, data)
 	for c := range h.clients {
 		if !c.attached {
@@ -446,10 +453,28 @@ func (h *Holder) serve(conn net.Conn) {
 }
 
 func (h *Holder) attach(c *hclient, a proto.Attach) {
+	// A client that has none of this session's output gets a snapshot from the
+	// shadow terminal, taken before the lock so output keeps flowing.
+	var snap []byte
+	snapAt := int64(-1)
+	h.mu.Lock()
+	canReplay := a.LastOffset >= 0 && h.ring.Has(a.LastOffset)
+	vt := h.vt
+	h.mu.Unlock()
+	if !canReplay && vt != nil {
+		if s, upTo, err := vt.Snapshot(a.Cols, a.Rows, snapshotLines, 3*time.Second); err == nil {
+			snap, snapAt = s, upTo
+		} else {
+			h.log.Printf("snapshot failed, replaying the ring instead: %v", err)
+		}
+	}
 	h.mu.Lock()
 	mode, from := "full", h.ring.Start()
-	if a.LastOffset >= 0 && h.ring.Has(a.LastOffset) {
+	switch {
+	case a.LastOffset >= 0 && h.ring.Has(a.LastOffset):
 		mode, from = "replay", a.LastOffset
+	case snapAt >= 0 && h.ring.Has(snapAt):
+		mode, from = "snapshot", snapAt
 	}
 	data, _ := h.ring.ReadFrom(from)
 	live := h.ring.End()
@@ -462,9 +487,22 @@ func (h *Holder) attach(c *hclient, a proto.Attach) {
 	h.dirty = true
 	h.mu.Unlock()
 
+	if h.vt != nil {
+		h.vt.AnswerQueries(false) // a client's terminal answers from now on
+	}
 	if err := c.w.WriteJSON(proto.TAttached, proto.Attached{Session: h.id, Mode: mode, From: from, Live: live, Exited: exited}); err != nil {
 		c.close()
 		return
+	}
+	if mode == "snapshot" {
+		for len(snap) > 0 {
+			n := min(len(snap), 256<<10)
+			if err := c.w.Write(proto.TSnapshot, snap[:n]); err != nil {
+				c.close()
+				return
+			}
+			snap = snap[n:]
+		}
 	}
 	for off := from; len(data) > 0; {
 		n := len(data)
@@ -529,7 +567,11 @@ func (h *Holder) resize(c *hclient, rz proto.Resize, force bool) {
 	_ = pty.Setsize(h.ptmx, &pty.Winsize{Cols: uint16(rz.Cols), Rows: uint16(rz.Rows), X: uint16(rz.XPx), Y: uint16(rz.YPx)})
 	h.mu.Lock()
 	h.scr.resize(rz.Cols, rz.Rows)
+	vt := h.vt
 	h.mu.Unlock()
+	if vt != nil {
+		vt.Resize(rz.Cols, rz.Rows, rz.XPx, rz.YPx)
+	}
 	if force {
 		// Make the agent repaint even when the size did not change.
 		if pgrp, err := unix.IoctlGetInt(h.fd, unix.TIOCGPGRP); err == nil && pgrp > 0 {
@@ -545,6 +587,9 @@ func (h *Holder) drop(c *hclient) {
 	c.attached = false
 	if h.leader == c {
 		h.leader = nil
+	}
+	if h.vt != nil && !h.anyAttached() {
+		h.vt.AnswerQueries(true)
 	}
 }
 
@@ -658,6 +703,9 @@ func (h *Holder) kill(reason string) {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+	if h.vt != nil {
+		_ = h.vt.Close()
+	}
 	h.log.Printf("holder exiting: %s", reason)
 	h.mu.Lock()
 	if h.m.Status.State != StateExited && h.m.Status.State != StateErrored {
@@ -736,4 +784,68 @@ func lookPath(name, path string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("%s is not installed on this host (not found on PATH)", name)
+}
+
+// snapshotLines is how much scrollback a new client gets in a snapshot.
+const snapshotLines = 5000
+
+// startVT starts the shadow terminal that sits next to this binary. Without it
+// the holder still works: new clients get the raw ring instead of a snapshot.
+func (h *Holder) startVT() {
+	exe, err := os.Executable()
+	if err != nil {
+		return
+	}
+	path := filepath.Join(filepath.Dir(exe), brand.VTBinary)
+	if _, err := os.Stat(path); err != nil {
+		h.log.Printf("no shadow terminal at %s; new clients get the raw output", path)
+		return
+	}
+	h.ptyOut = make(chan []byte, 256)
+	go func() {
+		for b := range h.ptyOut {
+			_, _ = h.ptmx.Write(b)
+		}
+	}()
+	h.mu.Lock()
+	cols, rows := h.m.Term.Cols, h.m.Term.Rows
+	tp, tpv := envValue(h.m.Env, "TERM_PROGRAM"), envValue(h.m.Env, "TERM_PROGRAM_VERSION")
+	h.mu.Unlock()
+	vt, err := StartVT(VTOptions{
+		Path: path, Cols: cols, Rows: rows,
+		History: func() ([]byte, int64) {
+			h.mu.Lock()
+			defer h.mu.Unlock()
+			d, _ := h.ring.ReadFrom(h.ring.Start())
+			return d, h.ring.Start()
+		},
+		OnWrite: func(p []byte) {
+			select {
+			case h.ptyOut <- append([]byte(nil), p...):
+			default: // the agent is not reading its input; drop the reply
+			}
+		},
+		Logf: h.log.Printf,
+	})
+	if err != nil {
+		h.log.Printf("shadow terminal did not start: %v", err)
+		return
+	}
+	if tp != "" {
+		vt.SetProfile(VTProfile{XTVersion: strings.TrimSpace(tp + " " + tpv)})
+	}
+	vt.AnswerQueries(true) // no client yet
+	h.mu.Lock()
+	h.vt = vt
+	h.mu.Unlock()
+}
+
+// anyAttached reports whether a client is attached. The caller holds h.mu.
+func (h *Holder) anyAttached() bool {
+	for c := range h.clients {
+		if c.attached {
+			return true
+		}
+	}
+	return false
 }

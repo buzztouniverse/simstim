@@ -10,6 +10,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Project scaffolding: licence, community files, CI, release configuration and decision records.
 - Host runtime: one holder process per session, with a PTY, an 8 MiB output ring with byte offsets, a manifest, and status from output signals. Each session runs as a systemd user service with a memory cap.
 - Host helper commands: `bridge`, `new`, `ls`, `rm`, `doctor`, `version`.
+- The shadow terminal (libghostty-vt in its own process): a new client gets a snapshot of the screen, scrollback and modes instead of raw history, and queries are answered while no client is attached. A crash restarts it; the agent never notices.
 - Wire protocol with a versioned hello, requests, attach streams and uploads.
 - Terminal mode tracking, reset without RIS, restore on reattach, and query removal from replayed history.
 - The input filter for the detach and image-paste keys, in legacy, kitty and modifyOtherKeys encodings.

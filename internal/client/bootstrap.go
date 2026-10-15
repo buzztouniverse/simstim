@@ -66,8 +66,9 @@ func Probe(ctx context.Context, s *SSH) (Platform, error) {
 	return p, nil
 }
 
-// Install uploads the helper for p, checks its SHA-256 on the host, and moves
-// it into place. It never runs during a background reconnect.
+// Install uploads the helper for p, and the shadow terminal when this build
+// has one, checks each SHA-256 on the host, and moves them into place. It never
+// runs during a background reconnect.
 func Install(ctx context.Context, s *SSH, p Platform) error {
 	bin, ok := helpers.For(p.OS, p.Arch)
 	if !ok {
@@ -76,11 +77,33 @@ func Install(ctx context.Context, s *SSH, p Platform) error {
 			Hint: "Linux hosts on amd64 and arm64 are supported. Build with `just build` to embed the helpers.",
 		}
 	}
-	sum := sha256.Sum256(bin)
-	hexsum := hex.EncodeToString(sum[:])
+	files := []struct {
+		name string
+		data []byte
+	}{{brand.VTBinary, nil}, {brand.HostBinary, bin}}
+	if vt, ok := helpers.VT(p.OS, p.Arch); ok {
+		files[0].data = vt
+	}
 	ver := HelperVersion()
+	for i, f := range files {
+		if f.data == nil {
+			continue
+		}
+		last := i == len(files)-1
+		if err := upload(ctx, s, ver, f.name, f.data, last); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// upload sends one file into the versioned helper folder. The helper itself
+// goes last, because its presence is what marks the version as installed.
+func upload(ctx context.Context, s *SSH, ver, name string, data []byte, last bool) error {
+	sum := sha256.Sum256(data)
+	hexsum := hex.EncodeToString(sum[:])
 	dir := fmt.Sprintf(`"$HOME/.local/share/%s/bin/%s"`, brand.Name, ver)
-	script := strings.Join([]string{
+	steps := []string{
 		"set -e",
 		"umask 077",
 		"d=" + dir,
@@ -89,16 +112,18 @@ func Install(ctx context.Context, s *SSH, p Platform) error {
 		`cat > "$t"`,
 		fmt.Sprintf(`echo "%s  $t" | sha256sum -c --quiet - || { rm -f "$t"; echo "checksum mismatch" >&2; exit 3; }`, hexsum),
 		`chmod 755 "$t"`,
-		fmt.Sprintf(`mv -f "$t" "$d/%s"`, brand.HostBinary),
-		fmt.Sprintf(`ln -sfn %q "$HOME/.local/share/%s/bin/current"`, ver, brand.Name),
-		"echo __INSTALLED__",
-	}, "; ")
-	out, err := s.Run(ctx, script, bytes.NewReader(bin))
+		fmt.Sprintf(`mv -f "$t" "$d/%s"`, name),
+	}
+	if last {
+		steps = append(steps, fmt.Sprintf(`ln -sfn %q "$HOME/.local/share/%s/bin/current"`, ver, brand.Name))
+	}
+	steps = append(steps, "echo __INSTALLED__")
+	out, err := s.Run(ctx, strings.Join(steps, "; "), bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
 	if !strings.Contains(string(out), "__INSTALLED__") {
-		return fmt.Errorf("the install did not finish: %s", strings.TrimSpace(string(out)))
+		return fmt.Errorf("the install of %s did not finish: %s", name, strings.TrimSpace(string(out)))
 	}
 	return nil
 }

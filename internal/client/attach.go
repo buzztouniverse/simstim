@@ -219,10 +219,8 @@ func (a *attacher) begin(att proto.Attached, st *AttachState, rows int) {
 	// A full redraw. Keep what is on screen in the scrollback, then start clean.
 	a.tracker = term.NewTracker()
 	a.offset = att.From
-	if att.Mode == "snapshot" {
-		// The snapshot frame redraws the screen; live output starts at Live.
-		a.offset = att.Live
-	}
+	// For "snapshot", a TSnapshot frame redraws the screen as of From, and the
+	// output from From follows; bytes before Live are history and are sanitised.
 	if a.o.Settings.Attach.Scrollback == "clear" {
 		a.write([]byte("\x1b[H\x1b[2J\x1b[3J"))
 	} else {

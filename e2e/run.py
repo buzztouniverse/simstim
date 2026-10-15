@@ -47,7 +47,7 @@ ok(code == 0 and m, "new --detach: " + out.strip().splitlines()[-1])
 sid = m.group(1); created.append(sid)
 # 2. Attach, type, see the output.
 t = Term([cli, "attach", HOST + "/" + sid], env=env)
-ok(t.wait_for(rb"\$ ", 30), "attach shows the shell prompt")
+ok(t.wait_for(rb":~\$", 30), "attach shows the shell prompt")
 t.send(b"echo MARK-$((40+2))\r")
 ok(t.wait_for(rb"MARK-42", 10), "typed command runs on the host and its output comes back")
 # 3. Detach with Ctrl+\ (legacy byte), wait for the double-tap window.
@@ -75,7 +75,8 @@ ok(code == 0, "single Ctrl+\\ then detaches")
 
 # --- Reliability and fidelity ---
 # A. Reconnect after the connection drops: no gap and no duplicate.
-sid = start("e2e-counter", "/bin/bash", "-c", "for i in $(seq 1 400); do echo N$i; sleep 0.05; done; sleep 600")
+# The output starts after the client attaches, so every line arrives live.
+sid = start("e2e-counter", "/bin/bash", "-c", "sleep 3; for i in $(seq 1 400); do echo N$i; sleep 0.05; done; sleep 600")
 t = Term([cli, "attach", HOST + "/" + sid], env=env)
 ok(t.wait_for(rb"N20\r", 30), "counter running")
 # Kill the client's bridge ssh (as a network drop would), and the shared master.
@@ -92,7 +93,7 @@ ok(not dups, "no duplicate after reconnect (dups: %s)" % dups[:10])
 t.send(b"\x1c"); t.exit_code(10)
 
 # B. Kitty keyboard sequences reach the host unchanged.
-sid2 = start("e2e-keys", HELPER, "keytest")
+sid2 = start("e2e-keys", "/bin/sh", "-c", "sleep 3; exec " + HELPER + " keytest")
 t = Term([cli, "attach", HOST + "/" + sid2], env=env)
 ok(t.wait_for(rb"Press keys", 30), "host key tester running in a session")
 ok(b"\x1b[>31u" in t.buf, "kitty keyboard push reached the local terminal")
@@ -110,7 +111,8 @@ seq = (b"\x1b]8;;https://example.com\x1b\\link\x1b]8;;\x1b\\ "
        b"\x1b[38;2;255;100;0mtruecolor\x1b[0m \x1b[4:3mcurly\x1b[0m "
        b"\x1b]777;notify;Title;Body\x1b\\\x1b]52;c;aGVsbG8=\x1b\\\x1b[?2026h\x1b[?2026l END")
 host_ssh("cat > ~/e2e-seq.bin", seq)
-sid3 = start("e2e-bytes", "/bin/bash", "-c", "cat ~/e2e-seq.bin; sleep 600")
+# Live output must be byte-identical (history on a new client is a snapshot, a redraw).
+sid3 = start("e2e-bytes", "/bin/bash", "-c", "sleep 3; cat ~/e2e-seq.bin; sleep 600")
 t = Term([cli, "attach", HOST + "/" + sid3], env=env)
 ok(t.wait_for(rb" END", 30), "escape test output arrived")
 ok(seq in t.buf, "OSC 8, truecolor, styled underline, OSC 777, OSC 52 and sync output are byte-identical")
@@ -169,6 +171,30 @@ while time.time() - woke < 30:
         break
 took = time.time() - woke
 ok(live and took < 5, "after a simulated sleep, live output resumed %.1f s after wake (%d missed lines replayed)" % (took, len(re.findall(rb"T(\d+\.\d+)", t.buf))))
+t.send(b"\x1c"); t.exit_code(10)
+
+# H. A new client after the ring wrapped gets a snapshot from the shadow
+#    terminal: the right screen and the modes set long ago (kitty flags).
+sid7 = start("e2e-snapshot", "/bin/bash", "-c",
+    'printf "\\033[>1u\\033[?2004h"; for i in $(seq 1 120000); do printf "LINE-%06d padding padding padding padding padding\\n" $i; done; printf "FINAL-SCREEN-MARKER\\n"; sleep 600')
+created.append(sid7)
+time.sleep(12)
+t = Term([cli, "attach", HOST + "/" + sid7], cols=100, rows=30, env=env)
+ok(t.wait_for(rb"FINAL-SCREEN-MARKER", 30), "snapshot: a new client sees the final screen after the ring wrapped")
+ok(b"\x1b[>1u" in t.buf and b"\x1b[?2004h" in t.buf, "snapshot: kitty flags and bracketed paste set before the ring's start are restored")
+ok(b"LINE-000001 " not in t.buf and len(t.buf) < 2 << 20, "snapshot: bounded (%d bytes, not the 8 MiB ring)" % len(t.buf))
+t.send(b"\x1c"); t.exit_code(10)
+
+# I. Killing the shadow terminal does not stop the agent; it restarts.
+sid8 = start("e2e-vtcrash", "/bin/bash", "-c", 'printf "\\033[>1u"; i=0; while :; do i=$((i+1)); printf "TICK-%d\\n" $i; sleep 0.2; done')
+created.append(sid8)
+time.sleep(3)
+host_ssh("pkill -KILL -x %s-vt; sleep 3" % NAME)
+t = Term([cli, "attach", HOST + "/" + sid8], env=env)
+t.read(4)
+ticks = [int(x) for x in re.findall(rb"TICK-(\d+)", t.buf)]
+ok(ticks and max(ticks) > 20, "shadow terminal killed: the agent kept running (tick %s)" % (max(ticks) if ticks else None))
+ok(b"\x1b[>1u" in t.buf, "shadow terminal killed: it restarted, and a new client still got a snapshot")
 t.send(b"\x1c"); t.exit_code(10)
 
 # Clean up.
