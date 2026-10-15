@@ -9,7 +9,6 @@
 package hosttest
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -309,6 +308,3 @@ func (h *Host) Script(name, body string) string {
 	}
 	return p
 }
-
-// Contains reports whether b holds sub; a short name for polling output.
-func Contains(b []byte, sub string) bool { return bytes.Contains(b, []byte(sub)) }
