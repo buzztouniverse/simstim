@@ -2,7 +2,7 @@
 
 Researched on 15 October 2026.
 
-This note studies thirteen Go repositories on a stack like ours (Go, Bubble Tea, Lip Gloss, GoReleaser) and turns what they do into a target layout for this project's code, docs and repository, with a migration plan. It backs three draft decision records: [0014 Code layout](../decisions/0014-code-layout.md), [0015 Docs toolchain](../decisions/0015-docs-toolchain.md) and [0016 Public repo layout](../decisions/0016-public-repo-layout.md).
+This note studies thirteen Go repositories on a stack like ours (Go, Bubble Tea, Lip Gloss, GoReleaser) and turns what they do into a target layout for this project's code, docs and repository, with a migration plan. It backs three draft decision records: [0014 Code layout](../contributing/decisions/0014-code-layout.md), [0015 Docs toolchain](../contributing/decisions/0015-docs-toolchain.md) and [0016 Public repo layout](../contributing/decisions/0016-public-repo-layout.md).
 
 ## Summary
 

@@ -101,7 +101,7 @@ screenshots: build
 snapshot:
     APP_NAME={{name}} goreleaser release --snapshot --clean
 
-# Rename the product (see docs/renaming.md).
+# Rename the product (see docs/contributing/renaming.md).
 rename new:
     scripts/rename.sh {{new}}
 

@@ -28,7 +28,7 @@ done < <(git ls-files --cached --others --exclude-standard -- '*.go' 'justfile' 
 if [ "$fail" -ne 0 ]; then
     echo
     echo "Error: the product name is spelled outside internal/brand."
-    echo "Try: use brand.Name, brand.HostBinary or brand.Env(...) instead (see docs/renaming.md)."
+    echo "Try: use brand.Name, brand.HostBinary or brand.Env(...) instead (see docs/contributing/renaming.md)."
     exit 1
 fi
 echo "check-name: ok (name \"$name\" appears only in internal/brand)"

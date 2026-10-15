@@ -32,7 +32,7 @@ type peekMsg struct {
 }
 
 // previewModal shows the selected session's last screen over the list
-// (docs/ux.md 2.6). It opens on Space and is never a permanent pane.
+// (docs/contributing/ux-spec.md 2.6). It opens on Space and is never a permanent pane.
 type previewModal struct{}
 
 func (m *Model) previewOpen() bool {

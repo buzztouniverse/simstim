@@ -13,7 +13,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// The launcher in every colour profile a terminal can have (docs/ux.md 4.1):
+// The launcher in every colour profile a terminal can have (docs/contributing/ux-spec.md 4.1):
 // truecolour, 256 colours, 16 colours, NO_COLOR (attributes only) and no
 // terminal at all. Bubble Tea turns the view into the terminal's profile the
 // same way, through colorprofile.

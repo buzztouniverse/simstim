@@ -8,7 +8,7 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-// Colour tokens (docs/ux.md 4.1). Every colour is a palette slot or the
+// Colour tokens (docs/contributing/ux-spec.md 4.1). Every colour is a palette slot or the
 // terminal's own default, so the screens take on the terminal's theme, and
 // secondary text is faint (SGR 2). The one accent is cyan, the colour of a
 // signal: keys, titles, the selection marker and work in progress. Fixed RGB
@@ -24,7 +24,7 @@ var (
 // brandStops is the one fixed gradient, for the mark and the name: deep teal
 // to electric cyan. On a light background the teal is deeper, so it keeps its
 // contrast. A 256-colour terminal gets the nearest indexes; with 16 colours
-// the brand is plain cyan (docs/ux.md 4.2).
+// the brand is plain cyan (docs/contributing/ux-spec.md 4.2).
 func brandStops(dark bool) []color.Color {
 	if dark {
 		return []color.Color{lipgloss.Color("#0E7C7B"), lipgloss.Color("#00E5FF")}
@@ -49,7 +49,7 @@ var (
 	sBrand   = lipgloss.NewStyle().Foreground(colBrand)
 )
 
-// Glyphs (docs/ux.md 4.4).
+// Glyphs (docs/contributing/ux-spec.md 4.4).
 const (
 	glyphMarker     = "▍" // the selected row
 	glyphNeedsInput = "●"

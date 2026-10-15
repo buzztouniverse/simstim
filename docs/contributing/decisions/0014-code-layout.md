@@ -7,7 +7,7 @@ date: 2026-10-15
 
 **Status:** Accepted. The owner said yes at Gate 1 on 15 October 2026.
 
-The evidence is in [the research note on Go project structure](../research/go-project-structure.md), sections 1, 2.1 to 2.3 and 4.
+The evidence is in [the research note on Go project structure](../../research/go-project-structure.md), sections 1, 2.1 to 2.3 and 4.
 
 ## Context
 

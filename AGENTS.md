@@ -4,7 +4,7 @@ Instructions for any operator of this repo: a person or an AI agent.
 
 ## What this repo is
 
-A client and a host helper that run AI coding agents in sessions on remote hosts, and show the agent's real terminal UI locally, byte for byte. [The plan](docs/plan.md) has the goals, [the architecture](docs/architecture.md) the design, and [the UX spec](docs/ux.md) the screens.
+A client and a host helper that run AI coding agents in sessions on remote hosts, and show the agent's real terminal UI locally, byte for byte. [The plan](docs/plan.md) has the goals, [the architecture](docs/architecture.md) the design, and [the UX spec](docs/contributing/ux-spec.md) the screens.
 
 | Path | Contents |
 | --- | --- |
@@ -23,14 +23,14 @@ A client and a host helper that run AI coding agents in sessions on remote hosts
 
 ## Rules
 
-1. **Never spell the product name** outside `internal/brand`, the docs and the module path. Derive it. `just check-name` enforces this. The name may change ([docs/renaming.md](docs/renaming.md)).
+1. **Never spell the product name** outside `internal/brand`, the docs and the module path. Derive it. `just check-name` enforces this. The name may change ([docs/contributing/renaming.md](docs/contributing/renaming.md)).
 2. **Byte-exact while attached.** Only the input filter's two keys (detach, image paste) may be intercepted. Never send RIS (`ESC c`) to the user's terminal.
 3. **Agents are data** in `internal/agents`.
 4. **Nothing listens, nothing phones home.** No new ports, relays or telemetry.
 5. **Clean-room and public-safe.** Never copy code, prompts or assets from closed-source tools. Keep private material (goals, status notes, logs, captures, host names, addresses, personal paths) in the git-ignored `private/` and `docs/research/private/` folders. Neither may enter the history.
-6. **Decisions** go in `docs/decisions/`. Do not edit an accepted record; supersede it.
+6. **Decisions** go in `docs/contributing/decisions/`. Do not edit an accepted record; supersede it.
 7. **Errors** carry a message and a "Try:" hint.
-8. **Commits:** one milestone or logical change each, pushed to `origin`. Run `just test lint` first. The message is a subject, a blank line and a body, and nothing more. Never add `Signed-off-by:`, `Co-Authored-By:`, `Claude-Session:` or any other trailer or attribution line, and never use `git commit -s` ([0010](docs/decisions/0010-no-commit-trailers.md)).
+8. **Commits:** one milestone or logical change each, pushed to `origin`. Run `just test lint` first. The message is a subject, a blank line and a body, and nothing more. Never add `Signed-off-by:`, `Co-Authored-By:`, `Claude-Session:` or any other trailer or attribution line, and never use `git commit -s` ([0010](docs/contributing/decisions/0010-no-commit-trailers.md)).
 9. **Docs:** plain English, short sentences, British spelling. A change ships with its docs and its CHANGELOG entry, in the same commit.
 
 ## Test hosts

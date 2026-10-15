@@ -12,7 +12,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// The launcher (docs/ux.md 2.2 and 2.3) is one list in one column, with no
+// The launcher (docs/contributing/ux-spec.md 2.2 and 2.3) is one list in one column, with no
 // box round it: a header with the brand and where you are, a rule, the
 // list, a line about the selected row, and at the bottom a rule, the prompt
 // line and the keys. Notices rise just above the bottom rule.

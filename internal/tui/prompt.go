@@ -12,7 +12,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// The prompt line (docs/ux.md 2.3) sits above the keys. "/" searches the
+// The prompt line (docs/contributing/ux-spec.md 2.3) sits above the keys. "/" searches the
 // sessions of every host at once; "n" starts a session from one line:
 // "claude ~/src/app auth", the agent, the folder and a name, each optional,
 // with Tab to complete.

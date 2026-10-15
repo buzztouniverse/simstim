@@ -117,7 +117,7 @@ type noticeLine struct {
 
 // noticeLines draws the toasts as short lines that rise above the bottom
 // rule, the newest lowest: a glyph and the text, or for an error a red cross
-// and the step to try next (docs/ux.md 2.8).
+// and the step to try next (docs/contributing/ux-spec.md 2.8).
 func (m *Model) noticeLines(w int) []noticeLine {
 	var out []noticeLine
 	for _, t := range m.toasts.shown {

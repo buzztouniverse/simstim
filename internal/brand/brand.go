@@ -1,7 +1,7 @@
 // Package brand holds the product name. Nothing else in the code base may spell it.
 //
 // The name may change. To rename the project, change Name here and follow
-// docs/renaming.md, which also covers the module path, the build files and the docs.
+// docs/contributing/renaming.md, which also covers the module path, the build files and the docs.
 package brand
 
 import "strings"

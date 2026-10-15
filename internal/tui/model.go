@@ -14,7 +14,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// screen is the one list the launcher shows (docs/ux.md 2): the hosts, or
+// screen is the one list the launcher shows (docs/contributing/ux-spec.md 2): the hosts, or
 // the sessions on one host.
 type screen int
 

@@ -47,7 +47,7 @@ func rule(w int, title, right string, t tone) string {
 	return out
 }
 
-// sheet draws a dialog (docs/ux.md 2.4 to 2.12): it rises from the bottom
+// sheet draws a dialog (docs/contributing/ux-spec.md 2.4 to 2.12): it rises from the bottom
 // of the screen, full width, with its title in a rule across the top, its
 // body indented under it, and its keys on the last line. It has no side
 // borders; the dimmed list behind it is the frame.

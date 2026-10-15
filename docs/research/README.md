@@ -15,4 +15,4 @@ The evidence behind the design, gathered on 14 and 15 October 2026. Each note ma
 | [Sandboxes and hosts](sandboxes.md) | E2B first, then Daytona, Modal, Fly, Morph, Coder, Codespaces, Hetzner, GCE, EC2 and local VMs: access, persistence, limits, prices, APIs and fit as a host (15 October 2026) |
 | [Go project structure](go-project-structure.md) | Thirteen well-run Go repos: code layout, tests, CI, releases, docs sites and public repo setup; our target layouts and a migration plan (15 October 2026) |
 
-A clean-room study of the Amp CLI binary, and the screens and images captured for [Amp's TUI, observed](amp-tui.md), are kept outside git (`private/`, ignored). They must never enter the history of this repo. Only what they show, described in our own words, appears in the notes and in [the UX spec](../ux.md).
+A clean-room study of the Amp CLI binary, and the screens and images captured for [Amp's TUI, observed](amp-tui.md), are kept outside git (`private/`, ignored). They must never enter the history of this repo. Only what they show, described in our own words, appears in the notes and in [the UX spec](../contributing/ux-spec.md).

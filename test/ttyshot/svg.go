@@ -26,7 +26,7 @@ const (
 )
 
 // shotTheme is the palette the images use: the reference theme of the
-// palette table in docs/ux.md 4.1, a dark Ghostty theme. The UI sends palette
+// palette table in docs/contributing/ux-spec.md 4.1, a dark Ghostty theme. The UI sends palette
 // slots, so in a real terminal the user's own theme decides the colours.
 // Faint text is drawn half way to the background, as Ghostty draws it.
 var shotTheme = struct {

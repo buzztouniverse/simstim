@@ -26,5 +26,5 @@ The owner agreed on 15 October 2026 that the key be made and kept only as the se
 
 - Good, because `curl … | sh` checks a signature on a clean machine, with nothing to install first.
 - Good, because the key never leaves GitHub's secret store, and the release job checks its own signature before it uploads it.
-- Bad, because a key kept by GitHub is only as safe as the repository's admin accounts and workflows. Pinned actions, least-privilege tokens and zizmor ([CI](../../.github/workflows/ci.yml)) reduce that risk.
+- Bad, because a key kept by GitHub is only as safe as the repository's admin accounts and workflows. Pinned actions, least-privilege tokens and zizmor ([CI](../../../.github/workflows/ci.yml)) reduce that risk.
 - Bad, because rotating the key means a new key in the secret, a new `.github/release-signers`, and a new `install.sh`. Old releases then need the old key: the release notes say which key signed them.

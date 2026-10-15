@@ -30,7 +30,7 @@ func errorLines(err error, w int) []string {
 	return errorBlock(msg, hint, w)
 }
 
-// New session (docs/ux.md 2.4).
+// New session (docs/contributing/ux-spec.md 2.4).
 
 type agentChoice struct {
 	kind      string
@@ -349,7 +349,7 @@ func (d *newSession) agentRow(w int) string {
 	return b.String()
 }
 
-// Confirm (docs/ux.md 2.5).
+// Confirm (docs/contributing/ux-spec.md 2.5).
 
 type confirm struct {
 	title  string
@@ -416,7 +416,7 @@ func removeHostDialog(h client.Host) *confirm {
 	}
 }
 
-// Host details (docs/ux.md 2.9).
+// Host details (docs/contributing/ux-spec.md 2.9).
 
 type details struct{ host string }
 

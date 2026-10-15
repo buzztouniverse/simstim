@@ -5,13 +5,13 @@ date: 2026-10-15
 
 # 0009 A light launcher, and a session that owns the whole terminal
 
-This record replaces the first UI design: the "one home screen" of the first [UX spec](../ux.md), which had hosts on the left, sessions on the right and a permanent live preview below. That design had no record of its own. The rest of the design stays as it was, including Bubble Tea v2 ([0001](0001-go-and-bubble-tea.md)), the detach key ([0006](0006-defaults.md)) and byte-exact pass-through.
+This record replaces the first UI design: the "one home screen" of the first [UX spec](../ux-spec.md), which had hosts on the left, sessions on the right and a permanent live preview below. That design had no record of its own. The rest of the design stays as it was, including Bubble Tea v2 ([0001](0001-go-and-bubble-tea.md)), the detach key ([0006](0006-defaults.md)) and byte-exact pass-through.
 
 ## Context
 
 The first home screen worked, but it looked and behaved like a GUI. Panes, a preview and every host's sessions all competed for attention, and the screen was busy even when you only wanted one session. The owner wants the tool to get out of the way: start or join a session in a few keys, then give full focus to the agent.
 
-Amp's CLI sets the bar for a calm terminal UI. Amp itself removed its TUI sidebar in August 2026 and left multiplexing to the terminal. We watched the real Amp CLI cell by cell ([research](../research/amp-tui.md)). Almost everything it draws uses the terminal's palette: notched frames, yellow titles, blue keys, faint secondary text, and a yellow selection bar.
+Amp's CLI sets the bar for a calm terminal UI. Amp itself removed its TUI sidebar in August 2026 and left multiplexing to the terminal. We watched the real Amp CLI cell by cell ([research](../../research/amp-tui.md)). Almost everything it draws uses the terminal's palette: notched frames, yellow titles, blue keys, faint secondary text, and a yellow selection bar.
 
 ## Options
 

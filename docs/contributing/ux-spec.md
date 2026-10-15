@@ -15,7 +15,7 @@ simstim has two kinds of screen, with opposite rules:
 | Look | Our own: a signal. One column, a cyan accent, live traces, sheets that rise from the bottom | Untouched. Every row and column is the agent's. |
 | Keys simstim reads | All of them | Only the detach key, and Ctrl+V when the clipboard holds an image |
 
-[Amp's CLI](research/amp-tui.md) was the baseline. We keep its good habits: colours from the terminal's palette, faint secondary text, a command palette, one list at a time. The rest is our own.
+[Amp's CLI](../research/amp-tui.md) was the baseline. We keep its good habits: colours from the terminal's palette, faint secondary text, a command palette, one list at a time. The rest is our own.
 
 ## 1. Principles
 

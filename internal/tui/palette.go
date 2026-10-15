@@ -31,7 +31,7 @@ type binding struct {
 }
 
 // command is one entry of the registry. The same registry feeds the
-// palette, the shortcuts and the keys of the launcher (docs/ux.md 2.7).
+// palette, the shortcuts and the keys of the launcher (docs/contributing/ux-spec.md 2.7).
 type command struct {
 	noun, verb string
 	short      string // the words in the shortcuts, if not the verb
@@ -205,7 +205,7 @@ func registry() []*command {
 	}
 }
 
-// Palette (docs/ux.md 2.7): Ctrl+O, a filter line, then "noun  verb" rows
+// Palette (docs/contributing/ux-spec.md 2.7): Ctrl+O, a filter line, then "noun  verb" rows
 // with the keys on the right.
 
 type palette struct {
@@ -301,7 +301,7 @@ func (p *palette) view(m *Model) string {
 	return sheet(w, "Commands", "", []hint{{"enter", "run"}, {"↑↓", "move"}, {"esc", "close"}}, body, toneNormal)
 }
 
-// Keys (docs/ux.md 2.7): ? opens a sheet of every key that works here,
+// Keys (docs/contributing/ux-spec.md 2.7): ? opens a sheet of every key that works here,
 // built from the live registry, so a rebound key shows its new name.
 
 type helpSheet struct{}

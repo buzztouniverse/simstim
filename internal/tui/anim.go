@@ -15,7 +15,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// Motion (docs/ux.md 4.5). Every animation is a function of the clock, so
+// Motion (docs/contributing/ux-spec.md 4.5). Every animation is a function of the clock, so
 // any moment can be drawn and tests can stop time. One tick runs while
 // something moves, fast or slow as the moving thing needs, and stops when
 // nothing does. With motion off, each animation draws one still frame.

@@ -10,7 +10,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/brand"
 )
 
-// The welcome mark (docs/ux.md 2.1): three strands of a signal, woven into
+// The welcome mark (docs/contributing/ux-spec.md 2.1): three strands of a signal, woven into
 // a ribbon that pinches at both ends, drawn in braille so the curves are
 // smooth, in the brand gradient. A pulse runs along it, and the strands are
 // brighter where they cross. With motion on it flows at 30 fps; with motion

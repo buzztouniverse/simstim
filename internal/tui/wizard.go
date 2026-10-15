@@ -13,7 +13,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// The add-host wizard (docs/ux.md 2.2): one step per screen, Esc goes back.
+// The add-host wizard (docs/contributing/ux-spec.md 2.2): one step per screen, Esc goes back.
 type wizStep int
 
 const (

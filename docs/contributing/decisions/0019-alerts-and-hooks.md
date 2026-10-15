@@ -7,7 +7,7 @@ date: 2026-10-15
 
 ## Context
 
-The roadmap's N5 asks for alerts that reach the user when a session needs them, with the laptop shut: 13 developer sources ask for it, and Cursor, Devin, Codex and Conductor sell it for $20 to $50 a month ([roadmap](../roadmap.md)). Today the client shows a desktop alert (OSC 777) only while it runs. The owner asked on 15 October 2026 for the whole backend for hooks and alerts now, and for the phone path (N4) to be scaffolded and launched later.
+The roadmap's N5 asks for alerts that reach the user when a session needs them, with the laptop shut: 13 developer sources ask for it, and Cursor, Devin, Codex and Conductor sell it for $20 to $50 a month ([roadmap](../../roadmap.md)). Today the client shows a desktop alert (OSC 777) only while it runs. The owner asked on 15 October 2026 for the whole backend for hooks and alerts now, and for the phone path (N4) to be scaffolded and launched later.
 
 Project rules that bind the design: nothing new listens on a host, there is no relay and no telemetry, and simstim stores no secrets of its own.
 

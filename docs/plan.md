@@ -2,7 +2,7 @@
 
 **Status:** accepted and built, 15 October 2026. v1, v1.x and v2 are implemented. The plan below is kept as written, for the reasons behind the design.
 
-This page is the plan. [Architecture](architecture.md) says how it works, [UX](ux.md) says how it looks and feels, and [the research notes](research/README.md) hold the evidence.
+This page is the plan. [Architecture](architecture.md) says how it works, [UX](contributing/ux-spec.md) says how it looks and feels, and [the research notes](research/README.md) hold the evidence.
 
 ## 1. In one paragraph
 
@@ -108,7 +108,7 @@ Prove the feel before building.
   - an ordered reset list on detach, which never sends RIS.
 - Reconnect after sleep or a network change: detect it fast, reconnect with backoff, and replay missed output from the last byte offset.
 - Image paste and dropped files: upload over the same connection, then paste the remote path as one bracketed paste.
-- The screens: setup wizard, host browser, session list with a live preview, new-session dialog, command palette, help, toasts. (Rebuilt later as a light launcher, one list at a time: [0009](decisions/0009-light-launcher.md).)
+- The screens: setup wizard, host browser, session list with a live preview, new-session dialog, command palette, help, toasts. (Rebuilt later as a light launcher, one list at a time: [0009](contributing/decisions/0009-light-launcher.md).)
 - CLI: `--json` on every list, `simstim doctor` (including a key tester), and shell completions.
 
 **Packaging:**
@@ -170,7 +170,7 @@ Each milestone ends with its exit test passing. Sizes are relative (S, M, L), no
 
 ## 8. Decisions for the owner
 
-Each is proposed. Once decided, write it as a decision record in `docs/decisions/`.
+Each is proposed. Once decided, write it as a decision record in `docs/contributing/decisions/`.
 
 | # | Decision | Recommendation | Why, in short |
 | --- | --- | --- | --- |

@@ -32,7 +32,7 @@ One static binary (Go in the proposed design).
 
 | Part | Job |
 | --- | --- |
-| Screens | The launcher: the hosts, then one host's sessions, one list at a time, with search across hosts, a one-line quick start, and sheets (the palette, peek, forms, the add-host wizard) that rise over it. It remembers what it saw, to draw at once. It runs in the alternate screen and is built with Bubble Tea v2. While attached it draws nothing. See [UX](ux.md), [0009](decisions/0009-light-launcher.md), [0011](decisions/0011-instant-launcher.md) and [0012](decisions/0012-own-look.md). |
+| Screens | The launcher: the hosts, then one host's sessions, one list at a time, with search across hosts, a one-line quick start, and sheets (the palette, peek, forms, the add-host wizard) that rise over it. It remembers what it saw, to draw at once. It runs in the alternate screen and is built with Bubble Tea v2. While attached it draws nothing. See [UX](contributing/ux-spec.md), [0009](contributing/decisions/0009-light-launcher.md), [0011](contributing/decisions/0011-instant-launcher.md) and [0012](contributing/decisions/0012-own-look.md). |
 | CLI | `simstim host …`, `new`, `ls`, `attach`, `kill`, `doctor`, `update`, `completion`. `--json` on every list. |
 | SSH layer | Runs the system `ssh` with a generated config. Owns a private ControlMaster per host. Opens the bridge channel. Uploads files. |
 | Attach pump | Raw mode, an output pump with a passive mode tracker, the input filter, resize forwarding, the reset list on detach. |
@@ -131,7 +131,7 @@ The full resume table for eight agents is in [the host runtime note](research/ho
    - **Same client, offset still in the ring:** it sends the raw bytes from `last_offset`. Local scrollback continues with no duplicates, and missed notifications arrive. Repeated ones are collapsed.
    - **New client, or offset too old:** the vt child makes a snapshot at the client's size. The client pushes what the terminal shows into its scrollback with blank lines, then the snapshot redraws the screen, including the kitty keyboard flags and other modes.
 3. The holder resizes the PTY and sends SIGWINCH to the foreground process group, even if the size is unchanged, so the agent repaints.
-4. Then it is pure pass-through, and the session owns every row and column ([0009](decisions/0009-light-launcher.md)):
+4. Then it is pure pass-through, and the session owns every row and column ([0009](contributing/decisions/0009-light-launcher.md)):
    - Output frames go straight to stdout. The client draws nothing of its own: no frame, no status line and no window title. The one exception is the reconnect notice (3.5). Alerts about other sessions, and a failed upload, go out as OSC 777 notifications, which draw nothing on the screen.
    - Input bytes go straight to the PTY, except the two filtered keys.
    - Terminal queries from the agent go to the leader client's terminal, and only the leader's replies reach the PTY.
@@ -298,5 +298,5 @@ simstim knows nothing about providers in v1. If OpenSSH can reach the host, sims
 | --- | --- | --- |
 | zmx | MIT | One process per session. Restore rules. The leader rule. Its bug list as a checklist. Restore code adapted for `simstim-vt`. |
 | Herdr | Apache-2.0 | The managed SSH config and banner skipping. Remote install with consent. The reconnect ladder and wake detection. The image paste bridge. The resume table and hooks. The agent detection manifests. Safe file writes. The pane environment clean-up. Exact files are listed in [the Herdr note](research/herdr.md#83-modules-worth-borrowing). |
-| Amp | Proprietary | **Patterns only, clean-room.** No code, prompts or assets. See [UX](ux.md). |
+| Amp | Proprietary | **Patterns only, clean-room.** No code, prompts or assets. See [UX](contributing/ux-spec.md). |
 | VS Code Remote, Zed | — | The login-shell environment resolution. Uploading a versioned server over SSH. |

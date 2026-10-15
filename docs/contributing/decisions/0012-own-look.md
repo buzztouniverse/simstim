@@ -22,7 +22,7 @@ This record replaces the look in [0009](0009-light-launcher.md): "Amp's look, fr
 
 ## Decision
 
-Option 2 ([UX](../ux.md)):
+Option 2 ([UX](../ux-spec.md)):
 - **No box round the list.** A header holds an animated braille logo, the name in the brand gradient and where you are. A rule sits under it, and another rule above the prompt line and the keys.
 - **One accent, cyan**, for keys, titles, the selection marker and work in progress. The selected row gets a cyan marker and a soft tint, not a bar.
 - **A trace on every row:** eight braille cells of the session's output over the last half minute.

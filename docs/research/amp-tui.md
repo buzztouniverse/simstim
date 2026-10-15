@@ -2,7 +2,7 @@
 
 - **Date:** 15 October 2026.
 - **Version watched:** the Amp CLI `0.0.1792008042-gef0030` (released 14 October 2026), on the owner's Mac.
-- **Purpose:** the reference for the launcher redesign ([decision 0009](../decisions/0009-light-launcher.md), [UX](../ux.md)).
+- **Purpose:** the reference for the launcher redesign ([decision 0009](../contributing/decisions/0009-light-launcher.md), [UX](../contributing/ux-spec.md)).
 
 This note is clean-room. It describes what Amp's terminal UI looks like and how it behaves, in our own words. No Amp code, prompts, logos, fonts or screenshots are in this repo. The captured screens, cell dumps, images and video frames stay in `docs/research/private/` (git-ignored).
 

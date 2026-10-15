@@ -79,7 +79,7 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 
 ## Screens
 
-The launcher does one thing: it starts or joins a session in a few keys, then gets out of the way. It is one list in one column. Enter goes forward, Esc goes back, a number opens a row, `/` searches every host, and `n` starts a session from one line. It opens where you left off and draws at once, so `simstim` then Enter takes you back into your last session. The look is its own: a cyan accent, a live trace of each session's output, and sheets that rise from the bottom, with smooth motion in your terminal's own colours ([UX](docs/ux.md)). `simstim demo` opens these screens with sample data.
+The launcher does one thing: it starts or joins a session in a few keys, then gets out of the way. It is one list in one column. Enter goes forward, Esc goes back, a number opens a row, `/` searches every host, and `n` starts a session from one line. It opens where you left off and draws at once, so `simstim` then Enter takes you back into your last session. The look is its own: a cyan accent, a live trace of each session's output, and sheets that rise from the bottom, with smooth motion in your terminal's own colours ([UX](docs/contributing/ux-spec.md)). `simstim demo` opens these screens with sample data.
 
 **Sessions.** Each session's state, agent, folder and a trace of its recent output. The line under the list says what the selected one is doing now, or what it is waiting for.
 
@@ -117,8 +117,8 @@ The images use a dark Ghostty theme and show still frames. In your terminal, the
 | --- | --- |
 | [Plan](docs/plan.md) | Goals, scope by version, milestones, decisions, risks |
 | [Architecture](docs/architecture.md) | Components, flows, protocol, fidelity contract, security |
-| [UX](docs/ux.md) | Screens, keys, visual language, CLI |
-| [Decisions](docs/decisions/) | The decision records |
+| [UX](docs/contributing/ux-spec.md) | Screens, keys, visual language, CLI |
+| [Decisions](docs/contributing/decisions/) | The decision records |
 | [Research](docs/research/README.md) | The evidence behind the design |
 
 ## Contributing
@@ -129,4 +129,4 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md). Contributions are under the Apache-2.0 
 
 [Apache-2.0](LICENSE).
 
-The name is a working name, from William Gibson's *Neuromancer*. It may change, so the code keeps it in one place ([docs/renaming.md](docs/renaming.md)).
+The name is a working name, from William Gibson's *Neuromancer*. It may change, so the code keeps it in one place ([docs/contributing/renaming.md](docs/contributing/renaming.md)).

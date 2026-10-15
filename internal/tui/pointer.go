@@ -4,7 +4,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-// Quick keys and the mouse (docs/ux.md 3). The keyboard stays the main way
+// Quick keys and the mouse (docs/contributing/ux-spec.md 3). The keyboard stays the main way
 // in; these make the common path shorter. 1–9 open the row with that number.
 // A click selects a row, a click on the selected row opens it, and the wheel
 // moves the selection.

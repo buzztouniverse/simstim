@@ -33,7 +33,7 @@ Today the client runs `ssh -T host simstim-host bridge` and speaks framed RPC ov
 1. **Streaming both ways.** stdin arrives as it is written, not buffered to EOF.
 2. **Binary-safe.** Frames are raw bytes. A channel that decodes output as UTF-8 text breaks them.
 3. **Clean.** stdout carries only the process's bytes: no banner, no CR/LF translation, no TTY. stderr is separate or can be dropped.
-4. **Long-lived.** It lasts hours, or it ends cleanly so the client can reconnect and replay by offset ([0004](../decisions/0004-replay-by-offset.md)).
+4. **Long-lived.** It lasts hours, or it ends cleanly so the client can reconnect and replay by offset ([0004](../contributing/decisions/0004-replay-by-offset.md)).
 5. **Closable.** When the client goes, the bridge gets EOF or a signal. If it does not, the bridge must exit by itself when the client's pings stop.
 
 Two kinds of door must be told apart:

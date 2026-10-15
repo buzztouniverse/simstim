@@ -34,7 +34,7 @@ const (
 	keysAt    = 950 * time.Millisecond
 )
 
-// viewFirstRun is the screen with no hosts (docs/ux.md 2.1): the ribbon in
+// viewFirstRun is the screen with no hosts (docs/contributing/ux-spec.md 2.1): the ribbon in
 // the middle, the name decoding under it, the tagline, and the keys. Errors
 // and notices go below.
 func (m *Model) viewFirstRun() string {

@@ -9,11 +9,11 @@ date: 2026-10-15
 
 ## Context
 
-Today simstim knows nothing about providers. A host is anything the system `ssh` can reach, and a user script can start and stop it ([architecture, 8](../architecture.md#8-providers)). The project now wants `host create <provider>` and `host destroy`: one command that creates a host, installs the helper and connects, with cloud hosts that stop when idle and wake on attach.
+Today simstim knows nothing about providers. A host is anything the system `ssh` can reach, and a user script can start and stop it ([architecture, 8](../../architecture.md#8-providers)). The project now wants `host create <provider>` and `host destroy`: one command that creates a host, installs the helper and connects, with cloud hosts that stop when idle and wake on attach.
 
 The rules stand: no relay, no telemetry, no new listening port on a host without a decision record and the owner's yes, and no secrets stored by simstim.
 
-The research is in [Sandboxes and cloud hosts](../research/sandboxes.md). Its main finding: the helper's protocol needs only a two-way, binary-safe byte stream to one process. `ssh -T` is one; so are `docker exec -i` and E2B's envd process API. A provider's own authenticated exec endpoint is a door that already exists, so a provider without SSH can work with no new port. One provider must also be a local VM or container, so the whole flow can be proved live on a Mac or a Linux box without an account.
+The research is in [Sandboxes and cloud hosts](../../research/sandboxes.md). Its main finding: the helper's protocol needs only a two-way, binary-safe byte stream to one process. `ssh -T` is one; so are `docker exec -i` and E2B's envd process API. A provider's own authenticated exec endpoint is a door that already exists, so a provider without SSH can work with no new port. One provider must also be a local VM or container, so the whole flow can be proved live on a Mac or a Linux box without an account.
 
 ## Options
 

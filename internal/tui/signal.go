@@ -16,7 +16,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// Signals (docs/ux.md 2.3). Every session row ends in a trace: a small
+// Signals (docs/contributing/ux-spec.md 2.3). Every session row ends in a trace: a small
 // braille line of the session's output over the last half minute, scrolling
 // as time passes. A busy agent draws a wave, a quiet one a flat line. The
 // launcher learns it from each list: the time of the session's last output,

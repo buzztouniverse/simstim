@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// Sequences (docs/ux.md 4.5): short, choreographed moments that make a
+// Sequences (docs/contributing/ux-spec.md 4.5): short, choreographed moments that make a
 // change easy to follow. None of them holds a key back for longer than the
 // jack-in, and with motion off each one is its last frame.
 

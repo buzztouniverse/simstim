@@ -1,5 +1,5 @@
 // Package tui is the launcher: hosts, then sessions, one list at a time, with
-// dialogs and the command palette over it (docs/ux.md).
+// dialogs and the command palette over it (docs/contributing/ux-spec.md).
 //
 // The model never blocks: every request to a host runs in a tea.Cmd and
 // reports back with a message. Attaching hands the whole terminal to
