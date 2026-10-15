@@ -43,6 +43,13 @@ def host_ssh(cmd, data=None):
         argv = ["ssh", "-F", WRAPPER, "-o", "BatchMode=yes", h["ssh"], cmd]
     return subprocess.run(argv, input=data, capture_output=True, check=True)
 
+def host_rc(cmd, data=None):
+    """Runs cmd on the host and returns its exit code; data goes to its stdin."""
+    import tomllib
+    hosts = tomllib.load(open(os.path.join(os.path.dirname(os.path.dirname(WRAPPER)), "hosts.toml"), "rb"))["host"]
+    target = [h for h in hosts if h["name"] == HOST][0]["ssh"]
+    return subprocess.run(["ssh", "-F", WRAPPER, "-o", "BatchMode=yes", target, cmd], input=data, capture_output=True).returncode
+
 def start(name, *argv):
     t = Term([cli, "new", HOST, "--name", name, "--detach", "--"] + list(argv), env=env)
     t.exit_code(60); m = re.search(rb"Started [^/]+/(\w+)", t.buf)
@@ -50,6 +57,15 @@ def start(name, *argv):
     return m.group(1).decode() if m else None
 
 created = []
+
+# Setting up hosts and sessions (agent_setup.py). E2E_ONLY=agent-setup runs only these.
+import agent_setup
+def setup_checks():
+    agent_setup.run(agent_setup.Ctx(cli=cli, HOST=HOST, NAME=NAME, env=env, ok=ok, Term=Term, host_ssh=host_ssh, host_rc=host_rc))
+if os.environ.get("E2E_ONLY") == "agent-setup":
+    setup_checks()
+    print("RESULT %d/%d passed" % (sum(results), len(results)))
+    sys.exit(0 if all(results) else 1)
 
 # --- Attach, detach, reattach ---
 # 1. Start a detached shell session.
@@ -330,6 +346,7 @@ host_ssh("rm -f " + ALERTS_OUT)
 if saved:
     host_ssh("mv %s.e2e-saved %s" % (ALERTS_TOML, ALERTS_TOML))
 
+setup_checks()
 # M. Full screen (roadmap N2): a program on the alternate screen is reported
 #    as full screen, and host doctor says so.
 sid_fs = start("e2e-fullscreen", "/bin/bash", "-c", 'printf "\\033[?1049hFULL"; sleep 600')

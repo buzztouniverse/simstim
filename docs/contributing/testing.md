@@ -33,6 +33,8 @@ A container made with `host create docker` runs the suite too, over `docker exec
 
 It covers start, attach and detach, resize, byte-exact output, replay after a dropped link, a simulated laptop sleep, the memory cap, snapshots after the ring wraps, a crashed shadow terminal, image paste and file drops, worktrees, ports, rename and delete. Host reboots are tested by hand, with the host owner's agreement.
 
+`test/e2e/agent_setup.py` checks setting up hosts and sessions: the agent checks, a secret that reaches the session's environment and no file, log, command line or unit on the host, setup scripts with and without trust, and `host doctor --fix` on a stale socket it makes. It uses a throwaway client config, so your own secrets and answers are never read. It installs no agent: it runs `agents install` only for an agent the host already has, which installs nothing. To run only these checks, set `E2E_ONLY=agent-setup`.
+
 ## Benchmarks
 
 The attach pump has benchmarks at each step a byte takes: the host's output ring and screen model (`internal/ring`, `internal/host`), the frames (`internal/proto`), the client's catch-up and mode tracker (`internal/term`), the output frames through the client's attach (`internal/client`), and the input filter (`internal/keys`). `internal/term/termtest` makes the output they use: redraws shaped like a coding agent's.
