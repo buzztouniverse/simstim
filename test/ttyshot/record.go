@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -88,7 +89,7 @@ func (r *recording) save(svgPath, castPath string, cols, rows int, hold time.Dur
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if len(r.frames) == 0 {
-		return fmt.Errorf("record: no frames")
+		return errors.New("record: no frames")
 	}
 	end := time.Since(r.start) + hold
 	if err := os.WriteFile(svgPath, []byte(animatedSVG(r.frames, end, cols, rows)), 0o644); err != nil {
@@ -106,15 +107,34 @@ func (r *recording) save(svgPath, castPath string, cols, rows int, hold time.Dur
 // only the last frame shows.
 func animatedSVG(frames []frame, end time.Duration, cols, rows int) string {
 	width, height := windowSize(cols, rows)
-	total := end.Seconds()
-	pct := func(d time.Duration) float64 { return 100 * d.Seconds() / total }
-	type span struct{ from, to time.Duration }
-	type piece struct {
-		body  string
-		spans []span
+	pieces := rowPieces(frames, end)
+	var body strings.Builder
+	for i, p := range pieces {
+		class := fmt.Sprintf("p p%d", i)
+		if p.last {
+			class += " l"
+		}
+		fmt.Fprintf(&body, "<g class=\"%s\">\n%s</g>\n", class, p.body)
 	}
-	var pieces []*piece
-	index := map[string]*piece{} // row number and body
+	return svgHead(width, height, pieceCSS(pieces, end)) + body.String() + "</svg>\n"
+}
+
+// rowSpan is a stretch of the recording during which a row shows.
+type rowSpan struct{ from, to time.Duration }
+
+// rowPiece is one row's drawing at one place, and when it shows. last is
+// true when the final frame shows it, so a still image keeps it.
+type rowPiece struct {
+	body  string
+	spans []rowSpan
+	last  bool
+}
+
+// rowPieces turns the frames into the distinct rows they show, in order of
+// first appearance, each with the stretches during which it shows.
+func rowPieces(frames []frame, end time.Duration) []*rowPiece {
+	var pieces []*rowPiece
+	index := map[string]*rowPiece{} // row number and body
 	for i, f := range frames {
 		next := end
 		if i+1 < len(frames) {
@@ -131,22 +151,30 @@ func animatedSVG(frames []frame, end time.Duration, cols, rows int) string {
 			key := fmt.Sprint(y, "\x00", body)
 			p := index[key]
 			if p == nil {
-				p = &piece{body: body}
+				p = &rowPiece{body: body}
 				index[key] = p
 				pieces = append(pieces, p)
 			}
 			if n := len(p.spans); n > 0 && p.spans[n-1].to == from {
 				p.spans[n-1].to = next // the row stays: one span
 			} else {
-				p.spans = append(p.spans, span{from, next})
+				p.spans = append(p.spans, rowSpan{from, next})
 			}
 		}
 	}
-	lastRows := map[string]bool{}
 	for y, body := range frames[len(frames)-1].rows {
-		lastRows[fmt.Sprint(y, "\x00", body)] = true
+		if p := index[fmt.Sprint(y, "\x00", body)]; p != nil {
+			p.last = true
+		}
 	}
-	var css, body strings.Builder
+	return pieces
+}
+
+// pieceCSS is the animation that shows each piece during its spans.
+func pieceCSS(pieces []*rowPiece, end time.Duration) string {
+	total := end.Seconds()
+	pct := func(d time.Duration) float64 { return 100 * d.Seconds() / total }
+	var css strings.Builder
 	fmt.Fprintf(&css, "g.p{opacity:0;animation:%.2fs steps(1,end) infinite}", total)
 	fmt.Fprint(&css, "@media (prefers-reduced-motion:reduce){g.p{animation:none}g.l{opacity:1}}")
 	for i, p := range pieces {
@@ -162,17 +190,7 @@ func animatedSVG(frames []frame, end time.Duration, cols, rows int) string {
 		}
 		fmt.Fprintf(&css, "}.p%d{animation-name:k%d}", i, i)
 	}
-	for i, p := range pieces {
-		class := fmt.Sprintf("p p%d", i)
-		for key, q := range index {
-			if q == p && lastRows[key] {
-				class += " l"
-				break
-			}
-		}
-		fmt.Fprintf(&body, "<g class=\"%s\">\n%s</g>\n", class, p.body)
-	}
-	return svgHead(width, height, css.String()) + body.String() + "</svg>\n"
+	return css.String()
 }
 
 // writeCast writes an asciicast v2 file: a header line, then one line per

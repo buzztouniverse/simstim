@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
+	"sort"
 	"strings"
 
 	"github.com/iAmLakshya/simstim/internal/api"
@@ -29,136 +31,181 @@ Usage:
   %[1]s version
 `
 
+// commands are the helper's commands. Each gets the arguments after its name.
+var commands = map[string]func(args []string) error{
+	"bridge": func(args []string) error {
+		return host.RunBridge(host.BridgeInput(os.Stdin, args), os.Stdout)
+	},
+	"idle":    runIdle,
+	"holder":  runHolder,
+	"ls":      runLs,
+	"new":     runNew,
+	"rm":      runRm,
+	"doctor":  runDoctor,
+	"hook":    runHook,
+	"restore": runRestore,
+	"prune":   runPrune,
+	"keytest": func([]string) error { return host.KeyTest() },
+	// The phone path: experimental, and left out of the usage on purpose
+	// until it is launched (docs/contributing/phone-path.md).
+	"pick":      func([]string) error { return host.RunPick(os.Stdin, os.Stdout) },
+	"version":   printVersion,
+	"--version": printVersion,
+	"help":      printUsage,
+	"-h":        printUsage,
+	"--help":    printUsage,
+}
+
 func main() {
-	name := brand.HostBinary
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, usage, name)
+		fmt.Fprintf(os.Stderr, usage, brand.HostBinary)
 		os.Exit(2)
 	}
-	var err error
-	switch os.Args[1] {
-	case "bridge":
-		err = host.RunBridge(host.BridgeInput(os.Stdin, os.Args[2:]), os.Stdout)
-	case "idle":
-		var msg string
-		if msg, err = host.RunIdle(os.Args[2:]); err == nil {
-			fmt.Println(msg)
-		}
-	case "holder":
-		if len(os.Args) != 3 {
-			err = fmt.Errorf("usage: %s holder <id>", name)
-			break
-		}
-		err = host.RunHolder(os.Args[2])
-	case "ls":
-		var list []host.SessionInfo
-		list, err = host.List()
-		if err == nil {
-			if hasFlag("--json") {
-				err = printJSON(list)
-			} else {
-				for _, s := range list {
-					fmt.Printf("%-10s %-20s %-9s %-12s %s\n", s.ID, s.Name, s.Agent, s.State, s.Cwd)
-				}
-			}
-		}
-	case "new":
-		a := host.NewArgs{Term: os.Getenv("TERM"), ColorTerm: os.Getenv("COLORTERM"),
-			TermProgram: os.Getenv("TERM_PROGRAM"), TermProgramVersion: os.Getenv("TERM_PROGRAM_VERSION")}
-		args := os.Args[2:]
-		for i := 0; i < len(args); i++ {
-			switch args[i] {
-			case "--agent":
-				i++
-				a.Agent = arg(args, i)
-			case "--dir":
-				i++
-				a.Cwd = arg(args, i)
-			case "--name":
-				i++
-				a.Name = arg(args, i)
-			case "--setup":
-				a.Setup = api.SetupRun
-			case "--no-setup":
-				a.Setup = api.SetupSkip
-			case "--":
-				a.Argv = args[i+1:]
-				i = len(args)
-			}
-		}
-		var info *host.SessionInfo
-		info, err = host.New(a)
-		if err == nil {
-			err = printJSON(info)
-		}
-	case "rm":
-		if len(os.Args) != 3 {
-			err = fmt.Errorf("usage: %s rm <id>", name)
-			break
-		}
-		var res host.DeleteResult
-		res, err = host.Delete(os.Args[2])
-		if err == nil && res.Worktree != "" {
-			fmt.Println(res.Worktree)
-		}
-	case "doctor":
-		d := host.Doctor()
-		if hasFlag("--json") {
-			err = printJSON(d)
-		} else {
-			fmt.Printf("%s %s on %s (%s, %s/%s)\n", name, d.Version, d.Hostname, d.Distro, d.OS, d.Arch)
-			for _, c := range d.Checks {
-				mark := "✓"
-				if !c.OK {
-					mark = "✕"
-				}
-				fmt.Printf("  %s %-22s %s\n", mark, c.Name, c.Detail)
-				if !c.OK && c.Fix != "" {
-					fmt.Printf("    Try: %s\n", c.Fix)
-				}
-			}
-			var found []string
-			for k := range d.Agents {
-				found = append(found, k)
-			}
-			fmt.Printf("  agents: %s\n", strings.Join(found, ", "))
-		}
-	case "hook":
-		if len(os.Args) >= 3 {
-			host.RunHook(os.Args[2], os.Args[3:])
-		}
-		return
-	case "restore":
-		res := host.Restore(hasFlag("--all"))
-		if hasFlag("--json") {
-			err = printJSON(res)
-		} else {
-			for _, r := range res {
-				fmt.Printf("%-10s %-20s %-9s %s\n", r.ID, r.Name, r.Action, r.Why)
-			}
-		}
-	case "prune":
-		var removed []string
-		if removed, err = host.Prune(); err == nil {
-			fmt.Printf("removed %d old helper versions\n", len(removed))
-		}
-	case "keytest":
-		err = host.KeyTest()
-	case "pick":
-		// The phone path: experimental, and left out of the usage on purpose
-		// until it is launched (docs/contributing/phone-path.md).
-		err = host.RunPick(os.Stdin, os.Stdout)
-	case "version", "--version":
-		fmt.Printf("%s %s (protocol %s)\n", name, version.Version, version.Protocol)
-	case "help", "-h", "--help":
-		fmt.Printf(usage, name)
-	default:
-		err = fmt.Errorf("unknown command %q", os.Args[1])
+	run, ok := commands[os.Args[1]]
+	if !ok {
+		fmt.Fprintf(os.Stderr, "Error: unknown command %q\n", os.Args[1])
+		os.Exit(1)
 	}
-	if err != nil {
+	if err := run(os.Args[2:]); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func runIdle(args []string) error {
+	msg, err := host.RunIdle(args)
+	if err != nil {
+		return err
+	}
+	fmt.Println(msg)
+	return nil
+}
+
+func runHolder(args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("usage: %s holder <id>", brand.HostBinary)
+	}
+	return host.RunHolder(args[0])
+}
+
+func runLs(args []string) error {
+	list, err := host.List()
+	if err != nil {
+		return err
+	}
+	if hasFlag(args, "--json") {
+		return printJSON(list)
+	}
+	for _, s := range list {
+		fmt.Printf("%-10s %-20s %-9s %-12s %s\n", s.ID, s.Name, s.Agent, s.State, s.Cwd)
+	}
+	return nil
+}
+
+func runNew(args []string) error {
+	a := host.NewArgs{Term: os.Getenv("TERM"), ColorTerm: os.Getenv("COLORTERM"),
+		TermProgram: os.Getenv("TERM_PROGRAM"), TermProgramVersion: os.Getenv("TERM_PROGRAM_VERSION")}
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--agent":
+			i++
+			a.Agent = arg(args, i)
+		case "--dir":
+			i++
+			a.Cwd = arg(args, i)
+		case "--name":
+			i++
+			a.Name = arg(args, i)
+		case "--setup":
+			a.Setup = api.SetupRun
+		case "--no-setup":
+			a.Setup = api.SetupSkip
+		case "--":
+			a.Argv = args[i+1:]
+			i = len(args)
+		}
+	}
+	info, err := host.New(a)
+	if err != nil {
+		return err
+	}
+	return printJSON(info)
+}
+
+func runRm(args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("usage: %s rm <id>", brand.HostBinary)
+	}
+	res, err := host.Delete(args[0])
+	if err != nil {
+		return err
+	}
+	if res.Worktree != "" {
+		fmt.Println(res.Worktree)
+	}
+	return nil
+}
+
+func runDoctor(args []string) error {
+	d := host.Doctor()
+	if hasFlag(args, "--json") {
+		return printJSON(d)
+	}
+	fmt.Printf("%s %s on %s (%s, %s/%s)\n", brand.HostBinary, d.Version, d.Hostname, d.Distro, d.OS, d.Arch)
+	for _, c := range d.Checks {
+		mark := "✓"
+		if !c.OK {
+			mark = "✕"
+		}
+		fmt.Printf("  %s %-22s %s\n", mark, c.Name, c.Detail)
+		if !c.OK && c.Fix != "" {
+			fmt.Printf("    Try: %s\n", c.Fix)
+		}
+	}
+	found := make([]string, 0, len(d.Agents))
+	for k := range d.Agents {
+		found = append(found, k)
+	}
+	sort.Strings(found)
+	fmt.Printf("  agents: %s\n", strings.Join(found, ", "))
+	return nil
+}
+
+func runHook(args []string) error {
+	if len(args) >= 1 {
+		host.RunHook(args[0], args[1:])
+	}
+	return nil
+}
+
+func runRestore(args []string) error {
+	res := host.Restore(hasFlag(args, "--all"))
+	if hasFlag(args, "--json") {
+		return printJSON(res)
+	}
+	for _, r := range res {
+		fmt.Printf("%-10s %-20s %-9s %s\n", r.ID, r.Name, r.Action, r.Why)
+	}
+	return nil
+}
+
+func runPrune([]string) error {
+	removed, err := host.Prune()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("removed %d old helper versions\n", len(removed))
+	return nil
+}
+
+func printVersion([]string) error {
+	fmt.Printf("%s %s (protocol %s)\n", brand.HostBinary, version.Version, version.Protocol)
+	return nil
+}
+
+func printUsage([]string) error {
+	fmt.Printf(usage, brand.HostBinary)
+	return nil
 }
 
 func arg(args []string, i int) string {
@@ -168,17 +215,15 @@ func arg(args []string, i int) string {
 	return ""
 }
 
-func hasFlag(f string) bool {
-	for _, a := range os.Args[2:] {
-		if a == f {
-			return true
-		}
-	}
-	return false
+func hasFlag(args []string, f string) bool {
+	return slices.Contains(args, f)
 }
 
 func printJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	return enc.Encode(v)
+	if err := enc.Encode(v); err != nil {
+		return fmt.Errorf("write JSON: %w", err)
+	}
+	return nil
 }

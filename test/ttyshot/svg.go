@@ -129,7 +129,7 @@ func svgCells(emu *vt.SafeEmulator) string {
 func svgRows(emu *vt.SafeEmulator) []string {
 	w, h := emu.Width(), emu.Height()
 	rows := make([]string, h)
-	for y := 0; y < h; y++ {
+	for y := range h {
 		var b strings.Builder
 		top := padTop + float64(y)*cellH
 		runs := rowRuns(emu, y, w)
@@ -163,7 +163,7 @@ func svgRows(emu *vt.SafeEmulator) []string {
 // rowRuns splits a row into runs of one look.
 func rowRuns(emu *vt.SafeEmulator, y, w int) []*run {
 	var runs []*run
-	for x := 0; x < w; x++ {
+	for x := range w {
 		c := emu.CellAt(x, y)
 		if c != nil && c.Width == 0 && c.Content == "" {
 			continue // the second half of a wide character
