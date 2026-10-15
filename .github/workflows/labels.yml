@@ -1,0 +1,26 @@
+name: Labels
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/labels.yml]
+  pull_request:
+    paths: [.github/labels.yml]
+
+permissions: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # labels belong to issues
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Sync (a dry run on pull requests)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          DRY: ${{ github.event_name == 'pull_request' && '--dry-run' || '' }}
+        run: scripts/sync-labels.sh $DRY

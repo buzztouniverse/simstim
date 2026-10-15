@@ -1,0 +1,89 @@
+# Labels as code. scripts/sync-labels.sh creates or updates each label on
+# GitHub; the Labels workflow runs it when this file changes on main.
+# Keep the shape: "- name:", then "color:" and "description:" lines.
+
+# Kinds
+- name: bug
+  color: d73a4a
+  description: Something does not work as documented
+- name: enhancement
+  color: a2eeef
+  description: A new feature or a better way to do something
+- name: documentation
+  color: 0075ca
+  description: Docs are missing, wrong or unclear
+- name: provider
+  color: 5319e7
+  description: A host provider for host create
+- name: question
+  color: d876e3
+  description: A question; Discussions may suit it better
+
+# Areas
+- name: "area: launcher"
+  color: c5def5
+  description: The launcher, its screens and keys
+- name: "area: attach"
+  color: c5def5
+  description: The attached session, pass-through and reconnect
+- name: "area: client"
+  color: c5def5
+  description: The CLI, config, SSH and bootstrap on the laptop
+- name: "area: host"
+  color: c5def5
+  description: The host helper, sessions, worktrees and restore
+- name: "area: providers"
+  color: c5def5
+  description: host create and destroy, idle stop and wake
+- name: "area: agents"
+  color: c5def5
+  description: The agent table and agent detection
+- name: "area: docs"
+  color: c5def5
+  description: The docs site, tutorials, how-to guides and reference
+- name: "area: ci"
+  color: c5def5
+  description: CI, releases, signing and the developer setup
+
+# Triage
+- name: needs triage
+  color: fbca04
+  description: Not looked at by a maintainer yet
+- name: needs design
+  color: fbca04
+  description: Needs a decision on the approach before code
+- name: good first issue
+  color: 7057ff
+  description: Small and well bounded; a good place to start
+- name: help wanted
+  color: 008672
+  description: Maintainers would welcome a pull request
+- name: duplicate
+  color: cfd3d7
+  description: Another issue covers this
+- name: wontfix
+  color: ffffff
+  description: Out of scope, or against a project rule
+- name: invalid
+  color: e4e669
+  description: Not a problem with this project
+- name: dependencies
+  color: 0366d6
+  description: Dependency updates
+- name: github_actions
+  color: "000000"
+  description: Updates to GitHub Actions
+- name: accessibility
+  color: f143ab
+  description: Use with a screen reader, without colour, or with other needs
+
+# Roadmap (docs/roadmap.md)
+- name: "horizon: now"
+  color: 0e8a16
+  description: Built in the current goal
+- name: "horizon: next"
+  color: 1d76db
+  description: Scored 2 to 4; after the current goal
+- name: "horizon: later"
+  color: bfdadc
+  description: Scored under 2

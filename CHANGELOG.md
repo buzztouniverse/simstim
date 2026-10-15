@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- A roadmap that scores every candidate feature by demand, impact and effort ([docs/roadmap.md](docs/roadmap.md)). Next and later items are GitHub issues, eleven of them good first issues, and the labels are kept as code in `.github/labels.yml` (synced by `scripts/sync-labels.sh` and the Labels workflow).
 - One-command developer setup: `scripts/setup.sh` (or `just setup`) installs pinned, checksum-checked tools into `.tools/`, then builds and tests once. A devcontainer runs the same script, and CI checks both weekly and on every change to them.
 - A versioning and release policy, with the steps to release and to check a release ([docs/contributing/releasing.md](docs/contributing/releasing.md)).
 - The plan, architecture, UX and research notes.

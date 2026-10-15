@@ -50,27 +50,27 @@ R6 scores low: few developers ask for it, and simstim stores no secrets by desig
 
 ## Next
 
-| # | Feature | Need (sources / reactions) | D | I | E | Score |
-| --- | --- | --- | --- | --- | --- | --- |
-| X1 | More agent rows: Pi, Cursor CLI, GitHub Copilot CLI | lock-in/any-agent 16 / 1,470 | 5 | 1 | S | 5.0 (small; left for contributors) |
-| X2 | Continue when a usage limit resets: `send --at <time>` or "after the reset" | cost; [Claude Code #13354](https://github.com/anthropics/claude-code/issues/13354) and [Codex #21073](https://github.com/openai/codex/issues/21073), 291 reactions | 3 | 2 | M | 3.0 |
-| X3 | Show the link state and the replayed bytes after a reconnect | reliable-reconnect 14 / 242 | 3 | 1 | S | 3.0 |
-| X4 | Choose the worktree's base branch in the new-session form | worktrees 10 / 216; [Claude Code #23622](https://github.com/anthropics/claude-code/issues/23622), 87 reactions | 3 | 1 | S | 3.0 |
-| X5 | Tests of OSC 52 copy in each agent's full-screen mode | clipboard 10 / 502 | 3 | 1 | S | 3.0 |
-| X6 | Per-session isolation: a separate Unix user or systemd sandboxing, for agents run without approvals | sandbox-isolation 15 / 0 | 4 | 2 | L | 2.7 |
-| X7 | Laptop and phone attached together, as a tested case | multi-device-attach 4 / 51 | 2 | 2 | M | 2.0 |
-| X8 | Sessions inside the repo's devcontainer on the host | own-environment 7 / 1,235 | 3 | 2 | L | 2.0 |
-| X9 | Background runs with a result: start an agent with a prompt, get its exit and summary when it ends | parallel-agents; scheduled runs are sold by Cursor and Amp | 2 | 2 | M | 2.0 |
-| X10 | A cost hint per cloud host | cost 21 / 2,318 | 4 | 1 | M | 2.0 |
+| # | Feature | Need (sources / reactions) | D | I | E | Score | Issue |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| X1 | More agent rows: Pi, Cursor CLI, GitHub Copilot CLI | lock-in/any-agent 16 / 1,470 | 5 | 1 | S | 5.0 (small; left for contributors) | [#6](https://github.com/iAmLakshya/simstim/issues/6), [#7](https://github.com/iAmLakshya/simstim/issues/7), [#8](https://github.com/iAmLakshya/simstim/issues/8) |
+| X2 | Continue when a usage limit resets: `send --at <time>` or "after the reset" | cost; [Claude Code #13354](https://github.com/anthropics/claude-code/issues/13354) and [Codex #21073](https://github.com/openai/codex/issues/21073), 291 reactions | 3 | 2 | M | 3.0 | [#9](https://github.com/iAmLakshya/simstim/issues/9) |
+| X3 | Show the link state and the replayed bytes after a reconnect | reliable-reconnect 14 / 242 | 3 | 1 | S | 3.0 | [#10](https://github.com/iAmLakshya/simstim/issues/10) |
+| X4 | Choose the worktree's base branch in the new-session form | worktrees 10 / 216; [Claude Code #23622](https://github.com/anthropics/claude-code/issues/23622), 87 reactions | 3 | 1 | S | 3.0 | [#11](https://github.com/iAmLakshya/simstim/issues/11) |
+| X5 | Tests of OSC 52 copy in each agent's full-screen mode | clipboard 10 / 502 | 3 | 1 | S | 3.0 | [#12](https://github.com/iAmLakshya/simstim/issues/12) |
+| X6 | Per-session isolation: a separate Unix user or systemd sandboxing, for agents run without approvals | sandbox-isolation 15 / 0 | 4 | 2 | L | 2.7 | [#13](https://github.com/iAmLakshya/simstim/issues/13) |
+| X7 | Laptop and phone attached together, as a tested case | multi-device-attach 4 / 51 | 2 | 2 | M | 2.0 | [#14](https://github.com/iAmLakshya/simstim/issues/14) |
+| X8 | Sessions inside the repo's devcontainer on the host | own-environment 7 / 1,235 | 3 | 2 | L | 2.0 | [#15](https://github.com/iAmLakshya/simstim/issues/15) |
+| X9 | Background runs with a result: start an agent with a prompt, get its exit and summary when it ends | parallel-agents; scheduled runs are sold by Cursor and Amp | 2 | 2 | M | 2.0 | [#16](https://github.com/iAmLakshya/simstim/issues/16) |
+| X10 | A cost hint per cloud host | cost 21 / 2,318 | 4 | 1 | M | 2.0 | [#17](https://github.com/iAmLakshya/simstim/issues/17) |
 
 ## Later
 
-| # | Feature | Need (sources / reactions) | D | I | E | Score |
-| --- | --- | --- | --- | --- | --- | --- |
-| L1 | Read-only watch: an attach that drops input, for a second screen or a colleague with SSH access | sharing 0 sources; sold by Conductor ($50), Devin Teams | 1 | 2 | M | 1.0 |
-| L2 | Opt-in recording of a session's output to a file, and replay | 0 sources; sold as Tailscale SSH recording | 1 | 1 | S | 1.0 |
-| L3 | Port preview: notice a new listening port and offer to forward it | port-preview 5 / 14 (`ports` and `forward` exist) | 2 | 1 | M | 1.0 |
-| L4 | Snapshots and hibernation: save a host and create from it | snapshots 1 source; providers' own pause covers idle hosts (R4) | 1 | 2 | L | 0.7 |
+| # | Feature | Need (sources / reactions) | D | I | E | Score | Issue |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| L1 | Read-only watch: an attach that drops input, for a second screen or a colleague with SSH access | sharing 0 sources; sold by Conductor ($50), Devin Teams | 1 | 2 | M | 1.0 | [#18](https://github.com/iAmLakshya/simstim/issues/18) |
+| L2 | Opt-in recording of a session's output to a file, and replay | 0 sources; sold as Tailscale SSH recording | 1 | 1 | S | 1.0 | [#19](https://github.com/iAmLakshya/simstim/issues/19) |
+| L3 | Port preview: notice a new listening port and offer to forward it | port-preview 5 / 14 (`ports` and `forward` exist) | 2 | 1 | M | 1.0 | [#20](https://github.com/iAmLakshya/simstim/issues/20) |
+| L4 | Snapshots and hibernation: save a host and create from it | snapshots 1 source; providers' own pause covers idle hosts (R4) | 1 | 2 | L | 0.7 | [#21](https://github.com/iAmLakshya/simstim/issues/21) |
 
 ## Not planned
 
@@ -82,10 +82,10 @@ R6 scores low: few developers ask for it, and simstim stores no secrets by desig
 
 ## Good first issues
 
-Small, well-bounded changes for new contributors, each a GitHub issue with the label `good first issue`: X1 (one issue per agent), X3, X4, X5, and these:
+Small, well-bounded changes for new contributors, each a GitHub issue with the label [`good first issue`](https://github.com/iAmLakshya/simstim/labels/good%20first%20issue): X1 (one issue per agent), X3, X4, X5, and these:
 
-- `ports --json`, like `ls --json`.
-- Shell completion of host and session names.
-- Recipes in the docs for scheduled runs with `new --detach` and `send` from cron or CI.
-- A key in the launcher that copies the selected session's folder.
-- The agent's version in host details.
+- `ports --json`, like `ls --json` ([#22](https://github.com/iAmLakshya/simstim/issues/22)).
+- Shell completion of host and session names ([#23](https://github.com/iAmLakshya/simstim/issues/23)).
+- Recipes in the docs for scheduled runs with `new --detach` and `send` from cron or CI ([#24](https://github.com/iAmLakshya/simstim/issues/24)).
+- A key in the launcher that copies the selected session's folder ([#25](https://github.com/iAmLakshya/simstim/issues/25)).
+- The agent's version in host details ([#26](https://github.com/iAmLakshya/simstim/issues/26)).
