@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-10-15
 ---
 
 # 0015 Docs toolchain: Hugo with Hextra, a Diátaxis docs/ folder and generated reference
 
-**Status:** Proposed — awaiting the owner's yes at Gate 1.
+**Status:** Accepted. The owner said yes at Gate 1 on 15 October 2026.
 
 The evidence is in [the research note on Go project structure](../research/go-project-structure.md), sections 2.7 and 3.
 

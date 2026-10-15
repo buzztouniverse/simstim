@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-10-15
 ---
 
 # 0013 Host providers: Lima and E2B first, over a byte-stream transport
 
-**Status:** Proposed — awaiting the owner's yes at Gate 1.
+**Status:** Accepted. The owner said yes at Gate 1 on 15 October 2026.
 
 ## Context
 

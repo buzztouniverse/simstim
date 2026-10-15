@@ -1,6 +1,6 @@
 # Roadmap
 
-**Status:** proposed, 15 October 2026, until the owner's yes at Gate 1. It replaces the scope lists in [the plan](plan.md#6-scope-by-version), which is kept for the reasons behind the design.
+**Status:** accepted at Gate 1, 15 October 2026. It replaces the scope lists in [the plan](plan.md#6-scope-by-version), which is kept for the reasons behind the design.
 
 Every candidate feature is scored from the evidence in the research notes:
 
@@ -43,8 +43,8 @@ R6 scores low: few developers ask for it, and simstim stores no secrets by desig
 | N1 | **Antigravity CLI in the agent table.** Google moved consumer Gemini CLI users to it on 18 June 2026. | lock-in/any-agent [16 / 1,470](research/developer-needs.md#needs-ranked) | 5 | 2 | S | 10.0 |
 | N2 | **Scrollback hints per agent:** the agent table records each agent's inline-mode flag (for example Codex `--no-alt-screen`), and `doctor` warns when an agent runs full screen and so keeps its own scrollback | scrollback 17 / 2,302 | 5 | 2 | S | 10.0 |
 | N3 | **"Who needs me" jump:** one key goes to the next session that waits for input, on any host | parallel-agents 18 / 283 | 4 | 2 | S | 8.0 |
-| N4 | **A phone path with no new app:** a small session picker in the host helper, so any phone SSH app (Termius, Blink, Termux) can pick a session and attach. No relay, no web UI. *Needs the owner's yes: the goal keeps phones out unless the owner agrees.* | mobile-access 40 / 1,373, the top need | 5 | 3 | M | 7.5 |
-| N5 | **A host-side alert hook:** a command per host, run when a session needs input or finishes (for example `curl` to the user's own ntfy topic), so alerts reach a phone with no simstim relay. *Needs the owner's yes, as N4.* | notify-when-input-needed 13 / 225; sold by Cursor, Devin, Codex, Conductor at $20 to $50 a month | 3 | 2 | S | 6.0 |
+| N4 | **A phone path with no new app:** a small session picker in the host helper, so any phone SSH app (Termius, Blink, Termux) can pick a session and attach. No relay, no web UI. The owner agreed at Gate 1. | mobile-access 40 / 1,373, the top need | 5 | 3 | M | 7.5 |
+| N5 | **A host-side alert hook:** a command per host, run when a session needs input or finishes (for example `curl` to the user's own ntfy topic), so alerts reach a phone with no simstim relay. The owner agreed at Gate 1. | notify-when-input-needed 13 / 225; sold by Cursor, Devin, Codex, Conductor at $20 to $50 a month | 3 | 2 | S | 6.0 |
 | N6 | **Repo setup hooks:** a repo's own setup script runs when a session or worktree starts, with its output in the session | setup-time 12 / 389; prebuilt environments are sold by Cursor, Coder, Devin, Codex | 3 | 2 | S | 6.0 |
 | N7 | **`pull <session>`:** bring a session's branch back to the laptop over the same SSH | worktrees 10 / 216; sold as Claude `--teleport`, `codex apply`, Terragon `terry pull` | 3 | 2 | S | 6.0 |
 

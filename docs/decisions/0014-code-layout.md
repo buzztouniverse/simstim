@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-10-15
 ---
 
 # 0014 Code layout: thin mains, an importable command tree, black-box tests under test/
 
-**Status:** Proposed — awaiting the owner's yes at Gate 1.
+**Status:** Accepted. The owner said yes at Gate 1 on 15 October 2026.
 
 The evidence is in [the research note on Go project structure](../research/go-project-structure.md), sections 1, 2.1 to 2.3 and 4.
 

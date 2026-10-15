@@ -16,11 +16,11 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0010](0010-no-commit-trailers.md) | No sign-off or attribution lines in commits (replaces the DCO part of 0005) | Accepted |
 | [0011](0011-instant-launcher.md) | The launcher remembers: it draws at once and opens where you left off | Accepted |
 | [0012](0012-own-look.md) | Our own look: a signal, not a copy of Amp (replaces the look in 0009) | Accepted |
-| [0013](0013-host-providers.md) | Host providers: Lima and E2B first, over a byte-stream transport | Proposed |
-| [0014](0014-code-layout.md) | Code layout: thin mains, an importable command tree, black-box tests under test/ | Proposed |
-| [0015](0015-docs-toolchain.md) | Docs toolchain: Hugo with Hextra, a Diátaxis docs folder and generated reference | Proposed |
-| [0016](0016-public-repo-layout.md) | Public repo layout: full community files at the root, GitHub config in .github/, private material out | Proposed |
+| [0013](0013-host-providers.md) | Host providers: Lima and E2B first, over a byte-stream transport | Accepted |
+| [0014](0014-code-layout.md) | Code layout: thin mains, an importable command tree, black-box tests under test/ | Accepted |
+| [0015](0015-docs-toolchain.md) | Docs toolchain: Hugo with Hextra, a Diátaxis docs folder and generated reference | Accepted |
+| [0016](0016-public-repo-layout.md) | Public repo layout: full community files at the root, GitHub config in .github/, private material out | Accepted |
 | [0017](0017-release-signatures.md) | Release signatures that any machine with OpenSSH can check | Accepted |
-| [0018](0018-feature-set.md) | The feature set: what we build now, next and later | Proposed |
+| [0018](0018-feature-set.md) | The feature set: what we build now, next and later | Accepted |
 
 Write a new record from [the template](template.md).

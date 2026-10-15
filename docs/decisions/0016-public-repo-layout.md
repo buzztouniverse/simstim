@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-10-15
 ---
 
 # 0016 Public repo layout: full community files at the root, GitHub config in .github/, private material out
 
-**Status:** Proposed — awaiting the owner's yes at Gate 1.
+**Status:** Accepted. The owner said yes at Gate 1 on 15 October 2026.
 
 The evidence is in [the research note on Go project structure](../research/go-project-structure.md), sections 2.4, 2.5, 2.8 and 6.
 
