@@ -4,15 +4,19 @@ Thank you for your interest. The project is young, so open an issue before a lar
 
 ## Set up
 
-- Go 1.26 or later
-- [just](https://github.com/casey/just)
-- [golangci-lint](https://golangci-lint.run) v2, for `just lint`
-- [Zig 0.16](https://ziglang.org/download/), only to build the shadow terminal in `vt/` (`just vt`); exactly 0.16, as Ghostty's build requires
+You need Go (any version from 1.21; it downloads the toolchain `go.mod` pins), git and OpenSSH. Then one command installs the rest:
 
 ```sh
-just build   # host helpers, then the client, into ./bin
+scripts/setup.sh
+```
+
+It puts pinned versions of just, golangci-lint, GoReleaser, gitleaks and Zig 0.16 into `.tools/` (git-ignored), checks each download's SHA-256 against [scripts/tools.lock](scripts/tools.lock), then builds and tests once. The justfile puts `.tools/bin` first on its PATH. Or open the repo in its [devcontainer](.devcontainer/devcontainer.json), which runs the same script.
+
+```sh
+just build   # host helpers, the shadow terminal, then the client, into ./bin
 just test    # unit tests with the race detector
-just lint    # go vet, golangci-lint, and the name check
+just lint    # go vet, golangci-lint, the name check and the private-detail check
+just e2e     # end-to-end tests against a real host (E2E_HOST=<a host you added>)
 ```
 
 ## Rules for the code
@@ -30,6 +34,10 @@ just lint    # go vet, golangci-lint, and the name check
 - One logical change per commit, with a message that says why.
 - No sign-off or attribution lines: no `Signed-off-by:`, `Co-Authored-By:` or session links ([0010](docs/decisions/0010-no-commit-trailers.md)). By contributing you agree that your work is under the Apache-2.0 licence, as its section 5 says.
 - Run `just test lint` before you push.
+
+## Releases
+
+[docs/contributing/releasing.md](docs/contributing/releasing.md) has the versioning policy and the steps.
 
 ## Decisions
 

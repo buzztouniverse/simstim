@@ -1,4 +1,7 @@
-# Routine commands. Run `just` to list them.
+# Routine commands. Run `just` to list them. New here? Run scripts/setup.sh.
+
+# The pinned tools from scripts/setup.sh come first.
+export PATH := justfile_directory() / ".tools/bin" + ":" + env_var("PATH")
 
 # The product name comes from internal/brand, so renaming needs no change here.
 name := `sed -n 's/^const Name = "\(.*\)"/\1/p' internal/brand/brand.go`
@@ -9,6 +12,10 @@ helpers := "internal/client/helpers"
 
 default:
     @just --list
+
+# Install the pinned developer tools into .tools/, then build and test once.
+setup:
+    scripts/setup.sh
 
 # Build the host helpers for every host platform, into the client's embed folder.
 helpers:

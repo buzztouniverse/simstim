@@ -1,5 +1,7 @@
 # Build output
 /bin/
+# Pinned developer tools (scripts/setup.sh)
+/.tools/
 /dist/
 *.test
 *.out

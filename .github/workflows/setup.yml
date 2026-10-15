@@ -1,0 +1,48 @@
+name: Setup
+
+# One-command developer setup must keep working: scripts/setup.sh on a bare
+# runner, and inside the devcontainer's image.
+on:
+  push:
+    branches: [main]
+    paths: [scripts/setup.sh, scripts/tools.lock, .devcontainer/**, justfile, go.mod]
+  pull_request:
+    paths: [scripts/setup.sh, scripts/tools.lock, .devcontainer/**, justfile, go.mod]
+  schedule:
+    - cron: "23 6 * * 3"
+
+permissions: {}
+
+jobs:
+  setup:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - run: scripts/setup.sh
+
+  devcontainer:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: mcr.microsoft.com/devcontainers/go:2-1.26-bookworm@sha256:2b79ecf3072235dd9bf0074e7dc5c6c9df66e0173cac0ec92a0603e1f14a918a
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The devcontainer's postCreateCommand
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          scripts/setup.sh
