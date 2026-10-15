@@ -196,7 +196,15 @@ func (m *Manifest) Save() error {
 		return err
 	}
 	tmp.Close()
-	return os.Rename(tmp.Name(), filepath.Join(dir, "manifest.json"))
+	if err := os.Rename(tmp.Name(), filepath.Join(dir, "manifest.json")); err != nil {
+		return err
+	}
+	// Make the rename itself durable, so a shutdown right after cannot lose it.
+	if d, err := os.Open(dir); err == nil {
+		_ = d.Sync()
+		d.Close()
+	}
+	return nil
 }
 
 // BootID identifies the current boot, so a respawn can tell that a reboot happened.

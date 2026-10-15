@@ -79,6 +79,8 @@ type Holder struct {
 	ended     proto.Ended
 	dirty     bool
 	oomBase   int64
+	// stopping is true while the system stops the session (for example at shutdown).
+	stopping bool
 	// From agent hooks.
 	hookSeen    bool
 	hookBusy    bool
@@ -137,7 +139,10 @@ func RunHolder(id string) error {
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	s := <-sig
 	h.log.Printf("signal %v: stopping", s)
-	h.kill("holder stopped")
+	// A signal means the system (or the user's manager) is stopping the
+	// session, for example at shutdown. The agent did not end by itself, so the
+	// session stays eligible for restore after the restart.
+	h.stop("stopped with the host", true)
 	return nil
 }
 
@@ -308,6 +313,12 @@ func (h *Holder) waitLoop() {
 	h.mu.Lock()
 	h.exited = true
 	h.ended = ended
+	if h.stopping {
+		// The holder stopped the agent because the system is stopping: keep
+		// the session's state, so it is restored after the restart.
+		h.mu.Unlock()
+		return
+	}
 	code := ended.ExitCode
 	st := Status{State: StateExited, Since: time.Now().UTC(), ExitCode: &code, Signal: ended.Signal, OOM: ended.OOM, Source: "process"}
 	if ended.OOM {
@@ -674,16 +685,22 @@ func (h *Holder) request(c *hclient, req proto.Request) {
 		reply(map[string]int{"bytes": len(data)}, nil)
 	case "kill":
 		reply(map[string]bool{"killed": true}, nil)
-		go h.kill("killed by request")
+		go h.stop("killed by request", false)
 	default:
 		reply(nil, &proto.Error{Code: "unknown_op", Message: "unknown request " + req.Op})
 	}
 }
 
 // kill stops the agent's whole process group, then the holder.
-func (h *Holder) kill(reason string) {
+func (h *Holder) kill(reason string) { h.stop(reason, false) }
+
+// stop ends the agent's process group, then the holder. When system is true,
+// the session is recorded as stopped with the host, not as ended, so restore
+// brings it back after a restart.
+func (h *Holder) stop(reason string, system bool) {
 	h.mu.Lock()
 	exited := h.exited
+	h.stopping = system
 	h.mu.Unlock()
 	if !exited && h.cmd != nil && h.cmd.Process != nil {
 		pid := h.cmd.Process.Pid
@@ -708,7 +725,10 @@ func (h *Holder) kill(reason string) {
 	}
 	h.log.Printf("holder exiting: %s", reason)
 	h.mu.Lock()
-	if h.m.Status.State != StateExited && h.m.Status.State != StateErrored {
+	switch {
+	case system:
+		h.m.Status.Reason, h.m.Status.Source = reason, "system"
+	case h.m.Status.State != StateExited && h.m.Status.State != StateErrored:
 		h.m.Status = Status{State: StateExited, Since: time.Now().UTC(), Reason: reason}
 	}
 	m := *h.m

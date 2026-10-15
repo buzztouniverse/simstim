@@ -70,7 +70,10 @@ func launchHolder(m *Manifest) error {
 		unit := UnitName(m.ID)
 		args := []string{"--user", "--quiet", "--collect",
 			"--unit=" + unit, "--slice=" + brand.Slice,
-			"-p", "KillMode=control-group",
+			// SIGTERM goes to the holder only, which stops its agent itself and
+			// records why; anything left is killed after the timeout.
+			"-p", "KillMode=mixed",
+			"-p", "TimeoutStopSec=15",
 			"-p", "OOMPolicy=continue",
 		}
 		if m.Limits.MemoryMax > 0 {
