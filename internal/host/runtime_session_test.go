@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/iamlakshya/simstim/internal/api"
 	"github.com/iamlakshya/simstim/internal/brand"
 	"github.com/iamlakshya/simstim/internal/host"
 	"github.com/iamlakshya/simstim/internal/host/hosttest"
@@ -99,19 +100,30 @@ func TestNewChecksItsArguments(t *testing.T) {
 		}
 	}
 	// A program that cannot run: the holder reports why, and New says so.
+	// With a secret, the holder answers on its socket and takes the secret
+	// before it starts the program, so New learns of the failure only from
+	// the start itself.
 	bad := filepath.Join(h.Home, "not-a-program")
 	writeFile(t, bad, "this is not a script\n")
 	if err := os.Chmod(bad, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	_, err := host.New(host.NewArgs{Argv: []string{bad}})
-	var pe *proto.Error
-	if !errors.As(err, &pe) || pe.Code != "start_failed" || !strings.Contains(pe.Message, "exec format error") {
-		t.Fatalf("new with a program that cannot run = %v", err)
+	for _, secrets := range []map[string]api.Secret{nil, {"TEST_TOKEN": "fake-value"}} {
+		_, err := host.New(host.NewArgs{Argv: []string{bad}, Secrets: secrets})
+		var pe *proto.Error
+		if !errors.As(err, &pe) || pe.Code != "start_failed" || !strings.Contains(pe.Message, "exec format error") {
+			t.Fatalf("new with a program that cannot run, and %d secrets = %v", len(secrets), err)
+		}
 	}
-	list, _ := host.List()
-	if len(list) != 1 || list[0].State != host.StateErrored || list[0].Alive {
-		t.Fatalf("the session that failed to start: %+v", list)
+	var list []host.SessionInfo
+	hosttest.WaitFor(t, 5*time.Second, "the holders of the sessions that failed to start to exit", func() bool {
+		list, _ = host.List()
+		return len(list) == 2 && !list[0].Alive && !list[1].Alive
+	})
+	for _, s := range list {
+		if s.State != host.StateErrored {
+			t.Errorf("the session that failed to start: %+v", s)
+		}
 	}
 }
 

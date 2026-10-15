@@ -206,6 +206,11 @@ func New(a NewArgs) (*SessionInfo, error) {
 		return nil, UserError("secrets_failed", "the session could not get its secrets, so it was removed", "Try again.")
 	}
 	if mm := waitStarted(id, 5*time.Second); mm != nil {
+		if mm.Status.State == StateErrored && mm.Run.AgentPID == 0 {
+			// The holder answered on its socket, as it does before the agent
+			// starts, and then could not start the agent.
+			return nil, UserError("start_failed", mm.Status.Reason, "Check the session log with the host doctor.")
+		}
 		if mm.Run.Unit == "" && m.Run.Unit != "" {
 			mm.Run.Unit = m.Run.Unit
 			_ = mm.Save()
