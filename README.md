@@ -4,9 +4,9 @@
 
 simstim runs Claude Code, Codex, opencode, Gemini CLI, Amp or a plain shell in a session on a host you own: a VPS, a cloud VM or a homelab machine. Close the laptop, change networks, switch devices: the session keeps running. Come back, and you flip straight back in. Your terminal draws the agent's real screen, byte for byte, so keys, colours, scrollback, clipboard and notifications work as they do locally.
 
-![The home screen: hosts on the left; sessions on the selected host with their agent, folder and state; and a live preview of a session waiting on a permission prompt](docs/images/home.svg)
+![The launcher: the sessions on one host, each with its state, agent, folder and age, and the keys in the bottom border](docs/images/sessions.svg)
 
-> **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 34 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet. See [the status](docs/status.md).
+> **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet. See [the status](docs/status.md).
 
 ## Why
 
@@ -46,7 +46,7 @@ just build        # builds the host helpers, then the client, into ./bin
 
 ```sh
 simstim host add my-vps                          # a Host from ~/.ssh/config: checks it, installs the helper
-simstim                                          # the home screen: Enter on a host starts a session
+simstim                                          # the launcher: Enter on a host, then Enter on a session (or n)
 simstim new my-vps --agent claude --dir ~/src/app --worktree
 simstim attach my-vps/app                        # attach from a script or a terminal keybinding
 ```
@@ -62,14 +62,18 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 | `ports`, `forward` | See and forward the ports a session listens on |
 | `flip` | Quick switcher: every host's sessions, then attach |
 | `doctor keys`, `doctor terminal` | Show what your terminal sends for each key, and what it supports |
-| `config keymap` | Show the home screen's keys; rebind them under `[keymap]` in `config.toml` |
-| `demo [--empty]` | Try the home screen with sample hosts and sessions; nothing connects anywhere |
+| `config keymap` | Show the launcher's keys; rebind them under `[keymap]` in `config.toml` |
+| `demo [--empty]` | Try the launcher with sample hosts and sessions; nothing connects anywhere |
 
 ## Screens
 
-Every action is a key away, and each dialog lists its keys on its bottom edge. `simstim demo` opens these screens with sample data, so you can try them before you add a host.
+The launcher does one thing: it starts or joins a session in a few keys, then gets out of the way. Each screen is one list in one column. Enter goes forward, Esc goes back, and each box lists its keys on its bottom edge. The look follows Amp's CLI ([UX](docs/ux.md)). `simstim demo` opens these screens with sample data, so you can try them before you add a host.
 
-**New session.** Pick the agent, then the folder, with Tab completion from the host. A session can get its own git worktree.
+**Hosts.** Each host with its state, its sessions, and how many need you. Enter opens one.
+
+![The hosts list: three hosts, one offline, with session counts and round-trip times](docs/images/hosts.svg)
+
+**New session.** `n` picks the agent, then the folder, with Tab completion from the host. A session can get its own git worktree.
 
 ![The new-session dialog: agent choice, a folder with completions from the host, a name, and a worktree option](docs/images/new-session.svg)
 
@@ -77,11 +81,15 @@ Every action is a key away, and each dialog lists its keys on its bottom edge. `
 
 ![The command palette, listing session, host and view commands with their keys](docs/images/commands.svg)
 
+**Attached.** The agent owns every row and column of your terminal. There is no frame or status bar. Ctrl+\ brings the launcher back.
+
+![An attached session: a made-up agent's screen from the demo, filling the whole terminal](docs/images/attached.svg)
+
 **Add a host.** The wizard offers the hosts in your `~/.ssh/config`, tests the connection, and installs the helper with your consent.
 
 ![Step 1 of the add-host wizard, offering hosts from the SSH config](docs/images/add-host.svg)
 
-The images use a dark theme. In your terminal, the screens use your own colour palette. `just screenshots` makes them again from the demo.
+The images use a dark Ghostty theme. In your terminal, the screens use your own colour palette. `just screenshots` makes them again from the demo.
 
 ## Docs
 

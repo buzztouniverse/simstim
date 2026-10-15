@@ -3,24 +3,24 @@
 
 
 
-            ╭─ Hosts ──────────────────────────────────────────────────────────────────────────── 3 hosts ─╮
+            ╭─ New session on atlas-dev ──────────────────────────────────────────────────────────────────╮
             │                                                                                              │
-            │  ● atlas-dev  4 sessions · 1 needs you                                                 9ms  │
-            │  ◌ aws-gpu     offline                                                                       │
-            │  ● gcp-dev     2 sessions                                                              41ms  │
+            │ Agent      claude  codex  opencode  shell  other…   not installed: gemini, amp, cursor, aid… │
             │                                                                                              │
-            ╰──────────────────── Enter open · n new session · a add host · Ctrl+O commands · ? shortcuts ─╯
-                      ╭─ New session on atlas-dev ──────────────────────────────────────────────╮
-                      │                                                                          │
-                      │ Agent      claude  codex  opencode  shell  other…   not installed: gemi… │
-                      │                                                                          │
-                      │ Folder     ~/src/app                                                     │
-                      │                                                                          │
-                      │ Name       auth                                                          │
-                      │                                                                          │
-                      │ Worktree   ● this folder   ○ new worktree                                │
-                      │                                                                          │
-                      ╰──────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+            │ Folder     ~/src/app                                                                         │
+            │                                                                                              │
+            │ Name       auth                                                                              │
+            │                                                                                              │
+            │ Worktree   ● this folder   ○ new worktree                                                    │
+            │                                                                                              │
+            ╰──────────────────────────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+
+
+
+
+
+
+
 
 
 

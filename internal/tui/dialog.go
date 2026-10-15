@@ -20,8 +20,9 @@ type modal interface {
 	view(m *Model) string
 }
 
-// dialogWidth is the width of a dialog on this screen.
-func (m *Model) dialogWidth(most int) int { return max(min(m.width-4, most), 30) }
+// dialogWidth is the width of a dialog: the launcher's own column, so a
+// dialog covers the list instead of cutting across it.
+func (m *Model) dialogWidth() int { return m.boxW() }
 
 // errorLines draws an error and what to try next inside a dialog.
 func errorLines(err error, w int) []string {
@@ -259,7 +260,7 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 }
 
 func (d *newSession) view(m *Model) string {
-	w := m.dialogWidth(76)
+	w := m.dialogWidth()
 	cw := w - 4
 	fw := cw - labelW
 	label := func(i int, s string) string {
@@ -371,7 +372,7 @@ func (c *confirm) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 }
 
 func (c *confirm) view(m *Model) string {
-	w := m.dialogWidth(76)
+	w := m.dialogWidth()
 	body := []string{""}
 	for _, l := range c.lines {
 		body = append(body, wrap(l, w-4)...)
@@ -441,7 +442,7 @@ func (d *details) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 }
 
 func (d *details) view(m *Model) string {
-	w := m.dialogWidth(76)
+	w := m.dialogWidth()
 	cw := w - 4
 	h := m.hostByName(d.host)
 	if h == nil {

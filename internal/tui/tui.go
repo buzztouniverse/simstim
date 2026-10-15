@@ -88,9 +88,14 @@ func (m *Model) render() string {
 		}
 	}
 	if m.modal != nil {
+		// A dialog sits in the launcher's column, from the box's top row.
 		b := m.modal.view(m)
 		bw, bh := lipgloss.Size(b)
-		layers = append(layers, layer{s: b, x: max((m.width-bw)/2, 0), y: max((m.height-bh)/2, 0)})
+		y := m.boxTop()
+		if len(m.hosts) == 0 || y+bh > m.height {
+			y = (m.height - bh) / 2
+		}
+		layers = append(layers, layer{s: b, x: max((m.width-bw)/2, 0), y: max(y, 0)})
 	}
 	if q, ok := m.quitLayer(); ok {
 		layers = append(layers, q)

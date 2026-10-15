@@ -3,26 +3,26 @@
 
 
 
-            ╭─ atlas-dev ─────────────────────────────────────────────────────────────────────────── 9ms ─╮
+            ╭─ Commands ───────────────────────────────────────────────────────────────────────────────────╮
             │                                                                                              │
-            │  ● auth-refactor             claude    ~/src/app                        needs input      2m  │
-            │  ≈ api-tests                 codex     ~/src/api                        working         14s  │
-            │  ○ notes                     shell     ~                                idle             1h  │
-            │  ✓ doc╭─ Commands ───────────────────────────────────────────────────────────────────╮   3h  │
-            │       │                                                                              │       │
-            ╰───────│ > ses                                                                        │tcuts ─╯
-                    │                                                                              │
-                    │  session  new                                                             n  │
-                    │  session  attach                                                      Enter  │
-                    │  session  rename                                                          r  │
-                    │  session  delete                                                          d  │
-                    │  session  preview                                                     Space  │
-                    │     view  all sessions                                                       │
-                    │  session  copy attach command                                             y  │
-                    │     host  test                                                               │
-                    │  simstim  settings                                                           │
-                    │     host  details                                                         i  │
-                    ╰──────────────────────────────────────────────────────────────────────────────╯
+            │ > ses                                                                                        │
+            │                                                                                              │
+            │  session  new                                                                             n  │
+            │  session  attach                                                                      Enter  │
+            │  session  rename                                                                          r  │
+            │  session  delete                                                                          d  │
+            │  session  preview                                                                     Space  │
+            │     view  all sessions                                                                       │
+            │  session  copy attach command                                                             y  │
+            │     host  test                                                                               │
+            │  simstim  settings                                                                           │
+            │     host  details                                                                         i  │
+            ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
 
 
 

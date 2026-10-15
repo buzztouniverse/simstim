@@ -2,9 +2,6 @@
 
 
 
-  ╭─ Hosts ──────────────────────────────────────────────────────── 3 hosts ─╮
-  │                                                                          │
-  │  ● atlas-dev  4 sessions · 1 needs you                             9ms  │
   ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
   │                                                                          │
   │ Route      atlas-dev                                                    │
@@ -14,6 +11,9 @@
   │ Limits     3.2 GiB per session · 4 sessions                              │
   │                                                                          │
   ╰─────────────────── t test · s shell · r reconnect · x remove · Esc back ─╯
+
+
+
 
 
 

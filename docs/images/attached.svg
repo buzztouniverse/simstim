@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="576" viewBox="0 0 972 576">
+<style>text{font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:14px;white-space:pre}</style>
+<rect width="972" height="576" rx="10" fill="#0B0E14"/>
+<circle cx="22" cy="20" r="6" fill="#FF5F57"/>
+<circle cx="42" cy="20" r="6" fill="#FEBC2E"/>
+<circle cx="62" cy="20" r="6" fill="#28C840"/>
+<text x="32.4" y="74.0" textLength="16.8" fill="#BFBDB6" font-weight="bold">&gt; </text>
+<text x="49.2" y="74.0" textLength="898.8" fill="#BFBDB6">Move the session store to the new token format, and keep old tokens working.                               </text>
+<text x="32.4" y="108.0" textLength="8.4" fill="#CDA1FA">●</text>
+<text x="49.2" y="108.0" textLength="898.8" fill="#BFBDB6">I'll read the current store first.                                                                         </text>
+<text x="32.4" y="125.0" textLength="344.4" fill="#656565">  Read internal/auth/store.go (212 lines)</text>
+<text x="32.4" y="142.0" textLength="336.0" fill="#656565">  Read internal/auth/token.go (96 lines)</text>
+<text x="32.4" y="176.0" textLength="8.4" fill="#CDA1FA">●</text>
+<text x="49.2" y="176.0" textLength="898.8" fill="#BFBDB6">Plan: add a v2 encoder, read both formats, migrate on write.                                               </text>
+<text x="32.4" y="210.0" textLength="8.4" fill="#CDA1FA">●</text>
+<text x="49.2" y="210.0" textLength="898.8" fill="#BFBDB6">Edit internal/auth/token.go                                                                                </text>
+<text x="32.4" y="227.0" textLength="369.6" fill="#7FD962">  + func encodeV2(t Token) ([]byte, error) {</text>
+<text x="32.4" y="244.0" textLength="487.2" fill="#7FD962">  +     return json.Marshal(tokenV2{ID: t.ID, Exp: t.Exp})</text>
+<text x="32.4" y="261.0" textLength="218.4" fill="#EA6C73">  - return legacyEncode(t)</text>
+<text x="32.4" y="295.0" textLength="218.4" fill="#BFBDB6" font-weight="bold">  Run the migration tests?</text>
+<text x="24.0" y="312.0" textLength="924.0" fill="#BFBDB6">   go test ./internal/auth/... -run Migrate                                                                   </text>
+<text x="49.2" y="346.0" textLength="8.4" fill="#90E1C6">❯</text>
+<text x="57.6" y="346.0" textLength="58.8" fill="#90E1C6"> 1. Yes</text>
+<text x="24.0" y="363.0" textLength="924.0" fill="#BFBDB6">     2. No, and tell the agent what to do differently                                                         </text>
+<text x="24.0" y="499.0" textLength="924.0" fill="#656565">╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮</text>
+<text x="24.0" y="516.0" textLength="8.4" fill="#656565">│</text>
+<text x="32.4" y="516.0" textLength="907.2" fill="#BFBDB6"> &gt;                                                                                                          </text>
+<text x="939.6" y="516.0" textLength="8.4" fill="#656565">│</text>
+<text x="24.0" y="533.0" textLength="924.0" fill="#656565">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
+<text x="24.0" y="550.0" textLength="848.4" fill="#656565"> ? for shortcuts                                                                           ~/src/app </text>
+<text x="872.4" y="550.0" textLength="8.4" fill="#656565">·</text>
+<text x="880.8" y="550.0" textLength="67.2" fill="#656565"> claude </text>
+</svg>

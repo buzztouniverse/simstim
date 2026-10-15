@@ -442,7 +442,7 @@ func (w *wizard) onMsg(m *Model, msg tea.Msg) tea.Cmd {
 }
 
 func (w *wizard) view(m *Model) string {
-	width := m.dialogWidth(76)
+	width := m.dialogWidth()
 	cw := width - 4
 	title := "Add a host"
 	var body []string

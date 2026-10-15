@@ -3,23 +3,23 @@
 
 
 
-            ╭─ Hosts ──────────────────────────────────────────────────────────────────────────── 3 hosts ─╮
+            ╭─ atlas-dev ─────────────────────────────────────────────────────────────────────────── 9ms ─╮
             │                                                                                              │
-            │  ● atlas-dev  4 sessions · 1 needs you                                                 9ms  │
-            │  ◌ aws-gpu     offline                                                                       │
-            │  ● gcp-dev     2 sessions                                                              41ms  │
+            │ Route      atlas-dev                                                                        │
+            │ System     Debian 13 · amd64 · 4 CPUs · 8 GiB · 61 GiB free                                  │
+            │ Helper     simstim-host 0.1.0                                                                │
+            │ Agents     claude · codex · opencode · shell                                                 │
+            │ Limits     3.2 GiB per session · 4 sessions                                                  │
             │                                                                                              │
-            ╰──────────────────── Enter open · n new session · a add host · Ctrl+O commands · ? shortcuts ─╯
+            ╰─────────────────────────────────────── t test · s shell · r reconnect · x remove · Esc back ─╯
 
-                      ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
-                      │                                                                          │
-                      │ Route      atlas-dev                                                    │
-                      │ System     Debian 13 · amd64 · 4 CPUs · 8 GiB · 61 GiB free              │
-                      │ Helper     simstim-host 0.1.0                                            │
-                      │ Agents     claude · codex · opencode · shell                             │
-                      │ Limits     3.2 GiB per session · 4 sessions                              │
-                      │                                                                          │
-                      ╰─────────────────── t test · s shell · r reconnect · x remove · Esc back ─╯
+
+
+
+
+
+
+
 
 
 

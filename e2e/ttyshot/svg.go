@@ -25,16 +25,18 @@ const (
 	padBot   = 22.0
 )
 
-// shotTheme is the dark palette the images use. Colours are ANSI slots in the
-// UI, so in a real terminal the user's theme decides them.
+// shotTheme is the palette the images use: the reference theme of the
+// palette table in docs/ux.md 4.1, a dark Ghostty theme. The UI sends palette
+// slots, so in a real terminal the user's own theme decides the colours.
+// Faint text is drawn half way to the background, as Ghostty draws it.
 var shotTheme = struct {
 	fg, bg  string
 	palette [16]string
 }{
-	fg: "#DDDDDD", bg: "#171717",
+	fg: "#BFBDB6", bg: "#0B0E14",
 	palette: [16]string{
-		"#282A2E", "#D74E6F", "#31BB71", "#D3E561", "#8056FF", "#ED61D7", "#04D7D7", "#C5C8C6",
-		"#5C5C5C", "#FE5F86", "#00D787", "#EBFF71", "#8F69FF", "#FF7AEA", "#00FEFE", "#FFFFFF",
+		"#1E232B", "#EA6C73", "#7FD962", "#F9AF4F", "#53BDFA", "#CDA1FA", "#90E1C6", "#C7C7C7",
+		"#686868", "#F07178", "#AAD94C", "#FFB454", "#59C2FF", "#D2A6FF", "#95E6CB", "#FFFFFF",
 	},
 }
 

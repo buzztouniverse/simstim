@@ -137,12 +137,17 @@ func hintsFor(hs []hint, w int) string { return hintLine(hs, w-6) }
 
 // listRow draws one row of a list. A selected row is a bar in the title
 // colour with black text, bold kept: the one strong colour on the screen.
+// Keys keep their own colour on the bar, as Amp's do.
 func listRow(selected bool, segs ...seg) string {
 	var b strings.Builder
 	for _, sg := range segs {
 		st := sg.st
 		if selected {
-			st = sPlain.Foreground(colOnSel).Background(colTitle).Bold(sg.st.GetBold())
+			fg := colOnSel
+			if sg.st.GetForeground() == colKey {
+				fg = colKey
+			}
+			st = sPlain.Foreground(fg).Background(colTitle).Bold(sg.st.GetBold())
 		}
 		b.WriteString(st.Render(sg.s))
 	}
@@ -157,7 +162,7 @@ type layer struct {
 
 // compose draws the layers over base on a w×h canvas. With dim set, the
 // backdrop is dimmed by setting the faint attribute on its cells, so it works
-// with any theme.
+// with any theme, and backgrounds are dropped.
 func compose(base string, w, h int, dim bool, layers ...layer) string {
 	c := lipgloss.NewCanvas(w, h)
 	uv.NewStyledString(base).Draw(c, c.Bounds())
@@ -167,6 +172,10 @@ func compose(base string, w, h int, dim bool, layers ...layer) string {
 				if cell := c.CellAt(x, y); cell != nil && (cell.Content != " " || !cell.Style.IsZero()) {
 					cell.Style.Attrs |= uv.AttrFaint
 					cell.Style.Attrs &^= uv.AttrBold
+					if cell.Style.Bg != nil {
+						// A selection bar goes quiet too: faint text, no bar.
+						cell.Style.Bg, cell.Style.Fg = nil, nil
+					}
 				}
 			}
 		}

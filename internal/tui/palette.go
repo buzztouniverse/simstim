@@ -269,7 +269,7 @@ func (p *palette) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 }
 
 func (p *palette) view(m *Model) string {
-	w := m.dialogWidth(80)
+	w := m.dialogWidth()
 	cw := w - 4
 	items := p.items(m)
 	listH := max(min(len(items), m.height-10), 1)

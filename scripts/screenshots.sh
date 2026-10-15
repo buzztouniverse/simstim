@@ -26,8 +26,8 @@ shot() {
     local image=$1
     shift
     {
-        echo 'wait "auth-refactor" 10s'
-        printf 'send "%s%s%s"\nsleep 1s\n' "$down" "$down" "$down"
+        echo 'wait "homelab" 10s'
+        printf 'send "%s"\nsleep 300ms\nsend "%s"\nsleep 1s\n' "$down" "$down"
         for k in "$@"; do printf 'send "%s"\nsleep 1s\n' "$k"; done
         echo "save $out/$image.svg"
     } | XDG_CONFIG_HOME="$tmp/config" TERM=xterm-ghostty COLORTERM=truecolor \
@@ -35,7 +35,9 @@ shot() {
     echo "$out/$image.svg"
 }
 
-shot home
-shot new-session '\r' '\t' '/src/a'
-shot commands '\x0f'
+shot hosts
+shot sessions '\r'
+shot new-session '\r' 'n' '\t' '/src/a'
+shot commands '\r' '\x0f'
+shot attached '\r' '\r'
 shot add-host 'a'

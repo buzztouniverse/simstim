@@ -2,8 +2,6 @@
 
 
 
-  ╭─ Hosts ──────────────────────────────────────────────────────── 3 hosts ─╮
-  │                                                                          │
   ╭─ New session on atlas-dev ──────────────────────────────────────────────╮
   │                                                                          │
   │ Agent      claude  codex  opencode  shell  other…   not installed: gemi… │
@@ -15,6 +13,8 @@
   │ Worktree   ● this folder   ○ new worktree                                │
   │                                                                          │
   ╰──────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+
+
 
 
 

@@ -3,26 +3,26 @@
 
 
 
-            ╭─ Hosts ──────────────────────────────────────────────────────────────────────────── 3 hosts ─╮
+            ╭─ New session on atlas-dev ──────────────────────────────────────────────────────────────────╮
             │                                                                                              │
-            │  ● atlas-dev  4 sessions · 1 needs you                                                 9ms  │
-            │  ◌ aws-gpu     offline                                                                       │
-            │  ● gcp-dev     2 sessions                                                              41ms  │
-            │         ╭─ New session on atlas-dev ──────────────────────────────────────────────╮         │
-            ╰─────────│                                                                          │ortcuts ─╯
-                      │ Agent      claude  codex  opencode  shell  other…   not installed: gemi… │
-                      │                                                                          │
-                      │ Folder     ~                                                             │
-                      │                                                                          │
-                      │ Name       the folder name                                               │
-                      │                                                                          │
-                      │ Worktree   ● this folder   ○ new worktree                                │
-                      │                                                                          │
-                      │ Error: Aider is not installed on this host.                              │
-                      │                                                                          │
-                      │ Install it on the host, then try again.                                  │
-                      │                                                                          │
-                      ╰──────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+            │ Agent      claude  codex  opencode  shell  other…   not installed: gemini, amp, cursor, aid… │
+            │                                                                                              │
+            │ Folder     ~                                                                                 │
+            │                                                                                              │
+            │ Name       the folder name                                                                   │
+            │                                                                                              │
+            │ Worktree   ● this folder   ○ new worktree                                                    │
+            │                                                                                              │
+            │ Error: Aider is not installed on this host.                                                  │
+            │                                                                                              │
+            │ Install it on the host, then try again.                                                      │
+            │                                                                                              │
+            ╰──────────────────────────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+
+
+
+
+
 
 
 

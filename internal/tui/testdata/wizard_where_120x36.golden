@@ -11,16 +11,16 @@
 
 
 
-                      ╭─ Add a host ─────────────────────────────────────────────── step 1 of 4 ─╮
-                      │                                                                          │
-                      │ Where does it live?                                                      │
-                      │                                                                          │
-                      │ SSH target   het                                                         │
-                      │              From your SSH config: hetzner-1  (1 found)                  │
-                      │ Name         het                                                         │
-                      │ SSH config   optional: an extra SSH config file                          │
-                      │                                                                          │
-                      ╰───── ↑↓ pick from SSH config · Tab next field · Enter test · Esc cancel ─╯
+            ╭─ Add a host ─────────────────────────────────────────────────────────────────── step 1 of 4 ─╮
+            │                                                                                              │
+            │ Where does it live?                                                                          │
+            │                                                                                              │
+            │ SSH target   het                                                                             │
+            │              From your SSH config: hetzner-1  (1 found)                                      │
+            │ Name         het                                                                             │
+            │ SSH config   optional: an extra SSH config file                                              │
+            │                                                                                              │
+            ╰───────────────────────── ↑↓ pick from SSH config · Tab next field · Enter test · Esc cancel ─╯
 
 
 
