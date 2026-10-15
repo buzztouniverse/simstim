@@ -89,6 +89,14 @@ func New(a NewArgs) (*SessionInfo, error) {
 		login = os.Environ()
 	}
 	id := NewID()
+	// Find the agent before anything is made: a missing one leaves nothing
+	// behind, no worktree and no branch.
+	inline := a.Inline && known && len(a.Argv) == 0 && agent.Inline.Has()
+	env, term := sessionEnv(a, id, login, agent, inline)
+	argv, hooks, sessionUUID := agentArgv(argv, a, agent, known, inline)
+	if _, err := lookPath(argv[0], envValue(env, "PATH")); err != nil {
+		return nil, UserError("agent_missing", argv[0]+" is not installed on this host", "Install it on the host, then try again.")
+	}
 	var gi *GitInfo
 	if a.Worktree {
 		n := a.Name
@@ -104,12 +112,6 @@ func New(a NewArgs) (*SessionInfo, error) {
 	sessHooks, err := setupHooks(a, cwd, gi)
 	if err != nil {
 		return nil, err
-	}
-	inline := a.Inline && known && len(a.Argv) == 0 && agent.Inline.Has()
-	env, term := sessionEnv(a, id, login, agent, inline)
-	argv, hooks, sessionUUID := agentArgv(argv, a, agent, known, inline)
-	if _, err := lookPath(argv[0], envValue(env, "PATH")); err != nil {
-		return nil, UserError("agent_missing", argv[0]+" is not installed on this host", "Install it on the host, then try again.")
 	}
 	name := strings.TrimSpace(a.Name)
 	if name == "" {

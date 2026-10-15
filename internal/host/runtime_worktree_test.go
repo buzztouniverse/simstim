@@ -132,3 +132,21 @@ func TestFolders(t *testing.T) {
 		t.Errorf("folders = %+v", f)
 	}
 }
+
+// An agent that is not installed is found before the worktree is made, so a
+// failed start leaves no worktree and no branch behind.
+func TestNewWithAMissingAgentMakesNoWorktree(t *testing.T) {
+	h := hosttest.New(t)
+	dir := repo(t, h)
+	_, err := host.New(host.NewArgs{Cwd: "~/src/app", Worktree: true, Argv: []string{"no-such-program-here"}})
+	var pe *proto.Error
+	if !errors.As(err, &pe) || pe.Code != "agent_missing" {
+		t.Fatalf("new = %v, want agent_missing", err)
+	}
+	if list := git(t, dir, "worktree", "list", "--porcelain"); strings.Count(list, "worktree ") != 1 {
+		t.Errorf("a worktree was left behind:\n%s", list)
+	}
+	if branches := git(t, dir, "branch", "--list", brand.Name+"/*"); strings.TrimSpace(branches) != "" {
+		t.Errorf("a branch was left behind: %s", branches)
+	}
+}
