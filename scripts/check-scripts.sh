@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # Fails when a shell script puts a non-ASCII character right after a variable
-# name, as in "$arch…": in some locales the shell reads the character as part
-# of the name and stops with "unbound variable". Write "${arch}…" instead.
+# name, as in "$name" followed by an ellipsis: in some locales the shell reads
+# the character as part of the name and stops with "unbound variable". Write
+# "${name}" before the character instead.
+#
+# It uses perl, which macOS and Linux both have; macOS grep has no -P.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-if hits=$(git ls-files '*.sh' | xargs grep -n -P '\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7F]' 2>/dev/null); then
+hits=$(git ls-files -z '*.sh' | xargs -0 perl -ne 'print "$ARGV:$.: $_" if /\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7F]/; close ARGV if eof')
+if [ -n "$hits" ]; then
     echo "$hits"
     echo
     echo "Error: a variable name runs into a non-ASCII character."
-    echo "Try: wrap the name in braces, as in \${name}…"
+    echo "Try: wrap the name in braces, as in \${name} before the character."
     exit 1
 fi
 echo "check-scripts: ok"
