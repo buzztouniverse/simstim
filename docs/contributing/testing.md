@@ -33,6 +33,23 @@ A container made with `host create docker` runs the suite too, over `docker exec
 
 It covers start, attach and detach, resize, byte-exact output, replay after a dropped link, a simulated laptop sleep, the memory cap, snapshots after the ring wraps, a crashed shadow terminal, image paste and file drops, worktrees, ports, rename and delete. Host reboots are tested by hand, with the host owner's agreement.
 
+## Benchmarks
+
+The attach pump has benchmarks at each step a byte takes: the host's output ring and screen model (`internal/ring`, `internal/host`), the frames (`internal/proto`), the client's catch-up and mode tracker (`internal/term`), the output frames through the client's attach (`internal/client`), and the input filter (`internal/keys`). `internal/term/termtest` makes the output they use: redraws shaped like a coding agent's.
+
+`just bench` (or `scripts/bench.sh <base>`) builds the benchmarks at a base commit and in the working tree, runs them in turns on this machine, and compares them with benchstat. It fails when a benchmark is more than 10 % slower with p below 0.05. CI runs it on every pull request against the base branch, with a 15 % limit for the noisier runners.
+
+Numbers on an Apple silicon laptop, 15 October 2026, per 32 KiB of agent output:
+
+| Step | Time | Throughput |
+| --- | --- | --- |
+| Ring write (host) | 0.4 µs | 75 GB/s |
+| Screen model (host, for status rules) | 1.3 ms | 26 MB/s |
+| Output frame write (host) | 12 µs | 2.8 GB/s |
+| Output frame through the client's attach | 63 µs | 520 MB/s |
+
+The screen model is the slowest step. It is a Go terminal emulator used only to read the screen for status rules, and 26 MB/s is far more than an agent prints.
+
 ## Vulnerabilities and dead code
 
 `just vulncheck` runs govulncheck, which reports known vulnerabilities only in code the project calls, and deadcode, which fails on any function that neither the program nor a test reaches. CI runs both on every push.

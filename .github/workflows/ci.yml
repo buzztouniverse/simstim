@@ -108,6 +108,28 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: scripts/check-docs-impact.sh "$BASE" HEAD
 
+  bench:
+    # A pull request must not slow the attach pump: its benchmarks run against
+    # the base commit's, on the same runner, in turns.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: The attach pump is no slower than the base
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          # Shared runners are noisier than a laptop.
+          BENCH_MAX: "15"
+        run: scripts/bench.sh "$BASE"
+
   windows:
     # The client also runs on Windows (with Windows OpenSSH); hosts are Linux.
     runs-on: windows-latest

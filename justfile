@@ -73,6 +73,10 @@ lint: check-name check-private check-scripts
     go vet ./...
     golangci-lint run
 
+# Compare the attach pump's benchmarks with a base commit (default origin/main), on this machine.
+bench base="origin/main":
+    scripts/bench.sh {{ base }}
+
 # Known vulnerabilities in the code we call, and code nothing reaches, tests included.
 vulncheck:
     go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...

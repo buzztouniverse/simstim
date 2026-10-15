@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- Benchmarks for each step of the attach pump, and `just bench` (`scripts/bench.sh`), which compares them with a base commit on the same machine and fails on a slowdown over 10 %; CI runs it on pull requests.
 - `just vulncheck`, also in CI: govulncheck, and deadcode with tests included, which fails on code nothing reaches. Two unused functions were removed.
 - `scripts/time-to-agent.sh` measures the time from a clean machine to an agent running on a host: 2.2 s of machine time on the test host ([testing](docs/contributing/testing.md#time-to-first-agent)).
 - An explanation page, [how simstim compares](docs/explanation/comparison.md): multiplexers, pass-through session tools, hosted agents, vendor agents on your own machine and cloud development environments, with when to choose each instead, and where simstim is behind.
