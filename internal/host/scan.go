@@ -101,7 +101,7 @@ func (s *scanner) endOSC(fn func(outSignal)) {
 	case hasPrefix(o, "9;"):
 		// iTerm2-style OSC 9;text is a notification. ConEmu uses OSC 9;<number>;…
 		// for other commands (for example 9;9 to report the folder), which are not.
-		if len(o) > 2 && !(o[2] >= '0' && o[2] <= '9' && (len(o) == 3 || o[3] == ';')) {
+		if len(o) > 2 && !conEmuCommand(o[2:]) {
 			fn(sigNotify)
 		}
 	case hasPrefix(o, "99;"):
@@ -115,4 +115,11 @@ func (s *scanner) endOSC(fn func(outSignal)) {
 
 func hasPrefix(b []byte, p string) bool {
 	return len(b) >= len(p) && string(b[:len(p)]) == p
+}
+
+// conEmuCommand reports whether an OSC 9 payload (after "9;") is a ConEmu
+// numeric command such as "9;/path", rather than notification text.
+func conEmuCommand(p []byte) bool {
+	isDigit := p[0] >= '0' && p[0] <= '9'
+	return isDigit && (len(p) == 1 || p[1] == ';')
 }

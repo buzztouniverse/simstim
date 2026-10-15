@@ -138,7 +138,7 @@ func Detect(kind string, s Screen) (state, rule string, ok bool) {
 	for _, r := range all[kind] {
 		lines := region(r.Region, s)
 		text := strings.Join(lines, "\n")
-		if r.Condition.holds(text, lines) {
+		if r.holds(text, lines) {
 			return r.State, r.ID, true
 		}
 	}
