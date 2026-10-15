@@ -13,7 +13,7 @@ simstim host alerts set my-vps --ntfy https://ntfy.sh/<your-topic>
 simstim host alerts test my-vps
 ```
 
-Your phone shows "Test alert from my-vps". From now on, every session on `my-vps` sends an alert when it needs you, finishes a turn of more than a minute, fails, or runs out of memory. Running sessions pick up the change at their next event.
+Your phone shows "Test alert from my-vps". From now on, every session on `my-vps` sends an alert when it needs you, finishes a turn of more than a minute, fails, or runs out of memory. Running sessions pick up the change at their next event. A session started before your helper had alerts keeps its old helper, and sends nothing: start it again to get alerts from it.
 
 `simstim host alerts my-vps` shows the settings and the last deliveries.
 
@@ -188,6 +188,8 @@ It says what each destination did. Then look at the delivery log, which also say
 ```sh
 simstim host alerts log my-vps -n 50
 ```
+
+If the log has nothing from a session at all, the session may run an older helper, from before alerts. Start it again.
 
 | The log says | What to do |
 | --- | --- |
