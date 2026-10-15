@@ -354,6 +354,7 @@ The TUI is the home, and every action also has a command, for scripts and termin
 | `simstim rename <host>/<session> <name>`, `kill <host>/<session>` | Renames; stops and removes (keeping a worktree that has work) |
 | `simstim ports <host>/<session>`, `forward <host>/<session> [port…]` | Lists the ports a session listens on; forwards them to localhost |
 | `simstim doctor keys` | Prints each key event as the terminal sends it, and marks the client's own keys |
+| `simstim doctor terminal` | Asks the terminal what it supports: kitty keys, synchronized output, colours, and more |
 | `simstim version`, `completion zsh\|bash\|fish` | Housekeeping |
 
 **Exit codes:** 0 for success, 1 for a user error, 2 for a host or network error, 3 for a session or host that is not found.
@@ -391,7 +392,7 @@ labels = { provider = "homelab" }
 
 These parts of this spec are planned, and not in the current build:
 
-- the capability probe at start-up (4.4) and a `doctor` report of it;
+- using the capability probe for the home screen's own drawing (the probe itself is `doctor terminal`);
 - the 150 ms cross-fade of status text;
 - the ⧗ mark for hosts with a time limit (GCP IAP, AWS EICE);
 - the disk check in the add-host wizard's test step, and "d details" on its consent screen;

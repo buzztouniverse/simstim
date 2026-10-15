@@ -17,6 +17,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Image paste from the clipboard and dropped-file upload, into a private per-session folder.
 - The home screen: hosts and sessions side by side with a live preview, the new-session dialog (agent, folder, name, worktree), rename, delete with a confirm, the add-host wizard, a command palette, help, toasts and a first-run screen. Colours follow the terminal's own palette. Attach and detach keep the terminal's scrollback continuous within one run.
 - Folder completion in the new-session dialog: recent session folders and git repositories as hints, and Tab completing a typed path from the host.
+- `doctor terminal`: one batch of queries (DA1 last) that reports what the terminal supports, which is what agents get through the pass-through.
 - `flip`: a quick switcher that opens on every host's sessions. Host details can open an SSH shell on the host (`s`).
 - Running any command from the new-session dialog ("other…").
 - Key rebinding through `[keymap]` in `config.toml`, and `config keymap` to print it.

@@ -16,6 +16,12 @@ import (
 func doctorCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "doctor", Short: "Check this machine and its terminal"}
 	cmd.AddCommand(&cobra.Command{
+		Use:   "terminal",
+		Short: "Ask this terminal what it supports (keys, colours, synchronized output…)",
+		Args:  cobra.NoArgs,
+		RunE:  func(*cobra.Command, []string) error { return terminalProbe() },
+	})
+	cmd.AddCommand(&cobra.Command{
 		Use:   "keys",
 		Short: "Show every key as the terminal sends it, and which keys " + brand.DisplayName + " keeps",
 		Long: "Turns on the kitty keyboard protocol, then prints each key press as bytes.\n" +
