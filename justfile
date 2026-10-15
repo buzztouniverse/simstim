@@ -78,6 +78,10 @@ fmt:
 e2e: build
     python3 e2e/run.py bin/{{name}}
 
+# Make the README's screenshots (docs/images) from the demo.
+screenshots: build
+    scripts/screenshots.sh bin/{{name}}
+
 # A local release build, with no publishing.
 snapshot:
     APP_NAME={{name}} goreleaser release --snapshot --clean

@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="576" viewBox="0 0 972 576">
+<style>text{font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:14px;white-space:pre}</style>
+<rect width="972" height="576" rx="10" fill="#171717"/>
+<circle cx="22" cy="20" r="6" fill="#FF5F57"/>
+<circle cx="42" cy="20" r="6" fill="#FEBC2E"/>
+<circle cx="62" cy="20" r="6" fill="#28C840"/>
+<rect x="32.4" y="129.0" width="8.4" height="17.0" fill="#DDDDDD"/>
+<rect x="40.8" y="129.0" width="8.4" height="17.0" fill="#8056FF"/>
+<rect x="49.2" y="129.0" width="117.6" height="17.0" fill="#DDDDDD"/>
+<rect x="200.4" y="146.0" width="8.4" height="17.0" fill="#DDDDDD"/>
+<rect x="175.2" y="163.0" width="596.4" height="17.0" fill="#DDDDDD"/>
+<rect x="771.6" y="163.0" width="8.4" height="17.0" fill="#8056FF"/>
+<rect x="780.0" y="163.0" width="16.8" height="17.0" fill="#DDDDDD"/>
+<text x="24.0" y="57.0" textLength="16.8" fill="#393939">╭─</text>
+<text x="49.2" y="57.0" textLength="58.8" fill="#7A7A7A">simstim</text>
+<text x="116.4" y="57.0" textLength="630.0" fill="#393939">───────────────────────────────────────────────────────────────────────────</text>
+<text x="754.8" y="57.0" textLength="67.2" fill="#393939">3 hosts </text>
+<text x="822.0" y="57.0" textLength="8.4" fill="#393939">·</text>
+<text x="830.4" y="57.0" textLength="92.4" fill="#393939"> 5 sessions</text>
+<text x="931.2" y="57.0" textLength="16.8" fill="#393939">─╮</text>
+<text x="24.0" y="74.0" textLength="8.4" fill="#393939">│</text>
+<text x="40.8" y="74.0" textLength="42.0" fill="#393939">HOSTS</text>
+<text x="301.2" y="74.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="74.0" textLength="92.4" fill="#393939">SESSIONS ─ </text>
+<text x="410.4" y="74.0" textLength="58.8" fill="#0D7777">homelab</text>
+<text x="939.6" y="74.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="91.0" textLength="8.4" fill="#393939">│</text>
+<text x="57.6" y="91.0" textLength="25.2" fill="#7A7A7A">all</text>
+<text x="91.2" y="91.0" textLength="42.0" fill="#7A7A7A">hosts</text>
+<text x="234.0" y="91.0" textLength="8.4" fill="#7A7A7A">5</text>
+<text x="301.2" y="91.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="91.0" textLength="8.4" fill="#757E3C">●</text>
+<text x="334.8" y="91.0" textLength="176.4" fill="#7A7A7A">auth-refactor        </text>
+<text x="519.6" y="91.0" textLength="50.4" fill="#7A7A7A">claude</text>
+<text x="595.2" y="91.0" textLength="176.4" fill="#0D7777">/home/me/src/app     </text>
+<text x="780.0" y="91.0" textLength="109.2" fill="#757E3C">needs input  </text>
+<text x="897.6" y="91.0" textLength="33.6" fill="#393939"> 42s</text>
+<text x="939.6" y="91.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="108.0" textLength="8.4" fill="#393939">│</text>
+<text x="57.6" y="108.0" textLength="58.8" fill="#7A7A7A">gcp-dev</text>
+<text x="234.0" y="108.0" textLength="8.4" fill="#7A7A7A">1</text>
+<text x="242.4" y="108.0" textLength="50.4" fill="#393939">  38ms</text>
+<text x="301.2" y="108.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="108.0" textLength="8.4" fill="#4B368B">⠶</text>
+<text x="334.8" y="108.0" textLength="75.6" fill="#7A7A7A">api-tests</text>
+<text x="519.6" y="108.0" textLength="42.0" fill="#7A7A7A">codex</text>
+<text x="595.2" y="108.0" textLength="176.4" fill="#0D7777">/home/me/src/api     </text>
+<text x="780.0" y="108.0" textLength="109.2" fill="#4B368B">working      </text>
+<text x="897.6" y="108.0" textLength="33.6" fill="#393939">  7s</text>
+<text x="939.6" y="108.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="125.0" textLength="8.4" fill="#393939">│</text>
+<text x="40.8" y="125.0" textLength="8.4" fill="#393939">◌</text>
+<text x="57.6" y="125.0" textLength="235.2" fill="#393939">hetzner-box          offline</text>
+<text x="301.2" y="125.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="125.0" textLength="8.4" fill="#393939">○</text>
+<text x="334.8" y="125.0" textLength="75.6" fill="#7A7A7A">docs-site</text>
+<text x="519.6" y="125.0" textLength="67.2" fill="#7A7A7A">opencode</text>
+<text x="595.2" y="125.0" textLength="176.4" fill="#0D7777">/home/me/src/docs    </text>
+<text x="780.0" y="125.0" textLength="109.2" fill="#393939">idle         </text>
+<text x="897.6" y="125.0" textLength="33.6" fill="#393939"> 20m</text>
+<text x="939.6" y="125.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="142.0" textLength="8.4" fill="#393939">│</text>
+<text x="40.8" y="142.0" textLength="8.4" fill="#4B368B">▸</text>
+<text x="49.2" y="142.0" textLength="117.6" fill="#7A7A7A"> homelab      </text>
+<text x="166.8" y="142.0" textLength="16.8" fill="#5C5C5C">╭─</text>
+<text x="192.0" y="142.0" textLength="67.2" fill="#DDDDDD" font-weight="bold">Commands</text>
+<text x="267.6" y="142.0" textLength="537.6" fill="#5C5C5C">───────────────────────────────────────────────────────────────╮</text>
+<text x="805.2" y="142.0" textLength="84.0" fill="#393939">ted 0     </text>
+<text x="897.6" y="142.0" textLength="33.6" fill="#393939">  2h</text>
+<text x="939.6" y="142.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="159.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="159.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="183.6" y="159.0" textLength="8.4" fill="#8056FF">&gt;</text>
+<text x="200.4" y="159.0" textLength="8.4" fill="#171717">t</text>
+<text x="208.8" y="159.0" textLength="109.2" fill="#5C5C5C">ype a command</text>
+<text x="796.8" y="159.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="939.6" y="159.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="176.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="176.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="176.0" textLength="596.4" fill="#171717">  session: new                                                         </text>
+<text x="771.6" y="176.0" textLength="8.4" fill="#171717" font-weight="bold">n</text>
+<text x="796.8" y="176.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="805.2" y="176.0" textLength="126.0" fill="#393939">──────────────╮</text>
+<text x="939.6" y="176.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="193.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="193.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="193.0" textLength="562.8" fill="#DDDDDD">  session: attach                                                  </text>
+<text x="738.0" y="193.0" textLength="42.0" fill="#8056FF" font-weight="bold">enter</text>
+<text x="796.8" y="193.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="805.2" y="193.0" textLength="16.8" fill="#7A7A7A">ep</text>
+<text x="830.4" y="193.0" textLength="25.2" fill="#7A7A7A">old</text>
+<text x="864.0" y="193.0" textLength="50.4" fill="#7A7A7A">tokens</text>
+<text x="922.8" y="193.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="193.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="210.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="210.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="210.0" textLength="596.4" fill="#DDDDDD">  session: rename                                                      </text>
+<text x="771.6" y="210.0" textLength="8.4" fill="#8056FF" font-weight="bold">r</text>
+<text x="796.8" y="210.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="210.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="210.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="227.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="227.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="227.0" textLength="596.4" fill="#DDDDDD">  session: delete                                                      </text>
+<text x="771.6" y="227.0" textLength="8.4" fill="#8056FF" font-weight="bold">d</text>
+<text x="796.8" y="227.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="227.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="227.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="244.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="244.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="244.0" textLength="596.4" fill="#DDDDDD">  session: copy attach command                                         </text>
+<text x="771.6" y="244.0" textLength="8.4" fill="#8056FF" font-weight="bold">y</text>
+<text x="796.8" y="244.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="244.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="244.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="261.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="261.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="261.0" textLength="596.4" fill="#DDDDDD">  host: add                                                            </text>
+<text x="771.6" y="261.0" textLength="8.4" fill="#8056FF" font-weight="bold">a</text>
+<text x="796.8" y="261.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="261.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="261.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="278.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="278.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="278.0" textLength="596.4" fill="#DDDDDD">  host: details                                                        </text>
+<text x="771.6" y="278.0" textLength="8.4" fill="#8056FF" font-weight="bold">i</text>
+<text x="796.8" y="278.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="278.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="278.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="295.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="295.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="295.0" textLength="621.6" fill="#DDDDDD">  host: test                                                              </text>
+<text x="796.8" y="295.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="805.2" y="295.0" textLength="50.4" fill="#7A7A7A">write.</text>
+<text x="922.8" y="295.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="295.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="312.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="312.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="312.0" textLength="621.6" fill="#DDDDDD">  host: reconnect                                                         </text>
+<text x="796.8" y="312.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="312.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="312.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="329.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="329.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="329.0" textLength="621.6" fill="#DDDDDD">  host: remove                                                            </text>
+<text x="796.8" y="329.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="329.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="329.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="346.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="346.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="346.0" textLength="621.6" fill="#DDDDDD">  view: all hosts                                                         </text>
+<text x="796.8" y="346.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="922.8" y="346.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="346.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="363.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="363.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="175.2" y="363.0" textLength="596.4" fill="#DDDDDD">  view: filter                                                         </text>
+<text x="771.6" y="363.0" textLength="8.4" fill="#8056FF" font-weight="bold">/</text>
+<text x="796.8" y="363.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="805.2" y="363.0" textLength="16.8" fill="#246944">})</text>
+<text x="922.8" y="363.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="363.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="380.0" textLength="8.4" fill="#393939">│</text>
+<text x="166.8" y="380.0" textLength="16.8" fill="#5C5C5C">╰─</text>
+<text x="192.0" y="380.0" textLength="8.4" fill="#8056FF" font-weight="bold">↑</text>
+<text x="200.4" y="380.0" textLength="8.4" fill="#8056FF" font-weight="bold">↓</text>
+<text x="217.2" y="380.0" textLength="58.8" fill="#5C5C5C">choose </text>
+<text x="276.0" y="380.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="292.8" y="380.0" textLength="42.0" fill="#8056FF" font-weight="bold">enter</text>
+<text x="343.2" y="380.0" textLength="33.6" fill="#5C5C5C">run </text>
+<text x="376.8" y="380.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="393.6" y="380.0" textLength="25.2" fill="#8056FF" font-weight="bold">esc</text>
+<text x="427.2" y="380.0" textLength="42.0" fill="#5C5C5C">close</text>
+<text x="477.6" y="380.0" textLength="327.6" fill="#5C5C5C">──────────────────────────────────────╯</text>
+<text x="922.8" y="380.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="380.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="397.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="397.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="397.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="397.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="397.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="414.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="414.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="414.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="414.0" textLength="210.0" fill="#7A7A7A"> Run the migration tests?</text>
+<text x="922.8" y="414.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="414.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="431.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="431.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="431.0" textLength="8.4" fill="#393939">│</text>
+<text x="351.6" y="431.0" textLength="16.8" fill="#7A7A7A">go</text>
+<text x="376.8" y="431.0" textLength="33.6" fill="#7A7A7A">test</text>
+<text x="418.8" y="431.0" textLength="159.6" fill="#7A7A7A">./internal/auth/...</text>
+<text x="586.8" y="431.0" textLength="33.6" fill="#7A7A7A">-run</text>
+<text x="628.8" y="431.0" textLength="58.8" fill="#7A7A7A">Migrate</text>
+<text x="922.8" y="431.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="431.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="448.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="448.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="448.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="448.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="448.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="465.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="465.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="465.0" textLength="8.4" fill="#393939">│</text>
+<text x="343.2" y="465.0" textLength="16.8" fill="#7A7A7A">Do</text>
+<text x="368.4" y="465.0" textLength="25.2" fill="#7A7A7A">you</text>
+<text x="402.0" y="465.0" textLength="33.6" fill="#7A7A7A">want</text>
+<text x="444.0" y="465.0" textLength="16.8" fill="#7A7A7A">to</text>
+<text x="469.2" y="465.0" textLength="67.2" fill="#7A7A7A">proceed?</text>
+<text x="922.8" y="465.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="465.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="482.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="482.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="482.0" textLength="8.4" fill="#393939">│</text>
+<text x="343.2" y="482.0" textLength="8.4" fill="#0D7777">❯</text>
+<text x="351.6" y="482.0" textLength="58.8" fill="#0D7777"> 1. Yes</text>
+<text x="922.8" y="482.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="482.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="499.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="499.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="499.0" textLength="8.4" fill="#393939">│</text>
+<text x="360.0" y="499.0" textLength="16.8" fill="#7A7A7A">2.</text>
+<text x="385.2" y="499.0" textLength="25.2" fill="#7A7A7A">No,</text>
+<text x="418.8" y="499.0" textLength="25.2" fill="#7A7A7A">and</text>
+<text x="452.4" y="499.0" textLength="33.6" fill="#7A7A7A">tell</text>
+<text x="494.4" y="499.0" textLength="25.2" fill="#7A7A7A">the</text>
+<text x="528.0" y="499.0" textLength="42.0" fill="#7A7A7A">agent</text>
+<text x="578.4" y="499.0" textLength="33.6" fill="#7A7A7A">what</text>
+<text x="620.4" y="499.0" textLength="16.8" fill="#7A7A7A">to</text>
+<text x="645.6" y="499.0" textLength="16.8" fill="#7A7A7A">do</text>
+<text x="670.8" y="499.0" textLength="92.4" fill="#7A7A7A">differently</text>
+<text x="922.8" y="499.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="499.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="516.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="516.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="516.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="516.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="516.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="533.0" textLength="8.4" fill="#393939">│</text>
+<text x="301.2" y="533.0" textLength="8.4" fill="#393939">│</text>
+<text x="318.0" y="533.0" textLength="16.8" fill="#393939">╰─</text>
+<text x="343.2" y="533.0" textLength="58.8" fill="#393939">claude </text>
+<text x="402.0" y="533.0" textLength="8.4" fill="#393939">·</text>
+<text x="410.4" y="533.0" textLength="151.2" fill="#393939"> /home/me/src/app </text>
+<text x="561.6" y="533.0" textLength="8.4" fill="#393939">·</text>
+<text x="570.0" y="533.0" textLength="142.8" fill="#393939"> 612 MiB of 8 GiB</text>
+<text x="721.2" y="533.0" textLength="210.0" fill="#393939">────────────────────────╯</text>
+<text x="939.6" y="533.0" textLength="8.4" fill="#393939">│</text>
+<text x="24.0" y="550.0" textLength="16.8" fill="#393939">╰─</text>
+<text x="49.2" y="550.0" textLength="42.0" fill="#4B368B">enter</text>
+<text x="99.6" y="550.0" textLength="100.8" fill="#393939">new session </text>
+<text x="200.4" y="550.0" textLength="8.4" fill="#393939">·</text>
+<text x="217.2" y="550.0" textLength="25.2" fill="#4B368B">tab</text>
+<text x="250.8" y="550.0" textLength="75.6" fill="#393939">sessions </text>
+<text x="326.4" y="550.0" textLength="8.4" fill="#393939">·</text>
+<text x="343.2" y="550.0" textLength="8.4" fill="#4B368B">a</text>
+<text x="360.0" y="550.0" textLength="75.6" fill="#393939">add host </text>
+<text x="435.6" y="550.0" textLength="8.4" fill="#393939">·</text>
+<text x="452.4" y="550.0" textLength="50.4" fill="#4B368B">ctrl+o</text>
+<text x="511.2" y="550.0" textLength="75.6" fill="#393939">commands </text>
+<text x="586.8" y="550.0" textLength="8.4" fill="#393939">·</text>
+<text x="603.6" y="550.0" textLength="8.4" fill="#4B368B">?</text>
+<text x="620.4" y="550.0" textLength="33.6" fill="#393939">help</text>
+<text x="662.4" y="550.0" textLength="285.6" fill="#393939">─────────────────────────────────╯</text>
+</svg>

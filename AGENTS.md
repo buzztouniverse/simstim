@@ -46,6 +46,7 @@ Any change made on a test host by hand goes in [docs/sandbox-log.md](docs/sandbo
 | --- | --- |
 | `just build` | Host helpers (and the shadow terminal, if Zig 0.16 is installed), then the client, into `./bin` |
 | `just vt` | The shadow terminal (`vt/`, Zig 0.16) for Linux amd64 and arm64 |
+| `just screenshots` | The README's screenshots (`docs/images`), drawn from `demo` by `ttyshot` |
 | `just test` | Unit tests with the race detector |
 | `just lint` | `go vet`, golangci-lint, the name check |
 | `just e2e` | End-to-end tests against `E2E_HOST` |

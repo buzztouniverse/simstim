@@ -9,6 +9,7 @@
 //	sleep 500ms
 //	shot                                   (print the screen)
 //	expect "regex"                         (fail unless the screen matches)
+//	save path                              (write the screen with colours: SVG if path ends in .svg, else ANSI)
 package main
 
 import (
@@ -134,6 +135,20 @@ func main() {
 			}
 		case "shot":
 			fmt.Print("----\n" + screen() + "----\n")
+		case "save":
+			// The screen with its colours and styles: an SVG image for a
+			// path ending in .svg, otherwise ANSI text.
+			path := strings.TrimSpace(rest)
+			mu.Lock()
+			styled := emu.Render()
+			if strings.HasSuffix(path, ".svg") {
+				styled = svgScreen(emu)
+			}
+			mu.Unlock()
+			if err := os.WriteFile(path, []byte(styled), 0o644); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 		}
 	}
 	_ = cmd.Process.Kill()

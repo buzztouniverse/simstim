@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="972" height="576" viewBox="0 0 972 576">
+<style>text{font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:14px;white-space:pre}</style>
+<rect width="972" height="576" rx="10" fill="#171717"/>
+<circle cx="22" cy="20" r="6" fill="#FF5F57"/>
+<circle cx="42" cy="20" r="6" fill="#FEBC2E"/>
+<circle cx="62" cy="20" r="6" fill="#28C840"/>
+<rect x="32.4" y="129.0" width="8.4" height="17.0" fill="#DDDDDD"/>
+<rect x="40.8" y="129.0" width="8.4" height="17.0" fill="#8056FF"/>
+<rect x="49.2" y="129.0" width="193.2" height="17.0" fill="#DDDDDD"/>
+<rect x="242.4" y="129.0" width="50.4" height="17.0" fill="#5C5C5C"/>
+<rect x="292.8" y="129.0" width="8.4" height="17.0" fill="#DDDDDD"/>
+<text x="24.0" y="57.0" textLength="16.8" fill="#5C5C5C">╭─</text>
+<text x="49.2" y="57.0" textLength="58.8" fill="#DDDDDD" font-weight="bold">simstim</text>
+<text x="116.4" y="57.0" textLength="630.0" fill="#5C5C5C">───────────────────────────────────────────────────────────────────────────</text>
+<text x="754.8" y="57.0" textLength="67.2" fill="#5C5C5C">3 hosts </text>
+<text x="822.0" y="57.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="830.4" y="57.0" textLength="92.4" fill="#5C5C5C"> 5 sessions</text>
+<text x="931.2" y="57.0" textLength="16.8" fill="#5C5C5C">─╮</text>
+<text x="24.0" y="74.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="40.8" y="74.0" textLength="42.0" fill="#5C5C5C" font-weight="bold">HOSTS</text>
+<text x="301.2" y="74.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="74.0" textLength="67.2" fill="#5C5C5C" font-weight="bold">SESSIONS</text>
+<text x="385.2" y="74.0" textLength="25.2" fill="#5C5C5C"> ─ </text>
+<text x="410.4" y="74.0" textLength="58.8" fill="#04D7D7">homelab</text>
+<text x="939.6" y="74.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="91.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="32.4" y="91.0" textLength="268.8" fill="#DDDDDD">   all hosts            5       </text>
+<text x="301.2" y="91.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="91.0" textLength="8.4" fill="#D3E561">●</text>
+<text x="334.8" y="91.0" textLength="176.4" fill="#DDDDDD" font-weight="bold">auth-refactor        </text>
+<text x="511.2" y="91.0" textLength="84.0" fill="#DDDDDD"> claude   </text>
+<text x="595.2" y="91.0" textLength="176.4" fill="#04D7D7">/home/me/src/app     </text>
+<text x="780.0" y="91.0" textLength="109.2" fill="#D3E561">needs input  </text>
+<text x="897.6" y="91.0" textLength="33.6" fill="#5C5C5C"> 41s</text>
+<text x="939.6" y="91.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="108.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="32.4" y="108.0" textLength="210.0" fill="#DDDDDD">   gcp-dev              1</text>
+<text x="242.4" y="108.0" textLength="50.4" fill="#5C5C5C">  38ms</text>
+<text x="301.2" y="108.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="108.0" textLength="8.4" fill="#8056FF">⠶</text>
+<text x="326.4" y="108.0" textLength="268.8" fill="#DDDDDD"> api-tests             codex    </text>
+<text x="595.2" y="108.0" textLength="176.4" fill="#04D7D7">/home/me/src/api     </text>
+<text x="780.0" y="108.0" textLength="109.2" fill="#8056FF">working      </text>
+<text x="897.6" y="108.0" textLength="33.6" fill="#5C5C5C">  6s</text>
+<text x="939.6" y="108.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="125.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="40.8" y="125.0" textLength="8.4" fill="#5C5C5C">◌</text>
+<text x="57.6" y="125.0" textLength="235.2" fill="#5C5C5C">hetzner-box          offline</text>
+<text x="301.2" y="125.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="125.0" textLength="8.4" fill="#5C5C5C">○</text>
+<text x="326.4" y="125.0" textLength="268.8" fill="#DDDDDD"> docs-site             opencode </text>
+<text x="595.2" y="125.0" textLength="176.4" fill="#04D7D7">/home/me/src/docs    </text>
+<text x="780.0" y="125.0" textLength="109.2" fill="#5C5C5C">idle         </text>
+<text x="897.6" y="125.0" textLength="33.6" fill="#5C5C5C"> 20m</text>
+<text x="939.6" y="125.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="142.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="40.8" y="142.0" textLength="8.4" fill="#171717">▸</text>
+<text x="57.6" y="142.0" textLength="159.6" fill="#171717" font-weight="bold">homelab            </text>
+<text x="217.2" y="142.0" textLength="25.2" fill="#171717">  4</text>
+<text x="242.4" y="142.0" textLength="50.4" fill="#171717">   4ms</text>
+<text x="301.2" y="142.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="142.0" textLength="8.4" fill="#31BB71">✓</text>
+<text x="326.4" y="142.0" textLength="268.8" fill="#DDDDDD"> notes                 shell    </text>
+<text x="595.2" y="142.0" textLength="176.4" fill="#04D7D7">/home/me             </text>
+<text x="780.0" y="142.0" textLength="109.2" fill="#5C5C5C">exited 0     </text>
+<text x="897.6" y="142.0" textLength="33.6" fill="#5C5C5C">  2h</text>
+<text x="939.6" y="142.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="159.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="159.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="939.6" y="159.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="176.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="176.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="176.0" textLength="16.8" fill="#393939">╭─</text>
+<text x="343.2" y="176.0" textLength="109.2" fill="#DDDDDD" font-weight="bold">auth-refactor</text>
+<text x="460.8" y="176.0" textLength="470.4" fill="#393939">───────────────────────────────────────────────────────╮</text>
+<text x="939.6" y="176.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="193.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="193.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="193.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="193.0" textLength="16.8" fill="#DDDDDD" font-weight="bold">&gt; </text>
+<text x="351.6" y="193.0" textLength="571.2" fill="#DDDDDD">Move the session store to the new token format, and keep old tokens </text>
+<text x="922.8" y="193.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="193.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="210.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="210.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="210.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="210.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="210.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="227.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="227.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="227.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="227.0" textLength="8.4" fill="#ED61D7">●</text>
+<text x="351.6" y="227.0" textLength="571.2" fill="#DDDDDD">I'll read the current store first.                                  </text>
+<text x="922.8" y="227.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="227.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="244.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="244.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="244.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="244.0" textLength="344.4" fill="#7A7A7A">  Read internal/auth/store.go (212 lines)</text>
+<text x="922.8" y="244.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="244.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="261.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="261.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="261.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="261.0" textLength="336.0" fill="#7A7A7A">  Read internal/auth/token.go (96 lines)</text>
+<text x="922.8" y="261.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="261.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="278.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="278.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="278.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="278.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="278.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="295.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="295.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="295.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="295.0" textLength="8.4" fill="#ED61D7">●</text>
+<text x="351.6" y="295.0" textLength="571.2" fill="#DDDDDD">Plan: add a v2 encoder, read both formats, migrate on write.        </text>
+<text x="922.8" y="295.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="295.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="312.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="312.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="312.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="312.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="312.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="329.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="329.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="329.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="329.0" textLength="8.4" fill="#ED61D7">●</text>
+<text x="351.6" y="329.0" textLength="571.2" fill="#DDDDDD">Update(internal/auth/token.go)                                      </text>
+<text x="922.8" y="329.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="329.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="346.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="346.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="346.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="346.0" textLength="369.6" fill="#31BB71">  + func encodeV2(t Token) ([]byte, error) {</text>
+<text x="922.8" y="346.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="346.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="363.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="363.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="363.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="363.0" textLength="487.2" fill="#31BB71">  +     return json.Marshal(tokenV2{ID: t.ID, Exp: t.Exp})</text>
+<text x="922.8" y="363.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="363.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="380.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="380.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="380.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="380.0" textLength="218.4" fill="#D74E6F">  - return legacyEncode(t)</text>
+<text x="922.8" y="380.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="380.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="397.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="397.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="397.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="397.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="397.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="414.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="414.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="414.0" textLength="8.4" fill="#393939">│</text>
+<text x="334.8" y="414.0" textLength="210.0" fill="#DDDDDD" font-weight="bold"> Run the migration tests?</text>
+<text x="922.8" y="414.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="414.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="431.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="431.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="431.0" textLength="8.4" fill="#393939">│</text>
+<text x="326.4" y="431.0" textLength="596.4" fill="#DDDDDD">   go test ./internal/auth/... -run Migrate                            </text>
+<text x="922.8" y="431.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="431.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="448.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="448.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="448.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="448.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="448.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="465.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="465.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="465.0" textLength="8.4" fill="#393939">│</text>
+<text x="326.4" y="465.0" textLength="596.4" fill="#DDDDDD">  Do you want to proceed?                                              </text>
+<text x="922.8" y="465.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="465.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="482.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="482.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="482.0" textLength="8.4" fill="#393939">│</text>
+<text x="343.2" y="482.0" textLength="8.4" fill="#04D7D7">❯</text>
+<text x="351.6" y="482.0" textLength="58.8" fill="#04D7D7"> 1. Yes</text>
+<text x="922.8" y="482.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="482.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="499.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="499.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="499.0" textLength="8.4" fill="#393939">│</text>
+<text x="326.4" y="499.0" textLength="596.4" fill="#DDDDDD">    2. No, and tell the agent what to do differently                   </text>
+<text x="922.8" y="499.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="499.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="516.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="516.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="516.0" textLength="8.4" fill="#393939">│</text>
+<text x="922.8" y="516.0" textLength="8.4" fill="#393939">│</text>
+<text x="939.6" y="516.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="533.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="301.2" y="533.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="318.0" y="533.0" textLength="16.8" fill="#393939">╰─</text>
+<text x="343.2" y="533.0" textLength="58.8" fill="#5C5C5C">claude </text>
+<text x="402.0" y="533.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="410.4" y="533.0" textLength="151.2" fill="#5C5C5C"> /home/me/src/app </text>
+<text x="561.6" y="533.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="570.0" y="533.0" textLength="142.8" fill="#5C5C5C"> 612 MiB of 8 GiB</text>
+<text x="721.2" y="533.0" textLength="210.0" fill="#393939">────────────────────────╯</text>
+<text x="939.6" y="533.0" textLength="8.4" fill="#5C5C5C">│</text>
+<text x="24.0" y="550.0" textLength="16.8" fill="#5C5C5C">╰─</text>
+<text x="49.2" y="550.0" textLength="42.0" fill="#8056FF" font-weight="bold">enter</text>
+<text x="99.6" y="550.0" textLength="100.8" fill="#5C5C5C">new session </text>
+<text x="200.4" y="550.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="217.2" y="550.0" textLength="25.2" fill="#8056FF" font-weight="bold">tab</text>
+<text x="250.8" y="550.0" textLength="75.6" fill="#5C5C5C">sessions </text>
+<text x="326.4" y="550.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="343.2" y="550.0" textLength="8.4" fill="#8056FF" font-weight="bold">a</text>
+<text x="360.0" y="550.0" textLength="75.6" fill="#5C5C5C">add host </text>
+<text x="435.6" y="550.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="452.4" y="550.0" textLength="50.4" fill="#8056FF" font-weight="bold">ctrl+o</text>
+<text x="511.2" y="550.0" textLength="75.6" fill="#5C5C5C">commands </text>
+<text x="586.8" y="550.0" textLength="8.4" fill="#5C5C5C">·</text>
+<text x="603.6" y="550.0" textLength="8.4" fill="#8056FF" font-weight="bold">?</text>
+<text x="620.4" y="550.0" textLength="33.6" fill="#5C5C5C">help</text>
+<text x="662.4" y="550.0" textLength="285.6" fill="#5C5C5C">─────────────────────────────────╯</text>
+</svg>

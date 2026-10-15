@@ -4,6 +4,8 @@
 
 simstim runs Claude Code, Codex, opencode, Gemini CLI, Amp or a plain shell in a session on a host you own: a VPS, a cloud VM or a homelab machine. Close the laptop, change networks, switch devices: the session keeps running. Come back, and you flip straight back in. Your terminal draws the agent's real screen, byte for byte, so keys, colours, scrollback, clipboard and notifications work as they do locally.
 
+![The home screen: hosts on the left; sessions on the selected host with their agent, folder and state; and a live preview of a session waiting on a permission prompt](docs/images/home.svg)
+
 > **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 34 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet. See [the status](docs/status.md).
 
 ## Why
@@ -61,6 +63,25 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 | `flip` | Quick switcher: every host's sessions, then attach |
 | `doctor keys`, `doctor terminal` | Show what your terminal sends for each key, and what it supports |
 | `config keymap` | Show the home screen's keys; rebind them under `[keymap]` in `config.toml` |
+| `demo [--empty]` | Try the home screen with sample hosts and sessions; nothing connects anywhere |
+
+## Screens
+
+Every action is a key away, and each dialog lists its keys on its bottom edge. `simstim demo` opens these screens with sample data, so you can try them before you add a host.
+
+**New session.** Pick the agent, then the folder, with Tab completion from the host. A session can get its own git worktree.
+
+![The new-session dialog: agent choice, a folder with completions from the host, a name, and a worktree option](docs/images/new-session.svg)
+
+**Commands.** Ctrl+O lists every action and its key. Type to filter.
+
+![The command palette, listing session, host and view commands with their keys](docs/images/commands.svg)
+
+**Add a host.** The wizard offers the hosts in your `~/.ssh/config`, tests the connection, and installs the helper with your consent.
+
+![Step 1 of the add-host wizard, offering hosts from the SSH config](docs/images/add-host.svg)
+
+The images use a dark theme. In your terminal, the screens use your own colour palette. `just screenshots` makes them again from the demo.
 
 ## Docs
 

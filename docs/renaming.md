@@ -25,3 +25,4 @@ The script changes the brand package, the module path and imports (if given), an
 2. Rename the local folder and update the git remote.
 3. Hosts that already run the old helper keep their sessions under `~/.local/share/<old>` and `~/.local/state/<old>`. Remove them after those sessions end.
 4. Update the Homebrew tap and the install script URLs.
+5. Make the README's screenshots again, as they show the name: `just screenshots`.
