@@ -19,3 +19,4 @@ coverage.*
 .vscode/
 *.swp
 .drop-test.txt
+__pycache__/
