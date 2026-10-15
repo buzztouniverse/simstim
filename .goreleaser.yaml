@@ -22,7 +22,7 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: cli
-    main: ./cmd/cli
+    main: .
     binary: "{{ .Env.APP_NAME }}"
     env: [CGO_ENABLED=0]
     goos: [darwin, linux]

@@ -52,7 +52,7 @@ _vt-if-zig:
 # Build the helpers, then the client for this machine, into ./bin.
 build: helpers _vt-if-zig
     mkdir -p bin
-    CGO_ENABLED=0 go build -trimpath -ldflags '{{ldflags}}' -o bin/{{name}} ./cmd/cli
+    CGO_ENABLED=0 go build -trimpath -ldflags '{{ldflags}}' -o bin/{{name}} .
     cp {{helpers}}/host-linux-amd64 bin/{{name}}-host-linux-amd64
     @echo "built bin/{{name}} {{version}}"
 

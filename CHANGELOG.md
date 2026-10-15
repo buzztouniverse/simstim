@@ -44,6 +44,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- `go install github.com/iAmLakshya/simstim@latest` installs the client under its own name: its main moved to the root of the module, and the command tree to `internal/cli`.
 - CI is hardened: every action is pinned to a full commit SHA, each job asks for the least token permissions, the checkout keeps no credentials, and zizmor lints the workflows. govulncheck runs on every push, and the toolchain is Go 1.26.9, which fixes two standard-library issues it found.
 - Releases are signed and traceable: cosign signs `checksums.txt` without a key (a Sigstore bundle), each archive gets an SBOM, a GitHub attestation and a SLSA level 3 provenance file, and the notes come from this CHANGELOG (`scripts/release-notes.sh`). A Homebrew cask is built with every release, ready for a tap.
 - Builds are reproducible: `just repro` (also in CI) builds every release binary twice from empty caches and checks they match byte for byte.

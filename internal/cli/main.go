@@ -1,5 +1,7 @@
-// Command cli is the client: the launcher and every command.
-package main
+// Package cli is the client's command tree: the launcher and every command.
+// The binary's main (main.go at the repository root) calls Main, and
+// cmd/docgen builds the reference docs from Root.
+package cli
 
 import (
 	"context"
@@ -23,16 +25,19 @@ const (
 	exitMissing = 3
 )
 
-func main() {
+// Main runs the client with the process's arguments and returns its exit
+// code.
+func Main() int {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM)
 	defer stop()
-	root := rootCmd()
-	if err := root.ExecuteContext(ctx); err != nil {
-		os.Exit(printError(err))
+	if err := Root().ExecuteContext(ctx); err != nil {
+		return printError(err)
 	}
+	return 0
 }
 
-func rootCmd() *cobra.Command {
+// Root builds the command tree.
+func Root() *cobra.Command {
 	root := &cobra.Command{
 		Use:           brand.Name,
 		Short:         "Run any coding agent on any host, and use it as if it ran here",

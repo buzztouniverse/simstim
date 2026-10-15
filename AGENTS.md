@@ -8,7 +8,8 @@ A client and a host helper that run AI coding agents in sessions on remote hosts
 
 | Path | Contents |
 | --- | --- |
-| `cmd/cli` | The client binary |
+| `main.go` | The client's main, at the root so `go install` names it right |
+| `internal/cli` | The client's command tree (cobra) |
 | `cmd/host` | The host helper binary, installed on hosts by the client |
 | `internal/brand` | The product name. **The only place that spells it.** |
 | `internal/proto` | The wire protocol |
