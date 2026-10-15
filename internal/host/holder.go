@@ -78,6 +78,11 @@ type Holder struct {
 	ended     proto.Ended
 	dirty     bool
 	oomBase   int64
+	// From agent hooks.
+	hookSeen    bool
+	hookBusy    bool
+	lastTurnEnd time.Time
+	notifyMsg   string
 }
 
 // RunHolder runs the holder for session id until the session is killed.
@@ -308,8 +313,12 @@ func (h *Holder) tick() {
 			switch {
 			case h.needInput:
 				state, src = StateNeedsInput, "notify"
+			case h.hookBusy:
+				state, src = StateWorking, "hook"
 			case h.busy:
 				state, src = StateWorking, "progress"
+			case h.hookSeen && !h.lastTurnEnd.IsZero() && time.Since(h.lastTurnEnd) < 3*time.Second:
+				state, src = StateIdle, "hook"
 			case time.Since(h.lastOut) < 3*time.Second:
 				state, src = StateWorking, "output"
 			}
@@ -318,6 +327,8 @@ func (h *Holder) tick() {
 				h.m.Status = Status{State: state, Since: time.Now().UTC(), Source: src}
 				if oom {
 					h.m.Status.OOM, h.m.Status.Reason = true, reason
+				} else if state == StateNeedsInput && h.notifyMsg != "" {
+					h.m.Status.Reason = h.notifyMsg
 				}
 				h.dirty = true
 			}
@@ -466,6 +477,7 @@ func (h *Holder) input(c *hclient, p []byte) {
 	}
 	h.leader = c
 	h.needInput = false
+	h.notifyMsg = ""
 	h.mu.Unlock()
 	if _, err := h.ptmx.Write(p); err != nil {
 		h.log.Printf("pty write: %v", err)
@@ -545,6 +557,40 @@ func (h *Holder) request(c *hclient, req proto.Request) {
 		h.dirty = true
 		h.mu.Unlock()
 		reply(map[string]string{"name": args.Name}, nil)
+	case "hook":
+		var ev HookEvent
+		if json.Unmarshal(req.Args, &ev) == nil {
+			h.mu.Lock()
+			h.applyHook(ev)
+			h.mu.Unlock()
+		}
+		reply(map[string]bool{"ok": true}, nil)
+	case "send":
+		var args struct {
+			Text  string `json:"text"`
+			Enter bool   `json:"enter"`
+		}
+		if json.Unmarshal(req.Args, &args) != nil {
+			reply(nil, &proto.Error{Code: "bad_request", Message: "text is needed"})
+			return
+		}
+		h.mu.Lock()
+		exited := h.exited
+		h.needInput = false
+		h.mu.Unlock()
+		if exited {
+			reply(nil, &proto.Error{Code: "exited", Message: "the session has ended"})
+			return
+		}
+		data := []byte(args.Text)
+		if args.Enter {
+			data = append(data, '\r')
+		}
+		if _, err := h.ptmx.Write(data); err != nil {
+			reply(nil, &proto.Error{Code: "write", Message: err.Error()})
+			return
+		}
+		reply(map[string]int{"bytes": len(data)}, nil)
 	case "kill":
 		reply(map[string]bool{"killed": true}, nil)
 		go h.kill("killed by request")

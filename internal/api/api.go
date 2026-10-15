@@ -89,3 +89,12 @@ type SetupArgs struct {
 type SetupResult struct {
 	Steps []Check `json:"steps"`
 }
+
+// RestoreResult is one session that restore looked at.
+type RestoreResult struct {
+	ID     string   `json:"id"`
+	Name   string   `json:"name"`
+	Action string   `json:"action"` // restored, skipped, failed
+	Why    string   `json:"why,omitempty"`
+	Argv   []string `json:"argv,omitempty"`
+}

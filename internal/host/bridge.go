@@ -21,7 +21,7 @@ import (
 )
 
 // Features this host helper offers. Clients check them before using a feature.
-var Features = []string{"attach.replay", "upload", "peek", "setup", "rename"}
+var Features = []string{"attach.replay", "upload", "peek", "setup", "rename", "send", "hooks", "restore"}
 
 // MaxUpload is the largest file a client may upload.
 const MaxUpload = 16 << 20
@@ -169,6 +169,29 @@ func (b *bridge) handle(req proto.Request) {
 			return
 		}
 		b.reply(req.ID, res, nil)
+	case "send":
+		var a struct {
+			ID    string `json:"id"`
+			Text  string `json:"text"`
+			Enter bool   `json:"enter"`
+		}
+		_ = json.Unmarshal(req.Args, &a)
+		if !validID(a.ID) {
+			b.reply(req.ID, nil, UserError("not_found", "no session "+a.ID, ""))
+			return
+		}
+		res, err := HolderRequest(a.ID, "send", map[string]any{"text": a.Text, "enter": a.Enter}, 3*time.Second)
+		if err != nil {
+			b.reply(req.ID, nil, err)
+			return
+		}
+		b.reply(req.ID, res, nil)
+	case "restore":
+		var a struct {
+			All bool `json:"all"`
+		}
+		_ = json.Unmarshal(req.Args, &a)
+		b.reply(req.ID, Restore(a.All), nil)
 	case "doctor":
 		b.reply(req.ID, Doctor(), nil)
 	case "setup":

@@ -97,3 +97,18 @@ func (c *Conn) RoundTrip(ctx context.Context) (time.Duration, error) {
 	}
 	return time.Since(start), nil
 }
+
+// SendText types text into a session without attaching.
+func (c *Conn) SendText(ctx context.Context, id, text string, enter bool) error {
+	return c.Call(ctx, "send", map[string]any{"id": id, "text": text, "enter": enter}, nil)
+}
+
+// RestoreResult is one session that restore looked at.
+type RestoreResult = api.RestoreResult
+
+// Restore asks the host to start again sessions a restart stopped.
+func (c *Conn) Restore(ctx context.Context, all bool) ([]RestoreResult, error) {
+	var out []RestoreResult
+	err := c.Call(ctx, "restore", map[string]bool{"all": all}, &out)
+	return out, err
+}

@@ -306,3 +306,24 @@ func age(t time.Time) string {
 		return fmt.Sprintf("%dd", int(d.Hours()/24))
 	}
 }
+
+func sendCmd() *cobra.Command {
+	var noEnter bool
+	cmd := &cobra.Command{
+		Use:     "send <host>/<session> <text>",
+		Short:   "Type text into a session without attaching, then press Enter",
+		Example: "  " + brand.Name + " send my-vps/auth-fix \"run the tests and fix what fails\"",
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return withSession(cmd.Context(), args[0], func(ctx context.Context, h client.Host, conn *client.Conn, s *client.Session) error {
+				if err := conn.SendText(ctx, s.ID, args[1], !noEnter); err != nil {
+					return err
+				}
+				fmt.Printf("Sent to %s on %s.\n", s.Name, h.Name)
+				return nil
+			})
+		},
+	}
+	cmd.Flags().BoolVar(&noEnter, "no-enter", false, "do not press Enter after the text")
+	return cmd
+}

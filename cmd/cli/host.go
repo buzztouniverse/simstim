@@ -19,7 +19,7 @@ import (
 
 func hostCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "host", Short: "Add, list, test and remove hosts"}
-	cmd.AddCommand(hostAddCmd(), hostLsCmd(), hostRmCmd(), hostTestCmd(), hostDoctorCmd())
+	cmd.AddCommand(hostAddCmd(), hostLsCmd(), hostRmCmd(), hostTestCmd(), hostDoctorCmd(), hostRestoreCmd())
 	return cmd
 }
 
@@ -296,4 +296,39 @@ func printJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
+}
+
+func hostRestoreCmd() *cobra.Command {
+	var all bool
+	cmd := &cobra.Command{
+		Use:   "restore <name>",
+		Short: "Start again the sessions a host restart stopped (the host also does this at boot)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			h, err := client.FindHost(args[0])
+			if err != nil {
+				return err
+			}
+			ctx, cancel := context.WithTimeout(cmd.Context(), 2*time.Minute)
+			defer cancel()
+			conn, err := client.Dial(ctx, h, true)
+			if err != nil {
+				return err
+			}
+			defer conn.Close()
+			res, err := conn.Restore(ctx, all)
+			if err != nil {
+				return err
+			}
+			if len(res) == 0 {
+				fmt.Printf("Nothing to restore on %s.\n", h.Name)
+			}
+			for _, r := range res {
+				fmt.Printf("%-10s %-20s %-9s %s\n", r.ID, r.Name, r.Action, r.Why)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().BoolVar(&all, "all", false, "also restart sessions whose holder crashed without a host restart")
+	return cmd
 }

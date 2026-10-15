@@ -45,7 +45,7 @@ func rootCmd() *cobra.Command {
 			return runHome(cmd.Context())
 		},
 	}
-	root.AddCommand(hostCmd(), newCmd(), lsCmd(), attachCmd(), killCmd(), renameCmd(), doctorCmd(), versionCmd())
+	root.AddCommand(hostCmd(), newCmd(), lsCmd(), attachCmd(), sendCmd(), killCmd(), renameCmd(), doctorCmd(), versionCmd())
 	return root
 }
 

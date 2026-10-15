@@ -119,6 +119,11 @@ func New(a NewArgs) (*SessionInfo, error) {
 	if strings.HasPrefix(argv[0], "~/") {
 		argv[0] = expandHome(argv[0])
 	}
+	var hooks []string
+	if known && len(agent.Hooks) > 0 && len(a.Argv) == 0 {
+		hooks = hookArgs(agent.Hooks)
+		argv = append(argv, hooks...)
+	}
 	if _, err := lookPath(argv[0], envValue(env, "PATH")); err != nil {
 		return nil, UserError("agent_missing", fmt.Sprintf("%s is not installed on this host", argv[0]), "Install it on the host, then try again.")
 	}
@@ -144,6 +149,7 @@ func New(a NewArgs) (*SessionInfo, error) {
 	if known {
 		m.Agent.ResumeArgv = agent.Resume
 		m.Agent.ContinueArgv = agent.Continue
+		m.Agent.Hooks = hooks
 		if agent.IDCapture == "choose" {
 			m.Agent.AgentSessionID = vars["session_uuid"]
 			m.Agent.IDSource = "chosen"
@@ -445,6 +451,9 @@ func Setup(a SetupArgs) SetupResult {
 				Detail: map[bool]string{true: "turned on", false: "could not turn it on"}[ok],
 				Fix:    "sudo loginctl enable-linger " + u.Username})
 		}
+	}
+	if a.Linger {
+		res.Steps = append(res.Steps, InstallRestoreUnit())
 	}
 	for name, src := range a.Terminfo {
 		if HasTerminfo(name) {

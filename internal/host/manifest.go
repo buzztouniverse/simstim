@@ -51,12 +51,22 @@ type Manifest struct {
 
 // AgentInfo is the agent part of a manifest.
 type AgentInfo struct {
-	Kind           string   `json:"kind"`
-	Argv           []string `json:"argv"`
-	ResumeArgv     []string `json:"resume_argv,omitempty"`
-	ContinueArgv   []string `json:"continue_argv,omitempty"`
-	AgentSessionID string   `json:"agent_session_id,omitempty"`
-	IDSource       string   `json:"id_source,omitempty"`
+	Kind           string    `json:"kind"`
+	Argv           []string  `json:"argv"`
+	ResumeArgv     []string  `json:"resume_argv,omitempty"`
+	ContinueArgv   []string  `json:"continue_argv,omitempty"`
+	AgentSessionID string    `json:"agent_session_id,omitempty"`
+	IDSource       string    `json:"id_source,omitempty"`
+	IDHistory      []IDEvent `json:"id_history,omitempty"`
+	// Hooks are the extra arguments that report status; kept so a respawn adds them again.
+	Hooks []string `json:"hooks,omitempty"`
+}
+
+// IDEvent records a change of the agent's own session ID, for example after /clear.
+type IDEvent struct {
+	ID     string    `json:"id"`
+	Source string    `json:"source,omitempty"`
+	At     time.Time `json:"at"`
 }
 
 // TermInfo is the terminal identity given to the agent.

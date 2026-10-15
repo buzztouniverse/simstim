@@ -20,7 +20,18 @@ type Agent struct {
 	// IDCapture says how we learn the agent's own session ID:
 	// "choose" (we pass it), "hook", "scan" or "none".
 	IDCapture string `json:"id_capture"`
+	// Hooks are extra arguments that make the agent report its status and session
+	// ID to the holder. {hook} is replaced by the command that forwards an event.
+	Hooks []string `json:"hooks,omitempty"`
 }
+
+// claudeHooks makes Claude Code report its session ID, prompts, finished turns
+// and notifications, through --settings (merged with the user's own settings).
+const claudeHooks = `{"hooks":{` +
+	`"SessionStart":[{"hooks":[{"type":"command","command":"{hook} session-start","timeout":5}]}],` +
+	`"UserPromptSubmit":[{"hooks":[{"type":"command","command":"{hook} prompt","timeout":5}]}],` +
+	`"Stop":[{"hooks":[{"type":"command","command":"{hook} stop","timeout":5}]}],` +
+	`"Notification":[{"hooks":[{"type":"command","command":"{hook} notification","timeout":5}]}]}}`
 
 // Table is the built-in agent table, checked against each agent's docs in October 2026.
 var Table = []Agent{
@@ -30,6 +41,7 @@ var Table = []Agent{
 		Resume:    []string{"claude", "--resume", "{agent_session_id}"},
 		Continue:  []string{"claude", "--continue"},
 		IDCapture: "choose",
+		Hooks:     []string{"--settings", claudeHooks},
 	},
 	{
 		Kind: "codex", Title: "Codex", Binaries: []string{"codex"},
@@ -38,6 +50,8 @@ var Table = []Agent{
 		Resume:    []string{"codex", "--no-daemon", "resume", "{agent_session_id}"},
 		Continue:  []string{"codex", "--no-daemon", "resume", "--last"},
 		IDCapture: "hook",
+		// Codex runs the notify program after each turn, with a JSON argument.
+		Hooks: []string{"-c", `notify=["{hook_bin}","hook","codex-notify"]`},
 	},
 	{
 		Kind: "opencode", Title: "opencode", Binaries: []string{"opencode"},

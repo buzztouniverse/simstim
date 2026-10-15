@@ -17,6 +17,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Image paste from the clipboard and dropped-file upload, into a private per-session folder.
 - CLI commands: `host add/ls/rm/test/doctor`, `new`, `ls`, `attach`, `kill`, `rename`, `doctor keys`, `version`.
 - End-to-end tests that drive the real client in a pseudo-terminal against a real host (`just e2e`).
+- Agent status hooks, as data in the agent table: Claude Code through `--settings`, Codex through `notify`. They report prompts, finished turns, notifications and the agent's own session ID (which follows `/clear`).
+- `send`: type text into a session without attaching.
+- Respawn after a host restart: `restore` brings sessions back with each agent's resume or continue command, and a boot-time user unit runs it. `host restore` runs it on demand.
 
 ### Changed
 

@@ -22,6 +22,7 @@ Usage:
   %[1]s rm <id>             stop a session and remove it
   %[1]s doctor [--json]     check this host
   %[1]s keytest             print every key the terminal sends
+  %[1]s restore [--all]     start again sessions a restart (or, with --all, a crash) stopped
   %[1]s version
 `
 
@@ -105,6 +106,20 @@ func main() {
 				found = append(found, k)
 			}
 			fmt.Printf("  agents: %s\n", strings.Join(found, ", "))
+		}
+	case "hook":
+		if len(os.Args) >= 3 {
+			host.RunHook(os.Args[2], os.Args[3:])
+		}
+		return
+	case "restore":
+		res := host.Restore(hasFlag("--all"))
+		if hasFlag("--json") {
+			err = printJSON(res)
+		} else {
+			for _, r := range res {
+				fmt.Printf("%-10s %-20s %-9s %s\n", r.ID, r.Name, r.Action, r.Why)
+			}
 		}
 	case "keytest":
 		err = host.KeyTest()
