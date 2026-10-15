@@ -24,10 +24,16 @@ func TestPruneKeepsWhatIsInUse(t *testing.T) {
 	if err := os.Symlink("now", filepath.Join(bin, "current")); err != nil {
 		t.Fatal(err)
 	}
-	// Every version is old, except "fresh", installed a minute ago.
-	old := time.Now().Add(-2 * pruneGrace)
-	for _, v := range []string{"old-1", "old-2", "running", "in-unit", "now"} {
-		if err := os.Chtimes(filepath.Join(bin, v), old, old); err != nil {
+	// Every version is old, oldest first, except "fresh", installed a
+	// minute ago; "new-1" and "new-2" are the newest old ones.
+	for _, v := range []string{"new-1", "new-2"} {
+		if err := os.MkdirAll(filepath.Join(bin, v), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i, v := range []string{"old-1", "old-2", "running", "in-unit", "now", "new-1", "new-2"} {
+		at := time.Now().Add(-3*pruneGrace + time.Duration(i)*time.Minute)
+		if err := os.Chtimes(filepath.Join(bin, v), at, at); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -61,10 +67,10 @@ func TestPruneKeepsWhatIsInUse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"old-1", "old-2"}; !reflect.DeepEqual(removed, want) {
+	if want := []string{"old-2", "old-1"}; !reflect.DeepEqual(removed, want) { // newest first
 		t.Errorf("removed %q, want %q", removed, want)
 	}
-	for _, v := range []string{"running", "in-unit", "now", "fresh", ".upload.1", "current"} {
+	for _, v := range []string{"running", "in-unit", "now", "fresh", "new-1", "new-2", ".upload.1", "current"} {
 		if _, err := os.Lstat(filepath.Join(bin, v)); err != nil {
 			t.Errorf("%s was removed: %v", v, err)
 		}

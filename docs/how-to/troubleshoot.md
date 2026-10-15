@@ -31,7 +31,7 @@ simstim doctor --fix
 | | Ghostty's terminfo is missing: compiles this computer's `xterm-ghostty` entry into `~/.terminfo` on the host. Run it from Ghostty, which has the entry. |
 | | The `current` helper link is broken, so hooks and the restore unit cannot find the helper: points it at the helper in use. |
 | | Session sockets with no session behind them: removes them. |
-| | Old helper versions that nothing uses: removes them, keeping the newest three and every one a session runs. |
+| | Old helper versions that nothing uses: removes them, keeping the newest three and every one in use. Each install does this by itself too. |
 | `doctor --fix` | SSH configs generated for hosts you removed: removes them. |
 | | ControlMaster sockets whose SSH master died, which can make connections hang: removes them. |
 

@@ -21,8 +21,8 @@ import (
 // user agrees. Nothing here uses sudo: a fix that needs root is printed for
 // the user to run.
 
-// keepHelpers is how many helper versions the old-helpers fix keeps, besides
-// the ones in use.
+// keepHelpers is how many of the newest helper versions Prune and the
+// old-helpers fix always keep, besides the ones in use.
 const keepHelpers = 3
 
 // selfExe is this helper's own path; tests replace it.
@@ -218,58 +218,19 @@ func staleSocketsFix() []fixItem {
 }
 
 func oldHelpersFix() []fixItem {
-	dirs := helperDirs()
-	used := helpersInUse()
-	var old []string
-	var size int64
-	for i, d := range dirs {
-		if i < keepHelpers || used[d.Name()] {
-			continue
-		}
-		p := filepath.Join(paths.BinDir(), d.Name())
-		old = append(old, p)
-		size += dirSize(p)
-	}
+	old := oldHelpers()
 	if len(old) == 0 {
 		return nil
 	}
+	var size int64
+	for _, p := range old {
+		size += dirSize(p)
+	}
 	return []fixItem{{Fix: api.Fix{ID: "old-helpers",
-		Problem: fmt.Sprintf("%s that no session uses take %.1f MB", plural(len(old), "old helper version", "old helper versions"), float64(size)/1e6),
-		Action:  fmt.Sprintf("remove them, and keep the newest %d and every version a session or the current link uses", keepHelpers),
+		Problem: fmt.Sprintf("%s that nothing uses take %.1f MB", plural(len(old), "old helper version", "old helper versions"), float64(size)/1e6),
+		Action:  fmt.Sprintf("remove them, and keep the newest %d and every version in use", keepHelpers),
 		Command: "rm -r " + strings.Join(old, " ")},
 		run: func() error { return removeAll(old, os.RemoveAll) }}}
-}
-
-// helpersInUse names the helper versions that something uses: the current
-// link, this helper, the holder of each running session, and any process
-// that runs a binary from a version folder.
-func helpersInUse() map[string]bool {
-	used := map[string]bool{}
-	if t, err := os.Readlink(filepath.Join(paths.BinDir(), "current")); err == nil {
-		used[filepath.Base(t)] = true
-	}
-	if v := ownVersion(); v != "" {
-		used[v] = true
-	}
-	mark := func(bin string) {
-		bin = strings.TrimSuffix(bin, " (deleted)")
-		if dir := filepath.Dir(bin); filepath.Dir(dir) == paths.BinDir() {
-			used[filepath.Base(dir)] = true
-		}
-	}
-	entries, _ := os.ReadDir(paths.SessionsDir())
-	for _, e := range entries {
-		if m, err := LoadManifest(e.Name()); err == nil && alive(e.Name()) {
-			mark(m.HolderBinary)
-		}
-	}
-	procs, _ := os.ReadDir("/proc")
-	for _, p := range procs {
-		if exe, err := os.Readlink(filepath.Join("/proc", p.Name(), "exe")); err == nil {
-			mark(exe)
-		}
-	}
-	return used
 }
 
 func dirSize(dir string) int64 {

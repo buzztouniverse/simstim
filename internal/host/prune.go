@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -27,70 +26,65 @@ func unitDir() string {
 	return filepath.Join(h, ".config", "systemd", "user")
 }
 
-// Prune removes the helper versions that nothing uses any more, and returns
-// their names. A version stays when it is the current one, when a process
-// of this user runs from it (a session's holder, or its shadow terminal,
-// which restarts from the same folder), or when one of the user's systemd
-// unit files names it, or when it was installed within pruneGrace. Each
-// install leaves a new version behind, so without
-// this they pile up on a host.
+// Prune removes the helper versions that nothing uses any more (see
+// oldHelpers), and returns their names. Each install leaves a new version
+// behind, so without this they pile up on a host. The client runs it after
+// each install; host doctor --fix offers the same.
 func Prune() ([]string, error) {
-	bin := paths.BinDir()
-	entries, err := os.ReadDir(bin)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
+	old := oldHelpers()
+	names := make([]string, len(old))
+	for i, p := range old {
+		names[i] = filepath.Base(p)
 	}
-	keep := map[string]bool{}
-	if cur, err := os.Readlink(filepath.Join(bin, "current")); err == nil {
-		keep[filepath.Base(cur)] = true
-	}
-	for v := range versionsRunning(bin) {
-		keep[v] = true
-	}
-	for v := range versionsInUnits(bin) {
-		keep[v] = true
-	}
-	var removed []string
-	for _, e := range entries {
-		name := e.Name()
-		if !e.IsDir() || name == "current" || strings.HasPrefix(name, ".") || keep[name] {
-			continue
-		}
-		if fi, err := e.Info(); err != nil || time.Since(fi.ModTime()) < pruneGrace {
-			continue
-		}
-		if err := os.RemoveAll(filepath.Join(bin, name)); err != nil {
-			return removed, err
-		}
-		removed = append(removed, name)
-	}
-	sort.Strings(removed)
-	return removed, nil
+	return names, removeAll(old, os.RemoveAll)
 }
 
-// versionsRunning is the set of versions that this user's processes run
-// from, read from /proc/<pid>/exe.
-func versionsRunning(bin string) map[string]bool {
-	out := map[string]bool{}
+// oldHelpers is every helper version folder that can go: not one of the
+// newest keepHelpers, not in use (helpersInUse), and not installed within
+// pruneGrace. Newest first.
+func oldHelpers() []string {
+	used := helpersInUse()
+	var old []string
+	for i, d := range helperDirs() {
+		if i < keepHelpers || used[d.Name()] || time.Since(modTime(d)) < pruneGrace {
+			continue
+		}
+		old = append(old, filepath.Join(paths.BinDir(), d.Name()))
+	}
+	return old
+}
+
+// helpersInUse names the helper versions that something uses: the current
+// link, this helper, the holder of each running session, any process of the
+// user that runs a binary from a version folder (a holder, or its shadow
+// terminal, which restarts from the same folder), and any unit file that
+// names one.
+func helpersInUse() map[string]bool {
+	bin := paths.BinDir()
+	used := map[string]bool{}
+	if t, err := os.Readlink(filepath.Join(bin, "current")); err == nil {
+		used[filepath.Base(t)] = true
+	}
+	if v := ownVersion(); v != "" {
+		used[v] = true
+	}
+	mark := func(path string) {
+		if v := versionOf(bin, strings.TrimSuffix(path, " (deleted)")); v != "" {
+			used[v] = true
+		}
+	}
+	entries, _ := os.ReadDir(paths.SessionsDir())
+	for _, e := range entries {
+		if m, err := LoadManifest(e.Name()); err == nil && alive(e.Name()) {
+			mark(m.HolderBinary)
+		}
+	}
 	procs, _ := os.ReadDir(procRoot)
 	for _, p := range procs {
-		exe, err := os.Readlink(filepath.Join(procRoot, p.Name(), "exe"))
-		if err != nil {
-			continue
-		}
-		if v := versionOf(bin, strings.TrimSuffix(exe, " (deleted)")); v != "" {
-			out[v] = true
+		if exe, err := os.Readlink(filepath.Join(procRoot, p.Name(), "exe")); err == nil {
+			mark(exe)
 		}
 	}
-	return out
-}
-
-// versionsInUnits is the set of versions that the user's unit files name.
-func versionsInUnits(bin string) map[string]bool {
-	out := map[string]bool{}
 	files, _ := os.ReadDir(unitDir())
 	prefix := []byte(bin + "/")
 	for _, f := range files {
@@ -100,13 +94,11 @@ func versionsInUnits(bin string) map[string]bool {
 		}
 		for _, field := range bytes.Fields(b) {
 			if i := bytes.Index(field, prefix); i >= 0 {
-				if v := versionOf(bin, string(field[i:])); v != "" {
-					out[v] = true
-				}
+				mark(string(field[i:]))
 			}
 		}
 	}
-	return out
+	return used
 }
 
 // versionOf is the version folder that path lies in under bin, or "".

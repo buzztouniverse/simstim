@@ -42,7 +42,7 @@ One static binary (Go in the proposed design).
 
 ### 2.2 Host: `simstim-host` and `simstim-vt`
 
-Installed by the client into `~/.local/share/simstim/bin/<version>/`, with a `current` link. After each install, the new helper removes the versions nothing uses (`simstim-host prune`): it keeps the current one, any that a process of the user runs from or a unit file names, and any installed in the last hour.
+Installed by the client into `~/.local/share/simstim/bin/<version>/`, with a `current` link. After each install, the new helper removes the versions nothing uses (`simstim-host prune`, and the same rule in `host doctor --fix`): it keeps the newest three, the current one, any that a session or a process of the user runs from or a unit file names, and any installed in the last hour.
 
 | Subcommand | Role | Lives for |
 | --- | --- | --- |
