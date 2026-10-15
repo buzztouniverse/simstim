@@ -341,8 +341,10 @@ func (h *Holder) waitLoop() {
 			}
 		}
 	}
+	// Save a copy: other goroutines change the manifest under the lock.
+	m := *h.m
 	h.mu.Unlock()
-	_ = h.m.Save()
+	_ = m.Save()
 }
 
 // tick updates the status and saves the manifest when it changed.
