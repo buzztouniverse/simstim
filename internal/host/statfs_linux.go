@@ -8,5 +8,5 @@ func diskFree(path string) int64 {
 	if syscall.Statfs(path, &st) != nil {
 		return 0
 	}
-	return int64(st.Bavail) * st.Bsize
+	return int64(st.Bavail) * st.Bsize //nolint:gosec // G115: Bavail counts a disk's free blocks, far below 2^63
 }

@@ -187,7 +187,7 @@ func (h *Holder) resize(c *hclient, rz proto.Resize, force bool) {
 	if !leader || exited || rz.Cols <= 0 || rz.Rows <= 0 {
 		return
 	}
-	_ = pty.Setsize(h.ptmx, &pty.Winsize{Cols: uint16(rz.Cols), Rows: uint16(rz.Rows), X: uint16(rz.XPx), Y: uint16(rz.YPx)})
+	_ = pty.Setsize(h.ptmx, &pty.Winsize{Cols: clamp16(rz.Cols), Rows: clamp16(rz.Rows), X: clamp16(rz.XPx), Y: clamp16(rz.YPx)})
 	h.mu.Lock()
 	h.scr.resize(rz.Cols, rz.Rows)
 	vt := h.vt

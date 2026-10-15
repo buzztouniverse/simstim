@@ -230,6 +230,7 @@ func RunIdle(args []string) (string, error) {
 	switch args[0] {
 	case "check":
 		after := idleAfter()
+		//nolint:gosec // G602: len(args) == 3 is checked first, which gosec does not follow
 		if len(args) == 3 && args[1] == "--after" {
 			d, err := time.ParseDuration(args[2])
 			if err != nil {

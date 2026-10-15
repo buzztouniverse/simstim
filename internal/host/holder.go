@@ -205,7 +205,7 @@ func (h *Holder) start() error {
 	if rows <= 0 {
 		rows = 24
 	}
-	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Cols: uint16(cols), Rows: uint16(rows)})
+	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Cols: clamp16(cols), Rows: clamp16(rows)})
 	cmd.Env, h.secretEnv = nil, nil // the agent has its copy; the holder keeps none
 	if err != nil {
 		return fmt.Errorf("start %s in a terminal: %w", argv[0], err)

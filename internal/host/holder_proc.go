@@ -103,7 +103,7 @@ func readOOMKills() int64 {
 	}
 	for _, line := range strings.Split(string(b), "\n") {
 		if rest, ok := strings.CutPrefix(line, "0::"); ok {
-			ev, err := os.ReadFile(filepath.Join("/sys/fs/cgroup", rest, "memory.events"))
+			ev, err := os.ReadFile(filepath.Join("/sys/fs/cgroup", rest, "memory.events")) //nolint:gosec // G703: rest is the kernel's own cgroup path, from /proc/self/cgroup
 			if err != nil {
 				return 0
 			}

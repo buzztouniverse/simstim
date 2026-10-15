@@ -263,7 +263,7 @@ func (v *VT) Snapshot(cols, rows, maxLines int, timeout time.Duration) (snap []b
 	var p [8]byte
 	binary.LittleEndian.PutUint16(p[0:], clamp16(cols))
 	binary.LittleEndian.PutUint16(p[2:], clamp16(rows))
-	binary.LittleEndian.PutUint32(p[4:], uint32(max(maxLines, 0)))
+	binary.LittleEndian.PutUint32(p[4:], clamp32(maxLines))
 	v.mu.Lock()
 	v.cols, v.rows = cols, rows
 	v.mu.Unlock()
@@ -334,7 +334,7 @@ func (v *VT) Close() error {
 // dump returns a JSON description of the screen, for tests.
 func (v *VT) dump(maxLines int, timeout time.Duration) ([]byte, error) {
 	var p [4]byte
-	binary.LittleEndian.PutUint32(p[:], uint32(max(maxLines, 0)))
+	binary.LittleEndian.PutUint32(p[:], clamp32(maxLines))
 	out, _, err := v.request(vtFrameDump, p[:], timeout)
 	return out, err
 }

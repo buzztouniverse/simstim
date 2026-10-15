@@ -28,7 +28,7 @@ func sessionPIDs(unit bool, agentPID int) []int {
 	if err == nil {
 		for _, line := range strings.Split(string(b), "\n") {
 			if rest, ok := strings.CutPrefix(line, "0::"); ok {
-				procs, err := os.ReadFile(filepath.Join("/sys/fs/cgroup", rest, "cgroup.procs"))
+				procs, err := os.ReadFile(filepath.Join("/sys/fs/cgroup", rest, "cgroup.procs")) //nolint:gosec // G703: rest is the kernel's own cgroup path, from /proc/self/cgroup
 				if err == nil {
 					for _, f := range strings.Fields(string(procs)) {
 						if n, err := strconv.Atoi(f); err == nil && n != os.Getpid() {

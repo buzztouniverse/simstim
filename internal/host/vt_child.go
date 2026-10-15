@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os/exec"
 	"strconv"
 	"time"
@@ -322,13 +323,19 @@ func (c *vtChild) kill() {
 func vtFrame(kind byte, payload []byte) []byte {
 	f := make([]byte, 5+len(payload))
 	f[0] = kind
-	binary.LittleEndian.PutUint32(f[1:], uint32(len(payload)))
+	binary.LittleEndian.PutUint32(f[1:], uint32(len(payload))) //nolint:gosec // G115: a payload is one PTY read, a chunk of vtChunk or a small control frame, far below 4 GiB
 	copy(f[5:], payload)
 	return f
 }
 
+// clamp16 is n as a uint16: a negative n is 0, and a larger one the largest.
 func clamp16(n int) uint16 {
 	return uint16(min(max(n, 0), 0xffff))
+}
+
+// clamp32 is n as a uint32: a negative n is 0, and a larger one the largest.
+func clamp32(n int) uint32 {
+	return uint32(min(max(int64(n), 0), math.MaxUint32))
 }
 
 // vtLogWriter passes the child's stderr to Logf, a line at a time.
