@@ -4,7 +4,7 @@ New here? Start with [getting started](tutorials/getting-started.md).
 
 | Page | What it covers |
 | --- | --- |
-| [Tutorials](tutorials/README.md) | Learn by doing: getting started in five minutes |
+| [Tutorials](tutorials/README.md) | Learn by doing: getting started in five minutes, and your first cloud host |
 | [How-to guides](how-to/README.md) | One task per page: hosts, worktrees, ports, images, keys, troubleshooting |
 | [Reference](reference/_index.md) | Every command, the configuration, the keys and the agent table, generated from the code |
 | [Create a host](how-to/create-a-host.md) | Make a host in one step: a local Lima VM, a Docker container for testing, or an E2B sandbox |
