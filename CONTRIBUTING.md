@@ -7,6 +7,7 @@ Thank you for your interest. The project is young, so open an issue before a lar
 - Go 1.26 or later
 - [just](https://github.com/casey/just)
 - [golangci-lint](https://golangci-lint.run) v2, for `just lint`
+- [Zig 0.16](https://ziglang.org/download/), only to build the shadow terminal in `vt/` (`just vt`); exactly 0.16, as Ghostty's build requires
 
 ```sh
 just build   # host helpers, then the client, into ./bin

@@ -4,7 +4,7 @@
 
 simstim runs Claude Code, Codex, opencode, Gemini CLI, Amp or a plain shell in a session on a host you own: a VPS, a cloud VM or a homelab machine. Close the laptop, change networks, switch devices: the session keeps running. Come back, and you flip straight back in. Your terminal draws the agent's real screen, byte for byte, so keys, colours, scrollback, clipboard and notifications work as they do locally.
 
-> **Status:** pre-release. The client, the host helper and the home screen work end to end on a Linux test host; the screen-restore engine is in progress. Nothing is released yet. See [the status](docs/status.md).
+> **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 34 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet. See [the status](docs/status.md).
 
 ## Why
 
@@ -33,7 +33,7 @@ Read [the architecture](docs/architecture.md) for the details.
 
 ## Build from source
 
-You need Go 1.26 and [just](https://github.com/casey/just).
+You need Go 1.26 and [just](https://github.com/casey/just). [Zig 0.16](https://ziglang.org/download/) is optional: it builds the shadow terminal that redraws a session's screen for a new client (without it, new clients get the raw history).
 
 ```sh
 just build        # builds the host helpers, then the client, into ./bin
@@ -58,7 +58,9 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 | `new <host> [--agent a] [--dir d] [--worktree] [--detach] [-- cmd…]` | Start a session |
 | `ls [--json]`, `attach`, `send`, `rename`, `kill` | Work with sessions |
 | `ports`, `forward` | See and forward the ports a session listens on |
-| `doctor keys` | Show exactly what your terminal sends for each key |
+| `flip` | Quick switcher: every host's sessions, then attach |
+| `doctor keys`, `doctor terminal` | Show what your terminal sends for each key, and what it supports |
+| `config keymap` | Show the home screen's keys; rebind them under `[keymap]` in `config.toml` |
 
 ## Docs
 

@@ -1,6 +1,6 @@
 # simstim plan
 
-**Status:** draft for the owner's review, 15 October 2026. Nothing is built yet.
+**Status:** accepted and built, 15 October 2026. v1, v1.x and v2 are implemented; progress against the goal, with evidence, is in [the status](status.md). The plan below is kept as written, for the reasons behind the design.
 
 This page is the plan. [Architecture](architecture.md) says how it works, [UX](ux.md) says how it looks and feels, and [the research notes](research/README.md) hold the evidence.
 

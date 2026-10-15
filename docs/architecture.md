@@ -49,7 +49,7 @@ Installed by the client into `~/.local/share/simstim/bin/<version>/`, with a `cu
 | `bridge` | Speaks framed RPC on stdin and stdout to one client. Connects to holder sockets. Runs `ls`, `watch`, `new`, `kill` and uploads for that client. | One client channel |
 | `new` | Resolves the environment, writes the manifest, starts a holder as a systemd user service | Seconds |
 | `holder <id>` (internal) | Owns one session's PTY, ring, socket, manifest and status | The session |
-| `simstim-vt` (internal) | The shadow terminal. A child of the holder, restarted on a crash. | The session |
+| `simstim-vt` (internal) | The shadow terminal: a static Zig program on libghostty-vt (source in `vt/`). A child of the holder, fed every output byte; it makes snapshots for new clients and answers terminal queries while no client is attached. Restarted on a crash from the ring. | The session |
 | `attach <id>` | Raw fallback: bridges a plain `ssh -t` to one holder, for any SSH client | One attach |
 | `ls --json`, `watch --json` | Reads manifests and probes holders in parallel. `watch` streams status events as NDJSON. | Seconds, or one client |
 | `hook <event>` | Called by agent hooks. Forwards the event to the session's holder (its socket is in the agent's environment). | Milliseconds |
@@ -212,7 +212,7 @@ Triggers: the detach key, closing the tab, `simstim kill` from elsewhere, or SIG
   - `hello`, `ping`/`pong`;
   - `hosts.info`, `ls`, `watch`/`event`, `new`, `kill`, `rename`;
   - `upload.begin`/`upload.chunk`/`upload.end`;
-  - `attach`, `detach`, `take_size`, `input`, `resize`, `output{offset}`, `snapshot`.
+  - `attach`, `detach`, `take_size`, `input`, `resize`, `output{offset}`, `snapshot` (VT bytes that redraw the screen; output from `Attached.From` follows).
 - **Holder socket:** the same `attach` family, plus `info`, `subscribe`, `hook`, `set_meta` and `kill`.
 - **Back-pressure:**
   - Each client's buffer is capped at 4 MiB.
