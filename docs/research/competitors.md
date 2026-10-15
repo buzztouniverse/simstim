@@ -71,7 +71,7 @@ What each column asks:
    - recipes for scheduled runs (S).
 6. **simstim is behind on reach and isolation.** Nothing is released yet, and you must bring a Linux host. There is no phone or web client, and no sharing with other people. There are no per-task sandboxes, no environment snapshots and no managed secrets.
 7. **simstim is ahead on fidelity, cost and control.** It passes bytes through with replay and keeps native scrollback. It has no time, concurrency or compute caps. It works with any agent login and any SSH path. It needs no account, relay or open port, and carries no vendor risk.
-8. **Updates to [the plan](../plan.md), section 2.** Daytona is now closed source, not just archived. zellij forwards OSC 9 and 777 since 0.45, though it still re-draws the screen. One fact is confirmed: tmux 3.8 still has no kitty keyboard protocol, which is planned for 3.9.
+8. **Updates to [the design page](../explanation/design.md#why-build-it).** Daytona is now closed source, not just archived. zellij forwards OSC 9 and 777 since 0.45, though it still re-draws the screen. One fact is confirmed: tmux 3.8 still has no kitty keyboard protocol, which is planned for 3.9.
 
 ## Changes in 2025–2026
 
@@ -302,7 +302,7 @@ Effort is for what simstim still lacks: **S** is days, **M** is a week or two, a
 3. **No caps and no compute markup.** There are no time limits, no concurrency limits and no per-minute fees; you pay only for your host. For scale:
    - An always-on Amp a1.medium orb (4 vCPU, 8 GB) at $0.33 an hour would cost about $241 a month ([sizes][amp-sizes]). Orbs pause when idle, so real bills are lower.
    - A 4-core codespace costs $0.36 an hour ([billing][cs-billing]).
-   - [The plan](../plan.md) cites a 4 vCPU, 8 GB VPS at €8.49 a month.
+   - [The first plan](../contributing/history.md) cites a 4 vCPU, 8 GB VPS at €8.49 a month.
 4. **Any agent login.** simstim runs the agent's own CLI on your host, with whatever subscription or key you give it. Claude's cloud sessions refuse Bedrock, Vertex and API-key logins ([docs][cc-cloud]). Warp's cloud needs an Anthropic API key stored as a Warp secret ([quick start][wp-quick]).
 5. **Any network path.** ProxyJump, GCP IAP, AWS SSM and Tailscale all work through `~/.ssh/config` ([connectivity][n-conn]), including private networks behind a jump host. Hosted runtimes reach a private network only through special features, such as Codex's Tailscale option ([environments][cx-env]).
 6. **Nothing listens, and nothing phones home.** Other tools need an open port, a relay or telemetry:
@@ -342,7 +342,7 @@ Each table cell links its own primary source. The link targets are defined at th
 [ss-readme]: ../../README.md
 [ss-changelog]: ../../CHANGELOG.md
 [ss-arch]: ../explanation/architecture.md
-[ss-plan]: ../plan.md
+[ss-plan]: ../explanation/design.md#non-goals
 [ss-licence]: ../../LICENSE
 
 [amp-pricing]: https://ampcode.com/pricing

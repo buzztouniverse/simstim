@@ -1,6 +1,6 @@
 # Roadmap
 
-**Status:** accepted at Gate 1, 15 October 2026. It replaces the scope lists in [the plan](plan.md#6-scope-by-version), which is kept for the reasons behind the design.
+**Status:** accepted at Gate 1, 15 October 2026. It replaces the scope lists of the first plan, which is kept as [history](contributing/history.md).
 
 Every candidate feature is scored from the evidence in the research notes:
 
@@ -76,7 +76,7 @@ R6 scores low: few developers ask for it, and simstim stores no secrets by desig
 
 | Feature | Why |
 | --- | --- |
-| A web or phone UI | A non-goal of [the plan](plan.md#4-non-goals). The evidence warns against it too: an unauthenticated remote code execution in another tool's server, and a phone app that changed a privacy setting ([needs](research/developer-needs.md#what-this-means-for-simstim)). N4 reaches phones through SSH apps instead. |
+| A web or phone UI | A [non-goal](explanation/design.md#non-goals). The evidence warns against it too: an unauthenticated remote code execution in another tool's server, and a phone app that changed a privacy setting ([needs](research/developer-needs.md#what-this-means-for-simstim)). N4 reaches phones through SSH apps instead. |
 | Managed secrets with redaction or a proxy | simstim stores no secrets. R6 fetches values from the user's own store at session start. |
 | A relay, accounts or telemetry | Project rule: nothing listens and nothing phones home. |
 

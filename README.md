@@ -6,7 +6,7 @@ simstim runs Claude Code, Codex, opencode, Antigravity CLI or any other terminal
 
 ![The launcher: the sessions on one host, each with its state, agent, folder, age and a trace of its output](docs/images/sessions.svg)
 
-> **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet.
+> **Status:** pre-release. Everything in v1 and v2 of [the first plan](docs/contributing/history.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet.
 
 ## Why
 
@@ -115,7 +115,8 @@ The images use a dark Ghostty theme and show still frames. In your terminal, the
 
 | Page | What it covers |
 | --- | --- |
-| [Plan](docs/plan.md) | Goals, scope by version, milestones, decisions, risks |
+| [Design](docs/explanation/design.md) | Why it exists, goals, non-goals, principles, risks |
+| [Roadmap](docs/roadmap.md) | What comes next, scored by demand, impact and effort |
 | [Architecture](docs/explanation/architecture.md) | Components, flows, protocol, fidelity contract, security |
 | [UX](docs/contributing/ux-spec.md) | Screens, keys, visual language, CLI |
 | [Decisions](docs/contributing/decisions/) | The decision records |

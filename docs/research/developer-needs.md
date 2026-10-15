@@ -343,7 +343,7 @@ The pattern is clear. Each vendor ships phone access and background sessions for
 
 ## What this means for simstim
 
-The table maps the top needs to what simstim does today and to candidate features. Demand is the number of voice sources, then the GitHub reactions. "Built" refers to the v1 and v2 work in the [README](../../README.md) and [the plan](../plan.md).
+The table maps the top needs to what simstim does today and to candidate features. Demand is the number of voice sources, then the GitHub reactions. "Built" refers to the v1 and v2 work in the [README](../../README.md) and [the plan](../contributing/history.md).
 
 | Rank | Need | Demand (sources / reactions) | simstim today | Candidate feature |
 | --- | --- | --- | --- | --- |
