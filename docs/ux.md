@@ -192,7 +192,7 @@ Every dialog is a sheet. It rises from the bottom of the screen over the dimmed 
 ```
   ── New session on atlas-dev ───────────────────────────────────────────────
 
-    Agent      claude  codex  opencode  shell  other…   not installed: gemi…
+    Agent      claude  codex  opencode  shell  other…   not installed: anti…
     Folder     ~/src/app
     Name       auth
     Worktree   ● this folder   ○ new worktree

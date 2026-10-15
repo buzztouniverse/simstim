@@ -6,6 +6,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- Antigravity CLI (`agy`) in the agent table: Google moved Gemini CLI's consumer users to it on 18 June 2026.
+- A support level for each agent: Claude Code and Codex are first-class (tested end to end on every release, with status hooks and resume), opencode, Antigravity CLI and the shell are supported, and the rest are best effort. The README lists them.
 - A roadmap that scores every candidate feature by demand, impact and effort ([docs/roadmap.md](docs/roadmap.md)). Next and later items are GitHub issues, eleven of them good first issues, and the labels are kept as code in `.github/labels.yml` (synced by `scripts/sync-labels.sh` and the Labels workflow).
 - One-command developer setup: `scripts/setup.sh` (or `just setup`) installs pinned, checksum-checked tools into `.tools/`, then builds and tests once. A devcontainer runs the same script, and CI checks both weekly and on every change to them.
 - A versioning and release policy, with the steps to release and to check a release ([docs/contributing/releasing.md](docs/contributing/releasing.md)).

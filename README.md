@@ -2,7 +2,7 @@
 
 **Your coding agents, on any host, as if they ran on your laptop.**
 
-simstim runs Claude Code, Codex, opencode, Gemini CLI, Amp or a plain shell in a session on a host you own: a VPS, a cloud VM or a homelab machine. Close the laptop, change networks, switch devices: the session keeps running. Come back, and you flip straight back in. Your terminal draws the agent's real screen, byte for byte, so keys, colours, scrollback, clipboard and notifications work as they do locally.
+simstim runs Claude Code, Codex, opencode, Antigravity CLI or any other terminal program in a session on a host you own: a VPS, a cloud VM or a homelab machine. Close the laptop, change networks, switch devices: the session keeps running. Come back, and you flip straight back in. Your terminal draws the agent's real screen, byte for byte, so keys, colours, scrollback, clipboard and notifications work as they do locally.
 
 ![The launcher: the sessions on one host, each with its state, agent, folder, age and a trace of its output](docs/images/sessions.svg)
 
@@ -32,6 +32,18 @@ simstim runs Claude Code, Codex, opencode, Gemini CLI, Amp or a plain shell in a
 ```
 
 Read [the architecture](docs/architecture.md) for the details.
+
+## Agents
+
+Any program that runs in a terminal runs in a session, unmodified: you log in through the agent's own flow, inside the session. Some agents get more:
+
+| Support | Agents | What it means |
+| --- | --- | --- |
+| First-class | Claude Code, Codex | Tested end to end on every release. Status comes from the agent's own hooks, sessions resume after a host reboot, and `agents install` sets them up. |
+| Supported | opencode, Antigravity CLI, a shell | In the agent table and tested when the test host has them. Status comes from screen rules. |
+| Best effort | Gemini CLI, Amp, Cursor CLI, Aider, Goose | In the agent table; contributors keep them working. |
+
+The table lives in `internal/agents`; adding an agent is one row.
 
 ## Build from source
 

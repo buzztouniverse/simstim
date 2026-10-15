@@ -52,7 +52,7 @@ R6 scores low: few developers ask for it, and simstim stores no secrets by desig
 
 | # | Feature | Need (sources / reactions) | D | I | E | Score | Issue |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| X1 | More agent rows: Pi, Cursor CLI, GitHub Copilot CLI | lock-in/any-agent 16 / 1,470 | 5 | 1 | S | 5.0 (small; left for contributors) | [#6](https://github.com/iAmLakshya/simstim/issues/6), [#7](https://github.com/iAmLakshya/simstim/issues/7), [#8](https://github.com/iAmLakshya/simstim/issues/8) |
+| X1 | More agent rows: Pi, GitHub Copilot CLI (Cursor CLI and Goose are in the table already) | lock-in/any-agent 16 / 1,470 | 5 | 1 | S | 5.0 (small; left for contributors) | [#6](https://github.com/iAmLakshya/simstim/issues/6), [#8](https://github.com/iAmLakshya/simstim/issues/8) |
 | X2 | Continue when a usage limit resets: `send --at <time>` or "after the reset" | cost; [Claude Code #13354](https://github.com/anthropics/claude-code/issues/13354) and [Codex #21073](https://github.com/openai/codex/issues/21073), 291 reactions | 3 | 2 | M | 3.0 | [#9](https://github.com/iAmLakshya/simstim/issues/9) |
 | X3 | Show the link state and the replayed bytes after a reconnect | reliable-reconnect 14 / 242 | 3 | 1 | S | 3.0 | [#10](https://github.com/iAmLakshya/simstim/issues/10) |
 | X4 | Choose the worktree's base branch in the new-session form | worktrees 10 / 216; [Claude Code #23622](https://github.com/anthropics/claude-code/issues/23622), 87 reactions | 3 | 1 | S | 3.0 | [#11](https://github.com/iAmLakshya/simstim/issues/11) |
