@@ -163,6 +163,9 @@ func TestVTRestartsWithBackoff(t *testing.T) {
 		return v.child.cmd.Process.Pid
 	}
 	first := pid()
+	// tee may echo a frame, which ends sync, before it appends it to the
+	// log: wait for the first child's three frames before it is killed.
+	childFrames(t, log, 3)
 	// The child crashes; output that arrives meanwhile is not lost.
 	if err := syscall.Kill(first, syscall.SIGKILL); err != nil {
 		t.Fatal(err)
