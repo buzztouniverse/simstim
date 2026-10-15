@@ -133,7 +133,7 @@
       <header class="section-head">
         <p class="kicker"><span aria-hidden="true">03</span> quick start</p>
         <h2 id="start-title">Three commands to your first session.</h2>
-        <p>You need a Mac or a Linux machine, and a Linux host that <code>ssh my-server</code> logs you in to.</p>
+        <p>You need a Mac or a Linux machine. A host helps: any Linux machine that <code>ssh</code> reaches. No host yet? Setup shows you how to make one.</p>
       </header>
       <ol class="steps">
         <li class="step">
@@ -142,9 +142,9 @@
           <p>It checks the release's signature and checksum, then puts <code>{{ $name }}</code> in <code>~/.local/bin</code>. <a href="{{ index $page "/how-to/install" }}">Other ways</a></p>
         </li>
         <li class="step">
-          <h3><span class="step-n" aria-hidden="true">2</span> Connect a host</h3>
-          <div class="cmd" data-copy-box><code data-copy-text>{{ $name }} host add my-server</code><button type="button" class="copy" data-copy aria-label="Copy step 2"><span data-copy-label>copy</span></button></div>
-          <p>It checks that the host answers, installs a small helper in your home folder, with nothing that listens, and saves the host. No host yet? <code>host create lima</code> makes a local VM. <a href="{{ index $page "/how-to/add-a-host" }}">Add a host</a></p>
+          <h3><span class="step-n" aria-hidden="true">2</span> Set it up</h3>
+          <div class="cmd" data-copy-box><code data-copy-text>{{ $name }} setup</code><button type="button" class="copy" data-copy aria-label="Copy step 2"><span data-copy-label>copy</span></button></div>
+          <p>It asks where agents should run: a host in your SSH config, a local VM, a container or a sandbox, or a server you will rent, with the steps for each. Then it installs the agents you tick with their own installers, and opens each one's login. <a href="{{ index $page "/tutorials/getting-started" }}">Getting started</a></p>
         </li>
         <li class="step">
           <h3><span class="step-n" aria-hidden="true">3</span> Start an agent</h3>
