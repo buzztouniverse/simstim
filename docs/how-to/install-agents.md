@@ -2,7 +2,26 @@
 
 simstim installs an agent with its vendor's own installer, in a session on the host, so you see the installer's output and can answer its questions. Then you log in with the agent's own login, in a session. simstim never logs in for you, and never sees your login.
 
-## Install
+## Pick them from a checklist
+
+`simstim setup` ends with a checklist of every agent it can install. First-class and supported agents come first; best-effort ones follow, marked as such. The agents the host has are ticked already, with their state: installed, logged in, or not.
+
+```text
+   1  [x] Claude Code      installed, logged in
+   2  [ ] Codex            not installed
+   3  [ ] opencode         not installed
+   4  [ ] Antigravity CLI  not installed
+  Best effort, kept working by contributors:
+   5  [ ] Gemini CLI       not installed
+```
+
+Type the numbers of the agents to install, such as `2 3`. The setup installs them one after another, each in its own session that you watch, as `agents install` does below. Then, for each agent that is not logged in, it offers the agent's own login in a session. When you leave a session, by detaching or when it ends, the setup checks the host again and says how it went.
+
+- On a host you have already set up, run `simstim setup --host my-server`.
+- `host add` shows the same checklist, in a terminal, when a first-class or supported agent is missing.
+- For a script, name the agents: `simstim setup --host my-server --agents claude,codex --yes`. Without a terminal, the setup waits for each installer to end, and leaves the logins to you.
+
+## Install one agent
 
 <!-- test: help (it runs an installer on the host) -->
 ```sh

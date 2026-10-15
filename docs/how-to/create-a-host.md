@@ -10,6 +10,17 @@
 
 Creating a host counts as your consent to install the helper on it. `host create` still prints what it installs and where. Nothing new listens on the host: the door is sshd, or the provider's own exec API.
 
+## With the guided setup
+
+`simstim setup` offers each provider when it asks where agents will run. It says whether this computer can use each one now: `limactl` or `docker` on your `PATH`, or an E2B key. If not, it shows the steps to install it, from the provider's own guide, and checks again. Then it makes the host, connects it, and offers the agent checklist and the logins ([install agents](install-agents.md#pick-them-from-a-checklist)). To skip the questions:
+
+<!-- test: help (it makes a VM) -->
+```sh
+simstim setup --create lima --name dev --agents claude --yes
+```
+
+Press Ctrl+C while Lima or Docker makes the machine, and the setup deletes the half-made VM or container, so nothing is left behind. After that, the host is saved: `simstim host destroy dev` deletes it.
+
 ## A local VM with Lima
 
 [Lima](https://lima-vm.io) runs Linux VMs on macOS and Linux. It is free and needs no account.

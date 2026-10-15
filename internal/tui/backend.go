@@ -1,12 +1,8 @@
 package tui
 
 import (
-	"bufio"
 	"context"
 	"errors"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -104,63 +100,10 @@ func (realBackend) HelperSize(p client.Platform) (int, bool) {
 	return len(b), ok
 }
 
-func (realBackend) SSHConfigHosts() []string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil
-	}
-	seen := map[string]bool{}
-	var out []string
-	readSSHConfig(filepath.Join(home, ".ssh", "config"), home, 0, seen, &out)
-	return out
-}
+func (realBackend) SSHConfigHosts() []string { return client.SSHConfigHosts() }
 
 func (realBackend) Attach(ctx context.Context, o client.AttachOptions) (client.AttachResult, error) {
 	return client.Attach(ctx, o)
-}
-
-// readSSHConfig collects Host aliases without wildcards, following Include.
-func readSSHConfig(path, home string, depth int, seen map[string]bool, out *[]string) {
-	if depth > 4 {
-		return
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		// "Host a b", "Host=a" and "Host = a" are all valid.
-		fields := strings.Fields(strings.Replace(line, "=", " ", 1))
-		key := fields[0]
-		fields = fields[1:]
-		switch strings.ToLower(key) {
-		case "host":
-			for _, h := range fields {
-				if !strings.ContainsAny(h, "*?!") && !seen[h] {
-					seen[h] = true
-					*out = append(*out, h)
-				}
-			}
-		case "include":
-			for _, p := range fields {
-				if rest, ok := strings.CutPrefix(p, "~/"); ok {
-					p = filepath.Join(home, rest)
-				} else if !filepath.IsAbs(p) {
-					p = filepath.Join(home, ".ssh", p)
-				}
-				matches, _ := filepath.Glob(p)
-				for _, m := range matches {
-					readSSHConfig(m, home, depth+1, seen, out)
-				}
-			}
-		}
-	}
 }
 
 // connSet tracks every open connection, so quitting closes them all, even

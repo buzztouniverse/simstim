@@ -14,6 +14,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 	"github.com/iAmLakshya/simstim/internal/provider"
 	"github.com/iAmLakshya/simstim/internal/provider/docker"
 	"github.com/iAmLakshya/simstim/internal/provider/e2b"
@@ -43,7 +44,7 @@ func findProvider(name string) (provider.Provider, error) {
 // powersOffWhenIdle reports whether a provider's machines stop themselves
 // with the helper's idle timer (VMs), rather than with a lease kept by the
 // client (sandboxes), or not at all (containers).
-func powersOffWhenIdle(p string) bool { return p == "lima" }
+func powersOffWhenIdle(p string) bool { return onboard.PowersOffWhenIdle(p) }
 
 func hostCreateCmd() *cobra.Command {
 	var req provider.Request
@@ -81,25 +82,13 @@ func hostCreateCmd() *cobra.Command {
 }
 
 func createHost(ctx context.Context, p provider.Provider, req provider.Request) error {
-	if !client.ValidHostName(req.Name) {
-		return &client.UserError{Msg: fmt.Sprintf("%q cannot name a host", req.Name), Hint: "Use letters, digits, dots, dashes and underscores."}
-	}
-	if req.IdleStop != "" && req.IdleStop != "never" {
-		if d, err := time.ParseDuration(req.IdleStop); err != nil || d < time.Minute {
-			return &client.UserError{Msg: fmt.Sprintf("%q is not an idle time", req.IdleStop), Hint: "Use a duration of a minute or more, such as 30m or 2h, or never."}
-		}
-	}
-	if _, err := client.FindHost(req.Name); err == nil {
-		return &client.UserError{Msg: fmt.Sprintf("there is already a host called %s", req.Name), Hint: brand.Name + " host create " + p.Name() + " <another-name>"}
+	if err := onboard.CheckCreate(p, req); err != nil {
+		return err
 	}
 	fmt.Printf("Creating %s with %s…\n", req.Name, p.Name())
 	start := time.Now()
-	h, err := p.Create(ctx, req)
+	h, err := onboard.Create(ctx, p, req)
 	if err != nil {
-		return err
-	}
-	// Save it at once, so that `host destroy` can always find what was made.
-	if err := saveHost(h); err != nil {
 		return err
 	}
 	fmt.Printf("  ✓ created %s %s in %s\n\n", h.Machine.Provider, h.Machine.ID, time.Since(start).Round(time.Second))
@@ -119,37 +108,15 @@ func createHost(ctx context.Context, p provider.Provider, req provider.Request) 
 }
 
 // saveHost adds h to hosts.toml, or replaces the host of the same name.
-func saveHost(h client.Host) error {
-	hosts, err := client.LoadHosts()
-	if err != nil {
-		return err
-	}
-	for i := range hosts {
-		if hosts[i].Name == h.Name {
-			hosts[i] = h
-			return client.SaveHosts(hosts)
-		}
-	}
-	return client.SaveHosts(append(hosts, h))
-}
+func saveHost(h client.Host) error { return client.SaveHost(h) }
 
 // applyIdle installs (or removes) the helper's idle timer on a VM.
 func applyIdle(ctx context.Context, h client.Host) error {
-	after := h.Machine.IdleStop
-	if after == "" {
-		after = lima.DefaultIdleStop
-	}
-	ictx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-	t, err := client.HostTransport(ictx, h, true)
+	out, err := onboard.SetIdle(ctx, h)
 	if err != nil {
 		return err
 	}
-	out, err := t.Run(ictx, client.RemoteHelper(client.HelperVersion())+" idle setup "+after, nil)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("  ✓ idle stop: %s\n", strings.TrimSpace(string(out)))
+	fmt.Printf("  ✓ idle stop: %s\n", out)
 	return nil
 }
 

@@ -10,6 +10,8 @@ You need:
 
 This page calls the server `my-server`. Use your own name for it.
 
+`simstim setup` walks you through steps 1 to 5: pick "A server I will rent". It checks each step it can, shows the lines for `~/.ssh/config` and adds them only if you say yes, then connects the server and offers to install and log in to your agents. This page explains each step, so you can also do them by hand.
+
 ## 1. Make an SSH key
 
 If you already have a key in `~/.ssh` (a file such as `id_ed25519.pub`), skip this step. Otherwise make one on your laptop:

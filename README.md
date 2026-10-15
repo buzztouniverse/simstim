@@ -59,7 +59,8 @@ just build        # builds the host helpers, then the client, into ./bin
 ## Quick start
 
 ```sh
-simstim host add my-vps                          # a Host from ~/.ssh/config: checks it, installs the helper
+simstim setup                                    # guided: a host, its agents and their logins, step by step
+simstim host add my-vps                          # or by hand: a Host from ~/.ssh/config: checks it, installs the helper
 simstim                                          # the launcher: Enter on a host, then Enter on a session; n to start one
 simstim new my-vps --agent claude --dir ~/src/app --worktree
 simstim attach my-vps/app                        # attach from a script or a terminal keybinding
@@ -69,6 +70,7 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 
 | Command | Does |
 | --- | --- |
+| `setup` | The guided setup: where agents run (your SSH config, Lima, Docker, E2B, or a server you rent, step by step), the host, a checklist of agents to install, and their logins |
 | `host add/ls/rm/test/doctor/restore` | Manage hosts; `restore` starts again sessions a reboot stopped |
 | `host create lima/docker/e2b`, `host destroy` | Make a host in one step (a local Lima VM, a test container, an E2B sandbox), and delete it ([how to](docs/how-to/create-a-host.md)) |
 | `host start/stop/status/idle` | Start or stop a created host, or a cloud VM through your provider script ([examples](examples/providers)); set its idle stop |

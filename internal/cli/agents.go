@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/client"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 )
 
 func agentsCmd() *cobra.Command {
@@ -119,7 +119,7 @@ func installAgent(ctx context.Context, h client.Host, a agents.Agent, force bool
 	fmt.Printf("Installing %s on %s with its vendor's installer:\n\n    %s\n\n", a.Title, h.Name, a.Setup.Install)
 	fmt.Printf("It comes from %s.\nIt runs in a session, so you see its output and can answer its questions.\n\n", a.Setup.Source)
 	cols, rows := termSize()
-	args := client.TerminalArgs(client.NewArgs{Name: "install-" + a.Kind, Cwd: "~", Argv: []string{"/bin/sh", "-c", a.Setup.Install}, Setup: api.SetupSkip}, cols, rows)
+	args := client.TerminalArgs(onboard.InstallArgs(a), cols, rows)
 	s, err := conn.NewSession(cctx, args)
 	conn.Close()
 	if err != nil {
@@ -176,46 +176,20 @@ func findCheck(checks []api.AgentCheck, kind string) (api.AgentCheck, bool) {
 }
 
 // loginCommand is the command that starts an agent's own login in a new
-// session on host. An agent whose login is its first start starts as itself.
-func loginCommand(host string, a agents.Agent) string {
-	if a.Setup == nil || a.Setup.Login == "" {
-		return ""
-	}
-	if a.Setup.Login == a.Binaries[0] {
-		return fmt.Sprintf("%s new %s --agent %s", brand.Name, host, a.Kind)
-	}
-	return fmt.Sprintf("%s new %s -- %s", brand.Name, host, a.Setup.Login)
-}
+// session on host.
+func loginCommand(host string, a agents.Agent) string { return onboard.LoginCommand(host, a) }
 
 // printAgentChecks prints one line for each agent, and what to do next.
 func printAgentChecks(w io.Writer, host string, checks []api.AgentCheck) {
 	for _, c := range checks {
-		a, _ := agents.Find(c.Kind)
-		mark, line, try := "✓", "", ""
-		switch {
-		case !c.Installed:
-			mark, line = "✕", "not installed"
-			try = fmt.Sprintf("%s agents install %s --host %s", brand.Name, c.Kind, host)
-		case !c.OnPath:
-			mark, line = "✕", c.Path+" is not on PATH in a login shell"
-			try = fmt.Sprintf("on the host, add it to PATH: echo 'export PATH=\"%s:$PATH\"' >> ~/.profile", filepath.Dir(c.Path))
-		case c.Login == api.LoginYes:
-			line = fmt.Sprintf("%s, logged in (%s)", c.Path, c.LoginHow)
-		case c.Login == api.LoginNo:
-			mark, line = "!", fmt.Sprintf("%s, not logged in (%s)", c.Path, c.LoginHow)
-			try = loginCommand(host, a)
-		default:
-			mark, line = "?", fmt.Sprintf("%s, login unknown (%s)", c.Path, c.LoginHow)
-			if l := loginCommand(host, a); l != "" {
-				try = "if it asks you to log in: " + l
-			}
-		}
-		if try == "" && c.Login != api.LoginYes && a.Setup != nil && len(a.Setup.LoginEnv) > 0 && c.OnPath {
-			try = fmt.Sprintf("pass its key from your laptop: %s new %s --agent %s --secret %s", brand.Name, host, c.Kind, a.Setup.LoginEnv[0])
-		}
-		fmt.Fprintf(w, "  %s %-16s %s\n", mark, c.Title, line)
-		if try != "" {
-			fmt.Fprintf(w, "    Try: %s\n", try)
-		}
+		printLine(w, onboard.Describe(host, c))
+	}
+}
+
+// printLine prints one agent's line of a summary, and what to try.
+func printLine(w io.Writer, l onboard.Line) {
+	fmt.Fprintf(w, "  %s %-16s %s\n", l.Mark, l.Title, l.State)
+	if l.Try != "" {
+		fmt.Fprintf(w, "    Try: %s\n", l.Try)
 	}
 }

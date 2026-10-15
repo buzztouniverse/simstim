@@ -5,15 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/iAmLakshya/simstim/internal/api"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/client"
 	"github.com/iAmLakshya/simstim/internal/client/helpers"
+	"github.com/iAmLakshya/simstim/internal/onboard"
 )
 
 func hostCmd() *cobra.Command {
@@ -65,41 +68,75 @@ func hostAddCmd() *cobra.Command {
 }
 
 func addHost(ctx context.Context, h client.Host, yes bool) error {
-	step := func(format string, a ...any) { fmt.Printf("  "+format+"\n", a...) }
-	fmt.Printf("Connecting to %s (%s)…\n", h.Name, h.Target())
+	consent := func(q string) (bool, error) { return yes || confirm(q), nil }
+	checks, err := connectHost(ctx, os.Stdout, h, consent, nil)
+	if err != nil {
+		return err
+	}
+	if checks != nil {
+		fmt.Println("\nAgents:")
+		printAgentChecks(os.Stdout, h.Name, checks)
+	}
+	// In a terminal, offer the agents the host lacks, as setup does.
+	if !yes && isTerminal(os.Stdin) && isTerminal(os.Stdout) {
+		f := onboard.NewFlow(h.Name, checks, nil)
+		f.NoLogin = true
+		if f.Missing() {
+			g := newGuide(ctx, guideOpts{}, nil)
+			if err := g.agents(h, f); err != nil {
+				return err
+			}
+		}
+	}
+	fmt.Printf("\n%s is ready. Start a session with `%s new %s --agent claude`, or run `%s`.\n", h.Name, brand.Name, h.Name, brand.Name)
+	return nil
+}
+
+// connectHost checks a host, installs the helper after consent says yes,
+// prepares the host, and saves it. It returns the host's agent checks, or
+// none from a helper too old to check. log, when set, gets a line for each
+// change.
+func connectHost(ctx context.Context, w io.Writer, h client.Host, consent func(q string) (bool, error), log *onboard.Log) ([]api.AgentCheck, error) {
+	step := func(format string, a ...any) { fmt.Fprintf(w, "  "+format+"\n", a...) }
+	fmt.Fprintf(w, "Connecting to %s (%s)…\n", h.Name, h.Target())
 	start := time.Now()
 	pctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	s, err := client.HostTransport(pctx, h, true)
 	if err != nil {
 		cancel()
-		return err
+		return nil, err
 	}
 	p, err := client.Probe(pctx, s)
 	cancel()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	step("✓ connected in %s: %s/%s", time.Since(start).Round(time.Millisecond), p.OS, p.Arch)
 	if !p.Installed {
 		bin, ok := helpers.For(p.OS, p.Arch)
 		if !ok {
-			return &client.UserError{Msg: fmt.Sprintf("no helper for %s/%s in this build", p.OS, p.Arch), Hint: "Linux hosts on amd64 and arm64 are supported."}
+			return nil, &client.UserError{Msg: fmt.Sprintf("no helper for %s/%s in this build", p.OS, p.Arch), Hint: "Linux hosts on amd64 and arm64 are supported."}
 		}
-		fmt.Printf("\n%s needs a small helper on the host to keep sessions alive.\n", brand.DisplayName)
-		fmt.Printf("    What   %s %s, %.1f MB, SHA-256 checked\n", brand.HostBinary, client.HelperVersion(), float64(len(bin))/1e6)
-		fmt.Printf("    Where  ~/.local/share/%s/bin/%s/\n", brand.Name, client.HelperVersion())
-		fmt.Printf("    Also   turn on linger, install this terminal's terminfo\n")
-		fmt.Printf("  Nothing listens on the network. To remove it later, delete ~/.local/share/%s on the host.\n\n", brand.Name)
-		if !yes && !confirm("Install it?") {
-			return &client.UserError{Msg: "cancelled; nothing was installed", Hint: brand.Name + " host add " + h.Name}
+		fmt.Fprintf(w, "\n%s needs a small helper on the host to keep sessions alive.\n", brand.DisplayName)
+		fmt.Fprintf(w, "    What   %s %s, %.1f MB, SHA-256 checked\n", brand.HostBinary, client.HelperVersion(), float64(len(bin))/1e6)
+		fmt.Fprintf(w, "    Where  ~/.local/share/%s/bin/%s/\n", brand.Name, client.HelperVersion())
+		fmt.Fprintf(w, "    Also   turn on linger, install this terminal's terminfo\n")
+		fmt.Fprintf(w, "  Nothing listens on the network. To remove it later, delete ~/.local/share/%s on the host.\n\n", brand.Name)
+		ok, err := consent("Install it?")
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, &client.UserError{Msg: "cancelled; nothing was installed", Hint: brand.Name + " host add " + h.Name}
 		}
 		ictx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-		err := client.Install(ictx, s, p)
+		err = client.Install(ictx, s, p)
 		cancel()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		step("✓ installed %s %s", brand.HostBinary, client.HelperVersion())
+		log.Add("installed the helper on %s", h.Name)
 	} else {
 		step("✓ %s %s is already installed", brand.HostBinary, client.HelperVersion())
 	}
@@ -107,12 +144,12 @@ func addHost(ctx context.Context, h client.Host, yes bool) error {
 	defer cancel()
 	conn, err := client.Dial(dctx, h, true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer conn.Close()
 	res, err := conn.Setup(dctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, s := range res.Steps {
 		mark := "✓"
@@ -126,31 +163,15 @@ func addHost(ctx context.Context, h client.Host, yes bool) error {
 	}
 	d, err := conn.Doctor(dctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	step("✓ %s, %d CPUs, %.1f GiB; %.1f GiB per session", d.Distro, d.CPUs, float64(d.MemTotal)/(1<<30), float64(d.MemoryMax)/(1<<30))
-	if checks, err := conn.AgentChecks(dctx); err == nil {
-		fmt.Println("\nAgents:")
-		printAgentChecks(os.Stdout, h.Name, checks)
+	checks, _ := conn.AgentChecks(dctx)
+	if err := client.SaveHost(h); err != nil {
+		return nil, err
 	}
-	hosts, err := client.LoadHosts()
-	if err != nil {
-		return err
-	}
-	replaced := false
-	for i := range hosts {
-		if hosts[i].Name == h.Name {
-			hosts[i], replaced = h, true
-		}
-	}
-	if !replaced {
-		hosts = append(hosts, h)
-	}
-	if err := client.SaveHosts(hosts); err != nil {
-		return err
-	}
-	fmt.Printf("\n%s is ready. Start a session with `%s new %s --agent claude`, or run `%s`.\n", h.Name, brand.Name, h.Name, brand.Name)
-	return nil
+	log.Add("saved the host %s", h.Name)
+	return checks, nil
 }
 
 func confirm(q string) bool {

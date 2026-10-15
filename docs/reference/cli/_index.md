@@ -39,4 +39,5 @@ simstim [flags]
 * [simstim pull](pull.md)     - Bring a session's branch into the git repository you are in
 * [simstim rename](rename.md)     - Rename a session
 * [simstim send](send.md)     - Type text into a session without attaching, then press Enter
+* [simstim setup](setup.md)     - Set up step by step: a host, its agents, and their logins
 * [simstim version](version.md)     - Print the version

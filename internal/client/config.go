@@ -167,6 +167,21 @@ func SaveHosts(hosts []Host) error {
 	return os.Rename(tmp, hostsPath())
 }
 
+// SaveHost adds h to the saved hosts, or replaces the host of the same name.
+func SaveHost(h Host) error {
+	hosts, err := LoadHosts()
+	if err != nil {
+		return err
+	}
+	for i := range hosts {
+		if hosts[i].Name == h.Name {
+			hosts[i] = h
+			return SaveHosts(hosts)
+		}
+	}
+	return SaveHosts(append(hosts, h))
+}
+
 // FindHost returns the saved host with the given name.
 func FindHost(name string) (Host, error) {
 	hosts, err := LoadHosts()

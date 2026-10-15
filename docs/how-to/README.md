@@ -5,8 +5,8 @@ One task per page.
 | Guide | Task |
 | --- | --- |
 | [Install](install.md) | Install, update or build the client |
-| [Add a host](add-a-host.md) | Connect any host you can reach with SSH |
-| [Install agents](install-agents.md) | Install an agent on a host with its own installer, then log in |
+| [Add a host](add-a-host.md) | Connect any host you can reach with SSH, with the guided setup or by hand |
+| [Install agents](install-agents.md) | Pick agents from a checklist, or install one with its own installer, then log in |
 | [Pass secrets](secrets.md) | Give a session an API key from your keychain or password manager, never stored |
 | [Get alerts](alerts.md) | Hear from a session that needs you, with the laptop shut: ntfy, webhooks, commands |
 | [Bring work to your laptop](pull.md) | Fetch a session's branch into your own clone |

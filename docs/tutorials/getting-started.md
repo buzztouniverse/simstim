@@ -1,11 +1,14 @@
 # Getting started
 
-In about five minutes you will install the client, connect a host, start a session, leave it running, and come back to it.
+In about five minutes you will install the client, set up a host and its agents, start a session, leave it running, and come back to it.
 
 You need:
 
 - a Mac or a Linux machine with OpenSSH (it has it already);
-- a Linux host you can reach with `ssh`: a VPS, a cloud VM, or a machine at home. If `ssh my-server` logs you in without a password prompt, you are ready. This page calls the host `my-server`; use your own name for it.
+- somewhere for agents to run. The guided setup offers each of these, and says what it needs:
+  - a Linux host you can reach with `ssh`: a VPS, a cloud VM, or a machine at home. If `ssh my-server` logs you in without a password prompt, you are ready. This page calls the host `my-server`; use your own name for it.
+  - a local VM, with [Lima](https://lima-vm.io);
+  - a server you will rent: the setup walks you through it.
 
 ## 1. Install the client
 
@@ -20,9 +23,33 @@ The installer checks the release's signature and checksum, then puts the client 
 simstim version
 ```
 
-## 2. Connect the host
+## 2. Run the guided setup
 
-`host add` checks that the host answers, installs a small helper there (in your home folder, with nothing that listens on the network), and saves the host.
+<!-- test: help (it asks questions) -->
+```sh
+simstim setup
+```
+
+It asks one thing at a time:
+
+1. **Where will agents run?** Pick a host in your SSH config, a local VM with Lima, a container for testing with Docker, an E2B sandbox, or "a server I will rent". Each one says whether this computer can use it now. If not, it shows the steps to make it ready, such as `brew install lima`, and checks again when you press Enter.
+2. **Connect.** It checks that the host answers, and asks before it installs a small helper there: in your home folder, with nothing that listens on the network. A host it makes for you, such as a Lima VM, counts as your yes.
+3. **Agents.** A checklist of the agents it can install. Installed ones are ticked already. Type the numbers of the ones you want, such as `1 2`. Each one installs with its vendor's own installer, in a session you watch: answer its questions there.
+4. **Log in.** For each agent that is not logged in, it offers the agent's own login, in a session. Follow its prompts, usually a link to open in your browser. simstim never sees the login.
+5. **Done.** A summary of each agent, and the command that starts your first session.
+
+Press **Ctrl+C** at any step to stop. The setup says what it did, and running it again picks up from there.
+
+For a script, or to skip the questions, answer them with flags:
+
+<!-- test: help (it changes the host) -->
+```sh
+simstim setup --host my-server --agents claude,codex --yes --no-login
+```
+
+### Or step by step
+
+The setup runs commands you can also run yourself. `host add` checks that the host answers, installs the helper, and saves the host:
 
 ```sh
 simstim host add my-server --yes
@@ -33,6 +60,8 @@ simstim host add my-server --yes
 ```sh
 simstim host test my-server
 ```
+
+[Install an agent](../how-to/install-agents.md) has the rest: `agents install`, and each agent's login.
 
 ## 3. Start a session
 
@@ -74,5 +103,6 @@ simstim kill my-server/first
 ## Next
 
 - [Add a host](../how-to/add-a-host.md) behind a jump host, or with a repo's own SSH config.
+- [Your first cloud host](first-cloud-host.md): what the setup's "a server I will rent" does, step by step.
 - [Keep each task in its own worktree](../how-to/worktrees.md).
 - Read [how it works](../explanation/architecture.md).

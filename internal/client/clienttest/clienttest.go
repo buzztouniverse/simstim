@@ -25,6 +25,8 @@ type Transport struct {
 	Sessions []client.Session
 	// Every, if set, makes the transport a client.KeepAliver.
 	Every time.Duration
+	// Agents is what the bridge's agents.check returns.
+	Agents []api.AgentCheck
 
 	mu      sync.Mutex
 	remotes []string
@@ -36,6 +38,13 @@ func (t *Transport) Remotes() []string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return append([]string(nil), t.remotes...)
+}
+
+// SetAgents changes what agents.check returns, as an install would.
+func (t *Transport) SetAgents(a []api.AgentCheck) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.Agents = a
 }
 
 // Pings counts the pings the bridge received.
@@ -85,7 +94,7 @@ func (t *Transport) Start(_ context.Context, remote string) (client.Proc, error)
 }
 
 // serve speaks just enough of the bridge's protocol: hello, ping, ls,
-// setup and doctor.
+// setup, doctor and agents.check.
 func (t *Transport) serve(in io.Reader, out io.Writer) {
 	r := bufio.NewReader(in)
 	w := proto.NewWriter(out)
@@ -128,6 +137,11 @@ func (t *Transport) answer(req proto.Request) proto.Response {
 		v = api.SetupResult{Steps: []api.Check{{Name: "linger", OK: true, Detail: "already on"}}}
 	case "doctor":
 		v = api.HostInfo{Distro: "Fake Linux", CPUs: 2, MemTotal: 4 << 30, Agents: map[string]string{"shell": "/bin/sh"}}
+	case "agents.check":
+		t.mu.Lock()
+		agents := append([]api.AgentCheck{}, t.Agents...)
+		t.mu.Unlock()
+		v = agents
 	default:
 		return proto.Response{ID: req.ID, Error: &proto.Error{Code: "unknown_op", Message: "unknown request " + req.Op}}
 	}

@@ -96,3 +96,17 @@ func apiKey(ctx context.Context, tokenCommand, cliPath string) (string, error) {
 		Hint: "export E2B_API_KEY=…   (or run `e2b auth login`, or pass --token-command to `" + brand.Name + " host create e2b`)",
 	}
 }
+
+// KeyFound says where an API key would come from without a token command:
+// "E2B_API_KEY", "the E2B CLI's login", or "" when there is none. It never
+// returns the key itself. The guided setup uses it to say whether E2B can
+// work on this computer.
+func KeyFound() string {
+	if strings.TrimSpace(os.Getenv("E2B_API_KEY")) != "" {
+		return "E2B_API_KEY"
+	}
+	if cliKey(cliConfigPath()) != "" {
+		return "the E2B CLI's login"
+	}
+	return ""
+}

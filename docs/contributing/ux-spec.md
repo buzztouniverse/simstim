@@ -424,7 +424,8 @@ The launcher is the home, and every action also has a command, for scripts and t
 | Command | Does |
 | --- | --- |
 | `simstim` | Opens the launcher |
-| `simstim host add <name> [target] [--ssh-config f] [--provider-script s --wake] [--yes]` | Connects a host: probe, consent, install, setup, doctor |
+| `simstim setup [--host h \| --create lima\|docker\|e2b] [--name n] [--agents a,b] [--yes] [--no-login]` | The guided setup: where agents run, the host, the agent checklist, the installs and the logins, then the first session's command |
+| `simstim host add <name> [target] [--ssh-config f] [--provider-script s --wake] [--yes]` | Connects a host: probe, consent, install, setup, doctor; in a terminal, the agent checklist when an agent is missing |
 | `simstim host ls`, `test`, `doctor`, `rm` | Host management |
 | `simstim host restore <name> [--all]` | Starts again the sessions that a host restart stopped (or, with `--all`, a crash) |
 | `simstim host start\|stop\|status <name>` | Runs the host's provider script |
