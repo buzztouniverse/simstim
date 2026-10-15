@@ -2,28 +2,30 @@ package tui
 
 import (
 	"image/color"
+	"runtime"
 	"time"
 
 	"charm.land/lipgloss/v2"
 )
 
-// Colour tokens (docs/ux.md 4.1). Each maps to an ANSI palette slot, so the
-// screens follow the terminal's own theme with no config.
+// Colour tokens (docs/ux.md 4). They follow what Amp's CLI draws, measured
+// cell by cell: nearly every colour is an ANSI palette slot or the terminal's
+// own default, so the screens take on the terminal's theme. Secondary text is
+// faint (SGR 2), not a grey. Fixed RGB is kept for the brand only.
 var (
-	colMuted       color.Color = lipgloss.BrightBlack
-	colPrimary     color.Color = lipgloss.Blue
-	colSecondary   color.Color = lipgloss.Cyan
-	colAccent      color.Color = lipgloss.Magenta
-	colBorder      color.Color = lipgloss.BrightBlack
-	colSuccess     color.Color = lipgloss.Green
-	colWarning     color.Color = lipgloss.Yellow
-	colDestructive color.Color = lipgloss.Red
-	colInfo        color.Color = lipgloss.BrightBlue
+	colTitle   color.Color = lipgloss.Yellow // titles in borders, and the selection bar
+	colKey     color.Color = lipgloss.Blue   // key names and suggestions
+	colOnSel   color.Color = lipgloss.Black  // text on the selection bar
+	colSuccess color.Color = lipgloss.Green
+	colWarning color.Color = lipgloss.Yellow
+	colDanger  color.Color = lipgloss.Red
+	colBrand   color.Color = lipgloss.Cyan // the brand with 16 colours
 )
 
-// brandStops is the one fixed gradient, kept for the hero and the first-run
-// title only: deep teal to electric cyan. On a light background the teal is
-// deeper, so the hero keeps its contrast.
+// brandStops is the one fixed gradient, for the welcome mark and the brand
+// name: deep teal to electric cyan. On a light background the teal is
+// deeper, so it keeps its contrast. A 256-colour terminal gets the nearest
+// indexes; with 16 colours the brand is plain cyan (docs/ux.md 4.2).
 func brandStops(dark bool) []color.Color {
 	if dark {
 		return []color.Color{lipgloss.Color("#0E7C7B"), lipgloss.Color("#00E5FF")}
@@ -33,46 +35,52 @@ func brandStops(dark bool) []color.Color {
 
 // Styles built from the tokens.
 var (
-	sBold      = lipgloss.NewStyle().Bold(true)
-	sMuted     = lipgloss.NewStyle().Foreground(colMuted)
-	sPrimary   = lipgloss.NewStyle().Foreground(colPrimary)
-	sKey       = lipgloss.NewStyle().Foreground(colPrimary).Bold(true)
-	sSecondary = lipgloss.NewStyle().Foreground(colSecondary)
-	sAccent    = lipgloss.NewStyle().Foreground(colAccent)
-	sBorder    = lipgloss.NewStyle().Foreground(colBorder)
-	sSuccess   = lipgloss.NewStyle().Foreground(colSuccess)
-	sWarning   = lipgloss.NewStyle().Foreground(colWarning)
-	sDanger    = lipgloss.NewStyle().Foreground(colDestructive)
-	sInfo      = lipgloss.NewStyle().Foreground(colInfo)
-	sLabel     = lipgloss.NewStyle().Foreground(colMuted).Bold(true)
-	sPlain     = lipgloss.NewStyle()
+	sPlain   = lipgloss.NewStyle()
+	sBold    = lipgloss.NewStyle().Bold(true)
+	sFaint   = lipgloss.NewStyle().Faint(true)
+	sTitle   = lipgloss.NewStyle().Foreground(colTitle).Bold(true)
+	sKey     = lipgloss.NewStyle().Foreground(colKey)            // a key in a border hint
+	sKeyBold = lipgloss.NewStyle().Foreground(colKey).Bold(true) // a key in a list or a popup
+	sLink    = lipgloss.NewStyle().Foreground(colKey)            // what to try next
+	sSuccess = lipgloss.NewStyle().Foreground(colSuccess)
+	sWarning = lipgloss.NewStyle().Foreground(colWarning)
+	sDanger  = lipgloss.NewStyle().Foreground(colDanger)
+	sErrHead = lipgloss.NewStyle().Foreground(colDanger).Bold(true) // "Error:"
+	sBrand   = lipgloss.NewStyle().Foreground(colBrand)
 )
 
-// Glyphs (docs/ux.md 2.3).
+// Glyphs (docs/ux.md 3).
 const (
 	glyphNeedsInput = "●"
+	glyphOnline     = "●"
 	glyphIdle       = "○"
 	glyphOK         = "✓"
 	glyphFail       = "✕"
 	glyphOffline    = "◌"
-	glyphPointer    = "▸"
 	glyphInfo       = "•"
-	glyphSpinStill  = "⠶"
+	glyphSpinStill  = "≈"
 	dot             = " · "
 )
 
-// The spinner is our own braille "scan", one style everywhere.
-var spinFrames = []string{"⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"}
+// The spinner is a small wave, one style everywhere.
+var spinFrames = []string{"∼", "≈", "≋", "≈"}
+
+// optKey names the Alt key the way the platform does.
+var optKey = func() string {
+	if runtime.GOOS == "darwin" {
+		return "Opt"
+	}
+	return "Alt"
+}()
 
 // Timings.
 const (
-	spinEvery      = 120 * time.Millisecond
+	spinEvery      = 200 * time.Millisecond
 	heroEvery      = 66 * time.Millisecond // about 15 fps, under the 30 fps cap
 	refreshEvery   = 2 * time.Second
 	latencyEvery   = 10 * time.Second
 	previewDelay   = 120 * time.Millisecond
-	toastLife      = 3 * time.Second
-	toastErrorLife = 6 * time.Second
-	quitWindow     = time.Second
+	toastLife      = 4 * time.Second
+	toastErrorLife = 8 * time.Second
 	maxBackoff     = 30 * time.Second
 )

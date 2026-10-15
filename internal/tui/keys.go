@@ -10,12 +10,21 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// onKey routes a key: to the dialog on top, then an inline rename, then a
-// filter being typed, then the moves and the command registry.
+// onKey routes a key: the quit chord, then the dialog on top, an inline
+// rename, a filter being typed, then the moves and the command registry.
 func (m *Model) onKey(k tea.KeyPressMsg) tea.Cmd {
 	ks := k.String()
+	if m.quitArmed {
+		// Ctrl+C then: Ctrl+C quits, anything else cancels.
+		m.quitArmed = false
+		if ks == "ctrl+c" {
+			return tea.Quit
+		}
+		return nil
+	}
 	if ks == "ctrl+c" {
-		return m.ctrlC()
+		m.quitArmed = true
+		return nil
 	}
 	if m.modal != nil {
 		return m.modal.key(m, k)
@@ -26,14 +35,8 @@ func (m *Model) onKey(k tea.KeyPressMsg) tea.Cmd {
 	if f := m.typingFilter(); f != nil {
 		return m.filterKey(f, k)
 	}
-	if len(m.hosts) > 0 {
-		if m.navKey(ks) {
-			return nil
-		}
-		if ks == "enter" && m.focus == paneHosts && m.selectedHost() == nil {
-			m.focus = paneSessions
-			return nil
-		}
+	if len(m.hosts) > 0 && m.navKey(ks) {
+		return nil
 	}
 	for _, c := range commands {
 		if c.matches(m, ks) {
@@ -43,28 +46,38 @@ func (m *Model) onKey(k tea.KeyPressMsg) tea.Cmd {
 	return nil
 }
 
-// navKey moves around the home screen. It reports whether it used the key.
+// navKey moves through the list, and between the two screens. It reports
+// whether it used the key.
 func (m *Model) navKey(ks string) bool {
 	switch ks {
 	case "up", "k", "down", "j", "home", "end", "pgup", "pgdown":
 		d := map[string]int{"up": -1, "k": -1, "down": 1, "j": 1, "home": -1 << 20, "end": 1 << 20, "pgup": -10, "pgdown": 10}[ks]
-		if m.focus == paneHosts {
+		switch {
+		case m.screen == scrHosts:
 			m.moveHost(d)
-		} else if d == 1 || d == -1 {
+		case d == 1 || d == -1:
 			m.moveSel(d)
-		} else {
+		default:
 			m.jumpSel(d)
 		}
-	case "tab", "shift+tab":
-		m.focus = 1 - m.focus
-	case "left", "h":
-		m.focus = paneHosts
 	case "right", "l":
-		m.focus = paneSessions
+		if m.screen != scrHosts || m.selectedHost() == nil {
+			return false
+		}
+		m.openHost(m.selectedHost())
+	case "left", "h":
+		if m.screen != scrSessions {
+			return false
+		}
+		m.backToHosts()
 	case "esc":
-		if m.sessFilter.query() != "" || m.hostFilter.query() != "" {
-			m.keepHost(func() { m.sessFilter, m.hostFilter = filter{}, filter{} })
-			m.syncSel()
+		switch {
+		case m.activeFilter().query() != "":
+			m.clearFilter()
+		case m.showHelp:
+			m.showHelp = false
+		case m.screen == scrSessions:
+			m.backToHosts()
 		}
 	default:
 		return false
@@ -72,79 +85,60 @@ func (m *Model) navKey(ks string) bool {
 	return true
 }
 
-func (m *Model) jumpSel(d int) {
-	rows := m.rows()
-	target := min(max(m.selIdx+d, 0), len(rows)-1)
-	if i := nearestSession(rows, target); i >= 0 {
-		m.selIdx, m.sel, m.autoSel = i, rows[i].key(), false
-		m.scrollTo(len(rows))
-	}
-}
-
-// ctrlC quits on the second press within a second.
-func (m *Model) ctrlC() tea.Cmd {
-	now := m.now()
-	if !m.quitArmed.IsZero() && now.Sub(m.quitArmed) <= quitWindow {
-		return tea.Quit
-	}
-	m.quitArmed = now
-	return m.toast(toastInfo, "Press ctrl+c again to quit. Sessions keep running.")
-}
-
 func (m *Model) typingFilter() *filter {
-	if m.hostFilter.typing {
-		return &m.hostFilter
-	}
-	if m.sessFilter.typing {
-		return &m.sessFilter
+	if f := m.activeFilter(); f.typing {
+		return f
 	}
 	return nil
 }
 
-func (m *Model) startFilter() {
-	f := &m.sessFilter
-	if m.focus == paneHosts {
-		f = &m.hostFilter
-	}
-	f.typing = true
-}
-
-// keepHost runs fn, which changes the host list, and keeps the same host
-// selected.
-func (m *Model) keepHost(fn func()) {
-	h := m.selectedHost()
-	fn()
-	if h != nil {
-		m.hostSel = indexOf(m.visibleHosts(), h) + 1
-	}
-}
-
 func (m *Model) filterKey(f *filter, k tea.KeyPressMsg) tea.Cmd {
+	keep := m.selectedHost()
 	switch k.String() {
 	case "esc":
-		m.keepHost(func() { *f = filter{} })
+		*f = filter{}
 	case "enter":
 		f.typing = false
+		return nil
 	case "up", "down":
 		f.typing = false
 		m.navKey(k.String())
 		return nil
 	default:
-		f.in.key(k)
+		if !f.in.key(k) {
+			return nil
+		}
+		keep = nil // the query changed: the best match goes on top
 	}
-	if f == &m.hostFilter {
-		m.hostSel = min(m.hostSel, len(m.visibleHosts()))
-		if m.hostFilter.query() != "" && len(m.visibleHosts()) > 0 {
-			m.hostSel = 1
+	m.refilter(keep)
+	return nil
+}
+
+// clearFilter drops the filter of the list on screen, and keeps the host
+// that was selected.
+func (m *Model) clearFilter() {
+	keep := m.selectedHost()
+	*m.activeFilter() = filter{}
+	m.refilter(keep)
+}
+
+// refilter puts the selection back after the filter changed: on keep if it
+// is still listed, else on the first row.
+func (m *Model) refilter(keep *hostConn) {
+	if m.screen == scrHosts {
+		m.hostSel = 0
+		for i, h := range m.visibleHosts() {
+			if h == keep {
+				m.hostSel = i
+			}
 		}
 	}
 	m.autoSel = true
 	m.syncSel()
-	return nil
 }
 
-// onPaste handles a paste at home: into a field being typed, or, if it is a
-// session ID, a jump to that session.
+// onPaste handles a paste: into a field being typed, or, if it is a session
+// ID, a jump to that session.
 func (m *Model) onPaste(text string) tea.Cmd {
 	switch {
 	case m.modal != nil:
@@ -167,8 +161,7 @@ func (m *Model) onPaste(text string) tea.Cmd {
 	for _, h := range m.hosts {
 		for _, s := range h.sessions {
 			if s.ID == id || (len(id) >= 4 && strings.HasPrefix(s.ID, id)) {
-				m.hostSel, m.focus = 0, paneSessions
-				m.sessFilter, m.hostFilter = filter{}, filter{}
+				m.openHost(h)
 				m.sel, m.autoSel = sessKey{h.name(), s.ID}, false
 				m.syncSel()
 				return nil
@@ -185,7 +178,6 @@ func (m *Model) startRename() tea.Cmd {
 	if s == nil {
 		return nil
 	}
-	m.focus = paneSessions
 	m.rename = &renameState{key: sessKey{h.name(), s.ID}, old: s.Name, in: newInput(s.Name, "a name")}
 	return nil
 }

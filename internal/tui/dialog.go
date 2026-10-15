@@ -14,7 +14,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// modal is a notched dialog over the home screen. Only one shows at a time.
+// modal is a notched dialog over the launcher. Only one shows at a time.
 type modal interface {
 	key(m *Model, k tea.KeyPressMsg) tea.Cmd
 	view(m *Model) string
@@ -23,27 +23,10 @@ type modal interface {
 // dialogWidth is the width of a dialog on this screen.
 func (m *Model) dialogWidth(most int) int { return max(min(m.width-4, most), 30) }
 
-// errorLines draws an error and its "Try:" line inside a dialog.
+// errorLines draws an error and what to try next inside a dialog.
 func errorLines(err error, w int) []string {
 	msg, hint := errText(err)
-	var out []string
-	for i, l := range wrap(sentence(msg), w-4) {
-		lead := "  " + sDanger.Render(glyphFail) + " "
-		if i > 0 {
-			lead = "    "
-		}
-		out = append(out, lead+l)
-	}
-	if hint != "" {
-		for i, l := range wrap(hint, w-11) {
-			lead := "    " + sPrimary.Render("Try:") + " "
-			if i > 0 {
-				lead = strings.Repeat(" ", 9)
-			}
-			out = append(out, lead+l)
-		}
-	}
-	return out
+	return errorBlock(msg, hint, w)
 }
 
 // New session (docs/ux.md 2.4).
@@ -155,8 +138,6 @@ func (d *newSession) step(n int) {
 	}
 	d.field = o[(i+n+len(o))%len(o)]
 }
-
-func (d *newSession) top() bool { return false }
 
 // refresh picks up the host's agents once the doctor has answered.
 func (d *newSession) refresh(m *Model) {
@@ -279,53 +260,59 @@ func (d *newSession) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 
 func (d *newSession) view(m *Model) string {
 	w := m.dialogWidth(76)
-	inner := w - 2
+	cw := w - 4
+	fw := cw - labelW
 	label := func(i int, s string) string {
-		if d.field == i {
-			return "  " + sBold.Render(fit(s, labelW))
+		w := labelW
+		if i == 0 {
+			w-- // the agent chips have a space on each side, so they start a cell early
 		}
-		return "  " + sMuted.Render(fit(s, labelW))
+		if d.field == i {
+			return sBold.Render(fit(s, w))
+		}
+		return sFaint.Render(fit(s, w))
 	}
-	agentsLine, under := d.agentRow(inner - 4 - labelW)
-	body := []string{
-		"",
-		label(0, "Agent") + agentsLine,
-		d.secondRow(label, under, inner-4-labelW),
-		label(1, "Folder") + d.folder.view(inner-4-labelW, d.field == 1),
-		"  " + strings.Repeat(" ", labelW) + d.suggestLine(inner-4-labelW),
-		label(2, "Name") + d.name.view(inner-4-labelW, d.field == 2),
-		label(3, "Worktree") + d.worktreeRow(),
-		"",
+	body := []string{"", label(0, "Agent") + d.agentRow(fw+1)}
+	if d.agent() == otherAgent {
+		body = append(body, label(4, "Command")+d.command.view(fw, d.field == 4))
 	}
+	body = append(body,
+		"",
+		label(1, "Folder")+d.folder.view(fw, d.field == 1),
+		strings.Repeat(" ", labelW)+d.suggestLine(fw),
+		label(2, "Name")+d.name.view(fw, d.field == 2),
+		"",
+		label(3, "Worktree")+d.worktreeRow(),
+		"",
+	)
 	switch {
 	case d.starting:
-		body = append(body, "  "+sPrimary.Render(m.spinner())+" "+sMuted.Render(fmt.Sprintf("Starting %s on %s…", d.agent(), d.host)), "")
+		body = append(body, sKey.Render(m.spinner())+" "+sFaint.Render(fmt.Sprintf("Starting %s on %s…", d.agent(), d.host)), "")
 	case d.err != nil:
-		body = append(append(body, errorLines(d.err, inner)...), "")
+		body = append(append(body, errorLines(d.err, cw)...), "")
 	}
-	hints := []hint{{"enter", "start"}, {"tab", "next field"}, {"ctrl+enter", "start detached"}, {"esc", "cancel"}}
-	return box(w, len(body)+2, "New session on "+d.host, "", hintsFor(hints, w), body, boxNormal)
+	hints := []hint{{"Enter", "start"}, {"Tab", "next"}, {"Ctrl+Enter", "start detached"}, {"Esc", "cancel"}}
+	return box(w, len(body)+2, "New session on "+d.host, "", hintsFor(hints, w), body, toneNormal)
 }
 
 // worktreeRow is a choice of two: the folder itself, or a new git worktree.
 func (d *newSession) worktreeRow() string {
 	opt := func(on bool, s string) string {
-		mark, st := "○", sMuted
-		if on {
-			mark, st = "●", sBold
-			if d.field == 3 {
-				st = sKey
-			}
+		switch {
+		case on && d.field == 3:
+			return sKeyBold.Render("● " + s)
+		case on:
+			return sBold.Render("● " + s)
 		}
-		return st.Render(mark + " " + s)
+		return sFaint.Render("○ " + s)
 	}
 	return opt(!d.worktree, "this folder") + "   " + opt(d.worktree, "new worktree")
 }
 
-// agentRow draws the agent choices and the mark under the chosen one.
-func (d *newSession) agentRow(w int) (string, string) {
-	const gap = 3
-	var b, u strings.Builder
+// agentRow draws the agent choices. The chosen one is the selection bar
+// while the row has focus, and bold when it does not.
+func (d *newSession) agentRow(w int) string {
+	var b strings.Builder
 	used := 0
 	var missing []string
 	for i, c := range d.choices {
@@ -333,39 +320,32 @@ func (d *newSession) agentRow(w int) (string, string) {
 			missing = append(missing, c.kind)
 			continue
 		}
-		n := cells(c.kind)
+		chip := " " + c.kind + " "
+		n := cells(chip)
 		if used+n > w {
-			b.WriteString(sMuted.Render("…"))
+			b.WriteString(sFaint.Render("…"))
 			break
-		}
-		if used > 0 {
-			b.WriteString(strings.Repeat(" ", gap))
-			u.WriteString(strings.Repeat(" ", gap))
-			used += gap
 		}
 		switch {
 		case i == d.ai && d.field == 0:
-			b.WriteString(sKey.Render(c.kind))
-			u.WriteString(sPrimary.Render(strings.Repeat("▔", n)))
+			b.WriteString(listRow(true, seg{chip, sBold}))
 		case i == d.ai:
-			b.WriteString(sBold.Render(c.kind))
-			u.WriteString(sMuted.Render(strings.Repeat("▔", n)))
+			b.WriteString(sBold.Render(chip))
 		default:
-			b.WriteString(c.kind)
-			u.WriteString(strings.Repeat(" ", n))
+			b.WriteString(sFaint.Render(chip))
 		}
 		used += n
 	}
 	if d.finding {
-		if room := w - used - gap; room > 8 {
-			b.WriteString(strings.Repeat(" ", gap) + sMuted.Render(trunc("finding agents…", room)))
+		if room := w - used - 2; room > 8 {
+			b.WriteString("  " + sFaint.Render(trunc("finding agents…", room)))
 		}
 	} else if len(missing) > 0 {
-		if room := w - used - gap; room > 16 {
-			b.WriteString(strings.Repeat(" ", gap) + sMuted.Render(trunc("not installed: "+strings.Join(missing, ", "), room)))
+		if room := w - used - 2; room > 16 {
+			b.WriteString("  " + sFaint.Render(trunc("not installed: "+strings.Join(missing, ", "), room)))
 		}
 	}
-	return b.String(), u.String()
+	return b.String()
 }
 
 // Confirm (docs/ux.md 2.5).
@@ -394,16 +374,14 @@ func (c *confirm) view(m *Model) string {
 	w := m.dialogWidth(76)
 	body := []string{""}
 	for _, l := range c.lines {
-		for _, x := range wrap(l, w-6) {
-			body = append(body, "  "+x)
-		}
+		body = append(body, wrap(l, w-4)...)
 	}
 	body = append(body, "")
-	bs := boxNormal
+	t := toneNormal
 	if c.danger {
-		bs = boxDanger
+		t = toneDanger
 	}
-	return box(w, len(body)+2, c.title, "", hintsFor([]hint{c.yes, c.no}, w), body, bs)
+	return box(w, len(body)+2, c.title, "", hintsFor([]hint{c.yes, c.no}, w), body, t)
 }
 
 func deleteDialog(h *hostConn, s client.Session) *confirm {
@@ -420,7 +398,7 @@ func deleteDialog(h *hostConn, s client.Session) *confirm {
 	}
 	return &confirm{
 		title: "Delete " + s.Name + "?", lines: lines, danger: true,
-		yes: hint{"enter", "delete"}, no: hint{"esc", "keep"},
+		yes: hint{"Enter", "delete"}, no: hint{"Esc", "keep"},
 		run: func(m *Model) tea.Cmd { return m.deleteSession(host, s) },
 	}
 }
@@ -432,7 +410,7 @@ func removeHostDialog(h client.Host) *confirm {
 			fmt.Sprintf("This removes %s from the hosts on this computer.", h.Name),
 			"Its sessions and the helper stay on the host, and keep running.",
 		},
-		danger: true, yes: hint{"enter", "remove"}, no: hint{"esc", "keep"},
+		danger: true, yes: hint{"Enter", "remove"}, no: hint{"Esc", "keep"},
 		run: func(m *Model) tea.Cmd { return m.saveHosts(h, true) },
 	}
 }
@@ -464,16 +442,17 @@ func (d *details) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 
 func (d *details) view(m *Model) string {
 	w := m.dialogWidth(76)
+	cw := w - 4
 	h := m.hostByName(d.host)
 	if h == nil {
 		return ""
 	}
-	field := func(k, v string) string { return "  " + sMuted.Render(fit(k, labelW)) + v }
+	field := func(k, v string) string { return sFaint.Render(fit(k, labelW)) + trunc(v, cw-labelW) }
 	route := h.host.SSH
 	if h.host.SSHConfig != "" {
-		route += sMuted.Render("  with " + h.host.SSHConfig)
+		route += sFaint.Render("  with " + h.host.SSHConfig)
 	}
-	body := []string{field("Route", route)}
+	body := []string{"", field("Route", route)}
 	if i := h.info; i != nil {
 		sys := []string{}
 		for _, s := range []string{i.Distro, i.Arch, plural(i.CPUs, "CPU", "CPUs"), fmtSize(i.MemTotal), fmtSize(i.DiskFree) + " free"} {
@@ -496,19 +475,11 @@ func (d *details) view(m *Model) string {
 		if msg == "" {
 			msg = "waiting for the host to answer"
 		}
-		body = append(body, field("Status", sMuted.Render(sentence(msg))))
+		body = append(body, field("Status", sFaint.Render(sentence(msg))))
 	}
-	state := "online" + dot + fmtLatency(h.latency)
-	switch h.status {
-	case stConnecting:
-		state = "connecting"
-	case stOffline:
-		state = "offline"
-	case stFailed:
-		state = "not ready"
-	}
-	hints := []hint{{"t", "test"}, {"s", "shell"}, {"r", "reconnect"}, {"x", "remove"}, {"esc", "back"}}
-	return box(w, len(body)+2, h.name(), sMuted.Render(strings.TrimSuffix(state, dot)), hintsFor(hints, w), body, boxNormal)
+	body = append(body, "")
+	hints := []hint{{"t", "test"}, {"s", "shell"}, {"r", "reconnect"}, {"x", "remove"}, {"Esc", "back"}}
+	return box(w, len(body)+2, h.name(), m.hostState(h), hintsFor(hints, w), body, toneNormal)
 }
 
 // fetchFolders asks the host for completions of the folder field.
@@ -563,7 +534,7 @@ func (d *newSession) suggestLine(w int) string {
 	if d.hints {
 		lead = "recent: "
 	}
-	return sMuted.Render(fit(lead+strings.Join(d.suggest, "  "), w))
+	return sFaint.Render(fit(lead+strings.Join(d.suggest, "  "), w))
 }
 
 // completion returns the next match that extends what the user typed. Adding
@@ -582,14 +553,6 @@ func (d *newSession) completion() (string, bool) {
 		}
 	}
 	return "", false
-}
-
-// secondRow is the mark under the chosen agent, or, for "other", the command field.
-func (d *newSession) secondRow(label func(int, string) string, under string, w int) string {
-	if d.agent() == otherAgent {
-		return label(4, "Command") + d.command.view(w, d.field == 4)
-	}
-	return "  " + strings.Repeat(" ", labelW) + under
 }
 
 // shellDoneMsg reports that an SSH shell on a host ended.

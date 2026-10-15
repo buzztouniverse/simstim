@@ -14,7 +14,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client/helpers"
 )
 
-// Backend is everything the home screen needs from outside: saved hosts,
+// Backend is everything the launcher needs from outside: saved hosts,
 // SSH, the host helper and attach. The real one wraps package client. Tests
 // use a fake, so every screen can be checked without SSH.
 type Backend interface {

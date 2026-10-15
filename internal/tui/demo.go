@@ -1,20 +1,27 @@
 package tui
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/muesli/cancelreader"
+	"golang.org/x/term"
+
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// Demo mode shows the home screen with sample hosts and sessions. Nothing
+// Demo mode shows the launcher with sample hosts and sessions. Nothing
 // connects anywhere. It lets people try the screens before they add a host,
 // and it is how the screenshots in the README are made.
 
-// RunDemo opens the home screen on sample data. With empty, it shows the
+// RunDemo opens the launcher on sample data. With empty, it shows the
 // first-run screen instead.
 func RunDemo(ctx context.Context, empty bool) error {
 	return runWith(ctx, newDemoBackend(empty), Options{})
@@ -102,8 +109,78 @@ func (b *demoBackend) SSHConfigHosts() []string {
 	return []string{"homelab", "gcp-dev", "hetzner-box", "work-vm", "pi"}
 }
 
-func (b *demoBackend) Attach(context.Context, client.AttachOptions) (client.AttachResult, error) {
-	return client.AttachResult{}, &client.UserError{Msg: "attach is not available in the demo", Hint: "Add a real host to attach to a session."}
+// Attach shows a made-up agent screen that fills the whole terminal, the
+// way a real session does, until the detach key.
+func (b *demoBackend) Attach(ctx context.Context, o client.AttachOptions) (client.AttachResult, error) {
+	b.mu.Lock()
+	var s client.Session
+	for _, x := range b.sessions[o.Host.Name] {
+		if x.ID == o.Session {
+			s = x
+		}
+	}
+	b.mu.Unlock()
+	in, out := o.In, o.Out
+	if in == nil {
+		in = os.Stdin
+	}
+	if out == nil {
+		out = os.Stdout
+	}
+	old, err := term.MakeRaw(int(in.Fd()))
+	if err != nil {
+		return client.AttachResult{}, err
+	}
+	defer func() { _ = term.Restore(int(in.Fd()), old) }()
+	cr, err := cancelreader.NewReader(in)
+	if err != nil {
+		return client.AttachResult{}, err
+	}
+	defer cr.Close()
+	keys := make(chan []byte, 8)
+	go func() {
+		buf := make([]byte, 256)
+		for {
+			n, err := cr.Read(buf)
+			if n > 0 {
+				keys <- append([]byte(nil), buf[:n]...)
+			}
+			if err != nil {
+				close(keys)
+				return
+			}
+		}
+	}()
+	cols, rows := 0, 0
+	draw := func() {
+		c, r, err := term.GetSize(int(out.Fd()))
+		if err != nil || c == cols && r == rows {
+			return
+		}
+		cols, rows = c, r
+		_, _ = io.WriteString(out, demoScreen(s, cols, rows))
+	}
+	_, _ = io.WriteString(out, "\x1b[?1049h")
+	draw()
+	defer func() {
+		cr.Cancel()
+		_, _ = io.WriteString(out, "\x1b[?1049l")
+	}()
+	tick := time.NewTicker(200 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		select {
+		case k, ok := <-keys:
+			// Ctrl+\, as a legacy byte or a kitty keyboard sequence.
+			if !ok || bytes.IndexByte(k, 0x1c) >= 0 || bytes.Contains(k, []byte("\x1b[92;5u")) {
+				return client.AttachResult{Detached: true}, nil
+			}
+		case <-tick.C:
+			draw()
+		case <-ctx.Done():
+			return client.AttachResult{Detached: true}, nil
+		}
+	}
 }
 
 type demoConn struct {
@@ -158,14 +235,21 @@ func (c *demoConn) RenameSession(_ context.Context, id, name string) error {
 }
 
 func (c *demoConn) Doctor(context.Context) (client.HostInfo, error) {
-	return client.HostInfo{Hostname: c.host, OS: "linux", Arch: "amd64", Distro: "Debian GNU/Linux 13 (trixie)", CPUs: 4,
+	return client.HostInfo{Hostname: c.host, User: "me", OS: "linux", Arch: "amd64", Distro: "Debian GNU/Linux 13 (trixie)", CPUs: 4,
 		MemTotal: 16 << 30, DiskFree: 61 << 30, Version: "0.1.0", MemoryMax: 6 << 30,
 		Agents: map[string]string{"claude": "/home/me/.local/bin/claude", "codex": "/home/me/.local/bin/codex",
 			"opencode": "/home/me/.opencode/bin/opencode", "gemini": "/usr/local/bin/gemini", "shell": "/bin/bash"}}, nil
 }
 
 func (c *demoConn) Peek(_ context.Context, id string, _ int) ([]byte, int, int, error) {
-	return []byte(demoScreen(id)), 120, 34, nil
+	c.be.mu.Lock()
+	defer c.be.mu.Unlock()
+	for _, s := range c.be.sessions[c.host] {
+		if s.ID == id {
+			return []byte(demoScreen(s, 96, 22)), 96, 22, nil
+		}
+	}
+	return nil, 0, 0, errors.New("no such session")
 }
 
 func (c *demoConn) Setup(context.Context) (client.SetupResult, error) {
@@ -190,8 +274,9 @@ func (c *demoConn) Done() <-chan struct{} { return c.done }
 
 func (c *demoConn) Close() { c.once.Do(func() { close(c.done) }) }
 
-// demoScreen is a made-up agent screen for the preview.
-func demoScreen(id string) string {
+// demoScreen is a made-up agent's screen, cols by rows, as its own bytes:
+// a transcript at the top and a prompt box at the bottom, edge to edge.
+func demoScreen(s client.Session, cols, rows int) string {
 	const (
 		dim   = "\x1b[2m"
 		bold  = "\x1b[1m"
@@ -201,25 +286,62 @@ func demoScreen(id string) string {
 		mag   = "\x1b[35m"
 		reset = "\x1b[0m"
 	)
-	switch id {
-	case "k2v7m4qa":
-		return "\r\n" + bold + "> " + reset + "Move the session store to the new token format, and keep old tokens working.\r\n\r\n" +
-			mag + "● " + reset + "I'll read the current store first.\r\n" +
-			dim + "  Read internal/auth/store.go (212 lines)\r\n  Read internal/auth/token.go (96 lines)" + reset + "\r\n\r\n" +
-			mag + "● " + reset + "Plan: add a v2 encoder, read both formats, migrate on write.\r\n\r\n" +
-			mag + "● " + reset + "Update(internal/auth/token.go)\r\n" +
-			green + "  + func encodeV2(t Token) ([]byte, error) {" + reset + "\r\n" +
-			green + "  +     return json.Marshal(tokenV2{ID: t.ID, Exp: t.Exp})" + reset + "\r\n" +
-			red + "  - return legacyEncode(t)" + reset + "\r\n\r\n" +
-			bold + " Run the migration tests?" + reset + "\r\n" +
-			"  go test ./internal/auth/... -run Migrate\r\n\r\n" +
-			" Do you want to proceed?\r\n" + cyan + " ❯ 1. Yes" + reset + "\r\n   2. No, and tell the agent what to do differently\r\n"
-	case "p9x3hdte":
-		return "\r\n" + bold + "> " + reset + "Make the API tests pass on the new schema.\r\n\r\n" +
-			dim + "  ran go test ./... (3 failed)" + reset + "\r\n" +
-			"  fixing handlers/users.go: the nullable email column\r\n\r\n" +
-			cyan + "• Working (14s • esc to interrupt)" + reset + "\r\n"
+	var talk []string
+	switch s.State {
+	case "needs_input":
+		talk = []string{
+			bold + "> " + reset + "Move the session store to the new token format, and keep old tokens working.",
+			"",
+			mag + "● " + reset + "I'll read the current store first.",
+			dim + "  Read internal/auth/store.go (212 lines)" + reset,
+			dim + "  Read internal/auth/token.go (96 lines)" + reset,
+			"",
+			mag + "● " + reset + "Plan: add a v2 encoder, read both formats, migrate on write.",
+			"",
+			mag + "● " + reset + "Edit internal/auth/token.go",
+			green + "  + func encodeV2(t Token) ([]byte, error) {" + reset,
+			green + "  +     return json.Marshal(tokenV2{ID: t.ID, Exp: t.Exp})" + reset,
+			red + "  - return legacyEncode(t)" + reset,
+			"",
+			bold + "  Run the migration tests?" + reset,
+			"  go test ./internal/auth/... -run Migrate",
+			"",
+			cyan + "  ❯ 1. Yes" + reset,
+			"    2. No, and tell the agent what to do differently",
+		}
+	case "working":
+		talk = []string{
+			bold + "> " + reset + "Make the API tests pass on the new schema.",
+			"",
+			dim + "  ran go test ./... (3 failed)" + reset,
+			"  fixing handlers/users.go: the nullable email column",
+			"",
+			cyan + "∴ Working (14s · esc to interrupt)" + reset,
+		}
 	default:
-		return "\r\n" + dim + "  (idle)" + reset + "\r\n"
+		talk = []string{dim + "  (idle)" + reset}
 	}
+	if rows < 6 || cols < 20 {
+		return "\x1b[H\x1b[2J" + strings.Join(talk, "\r\n")
+	}
+	room := rows - 5 // a blank first row, and the prompt box with its status line
+	if len(talk) > room {
+		talk = talk[len(talk)-room:]
+	}
+	var b strings.Builder
+	b.WriteString("\x1b[H\x1b[2J")
+	at := func(row int, text string) { fmt.Fprintf(&b, "\x1b[%d;1H%s", row, text) }
+	for i, l := range talk {
+		at(2+i, " "+l)
+	}
+	line := strings.Repeat("─", cols-2)
+	at(rows-3, dim+"╭"+line+"╮"+reset)
+	at(rows-2, dim+"│"+reset+" > "+strings.Repeat(" ", cols-5)+dim+"│"+reset)
+	at(rows-1, dim+"╰"+line+"╯"+reset)
+	where := strings.Replace(s.Cwd, "/home/me", "~", 1) + " · " + s.Agent
+	left := " ? for shortcuts"
+	gap := max(cols-len(left)-len([]rune(where))-1, 1)
+	at(rows, dim+left+strings.Repeat(" ", gap)+where+" "+reset)
+	fmt.Fprintf(&b, "\x1b[%d;5H", rows-1)
+	return b.String()
 }

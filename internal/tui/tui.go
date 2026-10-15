@@ -1,8 +1,9 @@
-// Package tui is the home screen: hosts, sessions, dialogs and the command palette.
+// Package tui is the launcher: hosts, then sessions, one list at a time, with
+// dialogs and the command palette over it (docs/ux.md).
 //
 // The model never blocks: every request to a host runs in a tea.Cmd and
 // reports back with a message. Attaching hands the whole terminal to
-// client.Attach through tea.Exec, and the home screen comes back when the
+// client.Attach through tea.Exec, and the launcher comes back when the
 // user detaches.
 package tui
 
@@ -21,15 +22,15 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-// Run opens the home screen.
+// Run opens the launcher.
 func Run(ctx context.Context) error { return RunWith(ctx, Options{}) }
 
-// RunWith opens the home screen with options; Motion is set from the settings.
+// RunWith opens the launcher with options; Motion is set from the settings.
 func RunWith(ctx context.Context, o Options) error { return runWith(ctx, realBackend{}, o) }
 
 func runWith(ctx context.Context, be Backend, o Options) error {
 	if !term.IsTerminal(int(os.Stdin.Fd())) || !term.IsTerminal(int(os.Stdout.Fd())) {
-		return &client.UserError{Msg: "the home screen needs a terminal", Hint: brand.Name + " ls, or run it in a terminal"}
+		return &client.UserError{Msg: "the launcher needs a terminal", Hint: brand.Name + " ls, or run it in a terminal"}
 	}
 	o.Motion = motionOn(be.Settings().UI.Motion, os.Getenv)
 	m := New(ctx, be, o)
@@ -65,31 +66,34 @@ func (m *Model) View() tea.View {
 	v := tea.NewView(m.render())
 	v.AltScreen = true
 	v.WindowTitle = brand.DisplayName
+	if h := m.selectedHost(); h != nil && m.screen == scrSessions {
+		v.WindowTitle += " · " + h.name()
+	}
 	return v
 }
 
-// render draws the whole screen as a string: the home screen or the
-// first-run screen, a dialog over a dimmed backdrop, and the toasts.
+// render draws the whole screen as a string: the launcher or the first-run
+// screen, a dialog over a dimmed backdrop, the notices and the quit popup.
 func (m *Model) render() string {
 	if m.width <= 0 || m.height <= 0 {
 		return ""
 	}
+	var layers []layer
 	base := m.viewFirstRun()
 	if len(m.hosts) > 0 {
-		base = m.viewHome()
+		var notices layer
+		base, notices = m.viewLauncher()
+		if notices.s != "" {
+			layers = append(layers, notices) // sharp, even over a dimmed backdrop
+		}
 	}
-	var layers []layer
 	if m.modal != nil {
 		b := m.modal.view(m)
 		bw, bh := lipgloss.Size(b)
-		y := (m.height - bh) / 2
-		if t, ok := m.modal.(interface{ top() bool }); ok && t.top() {
-			y = min(y, max(m.height/6, 1))
-		}
-		layers = append(layers, layer{s: b, x: max((m.width-bw)/2, 0), y: max(y, 0)})
+		layers = append(layers, layer{s: b, x: max((m.width-bw)/2, 0), y: max((m.height-bh)/2, 0)})
 	}
-	if t, ok := m.toastLayer(); ok {
-		layers = append(layers, t)
+	if q, ok := m.quitLayer(); ok {
+		layers = append(layers, q)
 	}
 	return compose(base, m.width, m.height, m.modal != nil, layers...)
 }
@@ -131,9 +135,8 @@ func (f *funcExec) Run() error {
 func (m *Model) attachTo(h *hostConn, id, name string) tea.Cmd {
 	o := client.AttachOptions{
 		Host: h.host, Session: id, Settings: m.settings, State: m.attach,
-		// The home screen has let go of the terminal, so SSH may prompt.
+		// The launcher has let go of the terminal, so SSH may prompt.
 		Interactive: true,
-		Title:       fmt.Sprintf("%s · %s/%s", brand.DisplayName, h.name(), name),
 	}
 	var res client.AttachResult
 	var aerr error

@@ -35,12 +35,13 @@ func offlineErr(h *hostConn) error {
 	return &client.UserError{Msg: h.name() + " is offline", Hint: fmt.Sprintf("%s host test %s", brand.Name, h.name())}
 }
 
-// newSessionHost picks the host for "session: new".
+// newSessionHost picks the host for "session: new": the host in play, or
+// on the list of every host, the selected session's host.
 func (m *Model) newSessionHost() *hostConn {
 	if h := m.selectedHost(); h != nil {
 		return h
 	}
-	if h, _ := m.selectedPair(); h != nil && m.focus == paneSessions {
+	if h, _ := m.selectedPair(); h != nil {
 		return h
 	}
 	if len(m.hosts) == 1 {
@@ -52,10 +53,18 @@ func (m *Model) newSessionHost() *hostConn {
 func (m *Model) openNewSession() tea.Cmd {
 	h := m.newSessionHost()
 	if h == nil {
-		m.focus = paneHosts
-		return m.toast(toastInfo, "Choose a host, then press enter.")
+		m.backToHosts()
+		return m.toast(toastInfo, "Choose a host, then press n.")
 	}
 	m.modal = newSessionDialog(m, h)
+	return nil
+}
+
+// openSelectedHost is Enter on the hosts list.
+func (m *Model) openSelectedHost() tea.Cmd {
+	if h := m.selectedHost(); h != nil {
+		m.openHost(h)
+	}
 	return nil
 }
 
@@ -93,8 +102,9 @@ func (m *Model) onStarted(msg startedMsg) tea.Cmd {
 	}
 	h.sessions = append(h.sessions, *msg.s)
 	h.changes++
-	m.hostSel, m.focus = indexOf(m.visibleHosts(), h)+1, paneSessions
-	m.sessFilter = filter{}
+	if m.screen != scrSessions || m.cur != "" && m.cur != h.name() {
+		m.openHost(h)
+	}
 	m.sel, m.autoSel = sessKey{h.name(), msg.s.ID}, false
 	m.syncSel()
 	if msg.attach {
@@ -103,19 +113,10 @@ func (m *Model) onStarted(msg startedMsg) tea.Cmd {
 	return tea.Batch(m.toast(toastSuccess, fmt.Sprintf("Started %s on %s.", msg.s.Name, h.name())), m.listSessions(h))
 }
 
-func indexOf(hs []*hostConn, h *hostConn) int {
-	for i, x := range hs {
-		if x == h {
-			return i
-		}
-	}
-	return -1
-}
-
 func (m *Model) attachSelected() tea.Cmd {
 	h, s := m.selectedPair()
 	if s == nil {
-		if m.focus == paneSessions && len(m.rows()) == 0 {
+		if sessionRows(m.rows()) == 0 && m.sessFilter.query() == "" {
 			return m.openNewSession()
 		}
 		return nil

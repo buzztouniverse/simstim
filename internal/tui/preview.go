@@ -31,9 +31,66 @@ type peekMsg struct {
 	err  error
 }
 
+// previewModal shows the selected session's last screen over the list
+// (docs/ux.md 2.6). It opens on Space and is never a permanent pane.
+type previewModal struct{}
+
+func (m *Model) previewOpen() bool {
+	_, ok := m.modal.(*previewModal)
+	return ok
+}
+
+// openPreview shows the preview and loads it at once.
+func (m *Model) openPreview() tea.Cmd {
+	if m.selected() == nil {
+		return nil
+	}
+	m.modal = &previewModal{}
+	m.preview = previewState{key: m.sel, seq: m.preview.seq + 1, loading: true}
+	return m.peek()
+}
+
+func (p *previewModal) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
+	switch k.String() {
+	case "esc", "space", "q":
+		m.modal = nil
+	case "enter":
+		m.modal = nil
+		return m.attachSelected()
+	case "up", "k":
+		m.moveSel(-1)
+	case "down", "j":
+		m.moveSel(1)
+	}
+	return nil
+}
+
+func (p *previewModal) view(m *Model) string {
+	hc, s := m.selectedPair()
+	if s == nil {
+		return ""
+	}
+	w, h := max(min(m.width-4, 132), 30), max(m.height-2, 8)
+	cw := w - 4
+	_, label := m.look(*s)
+	var facts []string
+	for _, f := range []string{s.Agent, truncPath(homePath(hc, s.Cwd), max(cw/3, 16)), fmtMemory(s.MemoryCurrent, s.MemoryMax)} {
+		if f != "" {
+			facts = append(facts, f)
+		}
+	}
+	body := []string{sFaint.Render(trunc(strings.Join(facts, dot), cw)), strings.Repeat("─", cw)}
+	body = append(body, m.previewLines(cw, h-4)...)
+	hints := []hint{{"Enter", "attach"}, {"↑↓", "next"}, {"Esc", "close"}}
+	return box(w, h, s.Name, label.st.Render(label.s), hintsFor(hints, w), body, toneNormal)
+}
+
 // schedulePreview loads the preview of the selected session after a short
 // pause, so moving quickly through the list does not flood the host.
 func (m *Model) schedulePreview() tea.Cmd {
+	if !m.previewOpen() {
+		return nil
+	}
 	m.preview.seq++
 	if m.sel == (sessKey{}) {
 		m.preview = previewState{seq: m.preview.seq}
@@ -42,15 +99,12 @@ func (m *Model) schedulePreview() tea.Cmd {
 	if m.preview.key != m.sel {
 		m.preview = previewState{key: m.sel, seq: m.preview.seq, loading: true}
 	}
-	if !m.showPreview {
-		return nil
-	}
 	return m.after(previewDelay, previewTickMsg{seq: m.preview.seq})
 }
 
 // peek asks the host for the selected session's newest output.
 func (m *Model) peek() tea.Cmd {
-	if !m.showPreview || m.preview.inflight || m.preview.key == (sessKey{}) {
+	if !m.previewOpen() || m.preview.inflight || m.preview.key == (sessKey{}) {
 		return nil
 	}
 	h := m.hostByName(m.preview.key.host)
@@ -182,21 +236,17 @@ func (m *Model) previewLines(w, h int) []string {
 	p := m.preview
 	switch {
 	case p.key != m.sel || (p.shot == nil && p.loading):
-		return []string{sPrimary.Render(m.spinner()) + " " + sMuted.Render("Loading the last screen…")}
+		return []string{sKey.Render(m.spinner()) + " " + sFaint.Render("Loading the last screen…")}
 	case p.shot == nil && p.err != "":
-		return wrapMuted(sentence(p.err), w)
+		var out []string
+		for _, l := range wrap(sentence(p.err), w) {
+			out = append(out, sFaint.Render(l))
+		}
+		return out
 	case p.shot == nil:
-		return []string{sMuted.Render("No screen to show.")}
+		return []string{sFaint.Render("No screen to show.")}
 	case p.shot.blank:
-		return []string{sMuted.Render("No output yet.")}
+		return []string{sFaint.Render("No output yet.")}
 	}
 	return p.shot.view(w, h)
-}
-
-func wrapMuted(s string, w int) []string {
-	var out []string
-	for _, l := range wrap(s, w) {
-		out = append(out, sMuted.Render(l))
-	}
-	return out
 }

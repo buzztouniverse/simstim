@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
 	"github.com/iAmLakshya/simstim/internal/client"
@@ -17,7 +16,7 @@ import (
 var update = flag.Bool("update", false, "rewrite the golden files in testdata")
 
 // screen is what the terminal shows, without colours or styles.
-func screen(m *Model) string {
+func plainScreen(m *Model) string {
 	lines := strings.Split(ansi.Strip(m.render()), "\n")
 	for i, l := range lines {
 		lines[i] = strings.TrimRight(l, " ")
@@ -27,7 +26,7 @@ func screen(m *Model) string {
 
 func golden(t *testing.T, name string, m *Model) {
 	t.Helper()
-	got := screen(m)
+	got := plainScreen(m)
 	for i, l := range strings.Split(strings.TrimSuffix(got, "\n"), "\n") {
 		if w := ansi.StringWidth(l); w > m.width {
 			t.Errorf("%s: line %d is %d cells wide, more than %d", name, i+1, w, m.width)
@@ -52,15 +51,19 @@ func golden(t *testing.T, name string, m *Model) {
 	}
 }
 
-// home is the lab, with atlas-dev selected and its preview loaded.
+// home is the lab on the hosts screen, with atlas-dev selected.
 func home(t *testing.T, w, h int) *harness {
 	hs := newHarness(t, labBackend(), w, h)
-	hs.key("down") // atlas-dev
-	hs.fire(isPreviewTick)
+	hs.m.motion = false
 	return hs
 }
 
-func isPreviewTick(msg tea.Msg) bool { _, ok := msg.(previewTickMsg); return ok }
+// sessions is the lab on atlas-dev's sessions.
+func sessions(t *testing.T, w, h int) *harness {
+	hs := home(t, w, h)
+	hs.key("enter")
+	return hs
+}
 
 var sizes = []struct{ w, h int }{{80, 24}, {120, 36}}
 
@@ -72,26 +75,32 @@ func TestGolden(t *testing.T) {
 		{"first_run", func(t *testing.T, w, h int) *Model {
 			return newHarness(t, newFakeBackend(), w, h).m
 		}},
-		{"home", func(t *testing.T, w, h int) *Model { return home(t, w, h).m }},
-		{"home_sessions", func(t *testing.T, w, h int) *Model {
-			hs := home(t, w, h)
-			hs.key("tab", "down")
-			hs.fire(isPreviewTick)
+		{"hosts", func(t *testing.T, w, h int) *Model { return home(t, w, h).m }},
+		{"sessions", func(t *testing.T, w, h int) *Model {
+			hs := sessions(t, w, h)
+			hs.key("down")
 			return hs.m
 		}},
-		{"all_hosts", func(t *testing.T, w, h int) *Model {
+		{"all_sessions", func(t *testing.T, w, h int) *Model {
 			hs := home(t, w, h)
-			hs.key("up", "tab", "space")
+			hs.m.openHost(nil)
 			return hs.m
 		}},
 		{"offline", func(t *testing.T, w, h int) *Model {
 			hs := home(t, w, h)
-			hs.key("down")
+			hs.key("down", "enter")
+			return hs.m
+		}},
+		{"empty_host", func(t *testing.T, w, h int) *Model {
+			hs := home(t, w, h)
+			hs.be.state["gcp-dev"].sessions = nil
+			hs.m.hostByName("gcp-dev").sessions = nil
+			hs.key("down", "down", "enter")
 			return hs.m
 		}},
 		{"new_session", func(t *testing.T, w, h int) *Model {
 			hs := home(t, w, h)
-			hs.key("enter", "tab")
+			hs.key("n", "tab")
 			hs.typeText("/src/app")
 			hs.key("tab")
 			hs.typeText("auth")
@@ -100,35 +109,40 @@ func TestGolden(t *testing.T) {
 		{"new_session_error", func(t *testing.T, w, h int) *Model {
 			hs := home(t, w, h)
 			hs.be.state["atlas-dev"].newErr = &client.UserError{Msg: "aider is not installed on this host", Hint: "Install it on the host, then try again."}
-			hs.key("enter", "enter")
+			hs.key("n", "enter")
 			return hs.m
 		}},
 		{"delete", func(t *testing.T, w, h int) *Model {
-			hs := home(t, w, h)
-			hs.key("tab", "down", "d")
+			hs := sessions(t, w, h)
+			hs.key("down", "d")
 			return hs.m
 		}},
 		{"rename", func(t *testing.T, w, h int) *Model {
-			hs := home(t, w, h)
-			hs.key("tab", "r", "ctrl+u")
+			hs := sessions(t, w, h)
+			hs.key("r", "ctrl+u")
 			hs.typeText("auth-v2")
 			return hs.m
 		}},
 		{"filter_empty", func(t *testing.T, w, h int) *Model {
-			hs := home(t, w, h)
-			hs.key("tab", "/")
+			hs := sessions(t, w, h)
+			hs.key("/")
 			hs.typeText("xyz")
 			return hs.m
 		}},
 		{"palette", func(t *testing.T, w, h int) *Model {
-			hs := home(t, w, h)
+			hs := sessions(t, w, h)
 			hs.key("ctrl+o")
 			hs.typeText("ses")
 			return hs.m
 		}},
 		{"help", func(t *testing.T, w, h int) *Model {
-			hs := home(t, w, h)
+			hs := sessions(t, w, h)
 			hs.key("?")
+			return hs.m
+		}},
+		{"preview", func(t *testing.T, w, h int) *Model {
+			hs := sessions(t, w, h)
+			hs.key("space")
 			return hs.m
 		}},
 		{"details", func(t *testing.T, w, h int) *Model {
@@ -136,10 +150,15 @@ func TestGolden(t *testing.T) {
 			hs.key("i")
 			return hs.m
 		}},
-		{"toasts", func(t *testing.T, w, h int) *Model {
-			hs := home(t, w, h)
-			hs.key("tab", "y")
+		{"notices", func(t *testing.T, w, h int) *Model {
+			hs := sessions(t, w, h)
+			hs.key("y")
 			hs.m.toastErr(&client.UserError{Msg: "cannot reach aws-gpu: timed out", Hint: "ssh aws-gpu"})
+			return hs.m
+		}},
+		{"quit", func(t *testing.T, w, h int) *Model {
+			hs := home(t, w, h)
+			hs.key("ctrl+c")
 			return hs.m
 		}},
 		{"wizard_where", func(t *testing.T, w, h int) *Model {

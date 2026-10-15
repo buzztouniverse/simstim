@@ -211,7 +211,7 @@ func (m *Model) onConn(msg tea.Msg) tea.Cmd {
 		}
 		h.conn, h.status, h.err, h.backoff = msg.conn, stOnline, nil, 0
 		cmds := []tea.Cmd{m.listSessions(h), m.ping(h), m.doctor(h), waitDone(h.name(), h.gen, h.conn)}
-		if m.preview.key.host == h.name() {
+		if m.previewOpen() && m.preview.key.host == h.name() {
 			cmds = append(cmds, m.peek())
 		}
 		return tea.Batch(cmds...)
@@ -285,7 +285,7 @@ func (m *Model) onConn(msg tea.Msg) tea.Cmd {
 		for _, h := range m.hosts {
 			cmds = append(cmds, m.listSessions(h))
 		}
-		if s := m.selected(); s != nil && s.Alive {
+		if s := m.selected(); s != nil && s.Alive && m.previewOpen() {
 			cmds = append(cmds, m.peek())
 		}
 		return tea.Batch(cmds...)
@@ -344,7 +344,9 @@ func (m *Model) removeHost(name string) tea.Cmd {
 		}
 		m.hosts = append(m.hosts[:i], m.hosts[i+1:]...)
 		h.gen++
-		m.hostSel = min(m.hostSel, len(m.visibleHosts()))
+		if m.cur == name {
+			m.screen, m.cur = scrHosts, ""
+		}
 		m.syncSel()
 		if h.conn != nil {
 			return m.dropConn(h.conn)
@@ -385,39 +387,39 @@ func sortSessions(list []client.Session) {
 
 func ended(s client.Session) bool { return rank(s) == 3 }
 
-// look is how a session's state is drawn: its glyph, label and their styles.
-func (m *Model) look(s client.Session) (glyph string, gst seg, label seg) {
+// look is how a session's state is drawn: its glyph and its label.
+func (m *Model) look(s client.Session) (glyph, label seg) {
 	spin := glyphSpinStill
 	if m.motion {
 		spin = spinFrames[m.spin%len(spinFrames)]
 	}
 	switch s.State {
 	case api.StateNeedsInput:
-		return glyphNeedsInput, seg{st: sWarning}, seg{"needs input", sWarning}
+		return seg{glyphNeedsInput, sWarning}, seg{"needs input", sWarning}
 	case api.StateWorking:
-		return spin, seg{st: sPrimary}, seg{"working", sPrimary}
+		return seg{spin, sKey}, seg{"working", sKey}
 	case api.StateStarting:
-		return spin, seg{st: sPrimary}, seg{"starting", sMuted}
+		return seg{spin, sKey}, seg{"starting", sFaint}
 	case api.StateIdle:
-		return glyphIdle, seg{st: sMuted}, seg{"idle", sMuted}
+		return seg{glyphIdle, sFaint}, seg{"idle", sFaint}
 	case api.StateExited:
 		switch {
 		case s.Signal != "":
-			return glyphFail, seg{st: sDanger}, seg{"stopped " + strings.TrimPrefix(s.Signal, "SIG"), sDanger}
+			return seg{glyphFail, sDanger}, seg{"stopped " + strings.TrimPrefix(s.Signal, "SIG"), sDanger}
 		case s.ExitCode != nil && *s.ExitCode != 0:
-			return glyphFail, seg{st: sDanger}, seg{fmt.Sprintf("exited %d", *s.ExitCode), sDanger}
+			return seg{glyphFail, sDanger}, seg{fmt.Sprintf("exited %d", *s.ExitCode), sDanger}
 		default:
-			return glyphOK, seg{st: sSuccess}, seg{"exited 0", sMuted}
+			return seg{glyphOK, sSuccess}, seg{"exited 0", sFaint}
 		}
 	case api.StateErrored:
 		if s.OOM {
-			return glyphFail, seg{st: sDanger}, seg{"out of memory", sDanger}
+			return seg{glyphFail, sDanger}, seg{"out of memory", sDanger}
 		}
-		return glyphFail, seg{st: sDanger}, seg{"failed", sDanger}
+		return seg{glyphFail, sDanger}, seg{"failed", sDanger}
 	case api.StateLost:
-		return glyphOffline, seg{st: sMuted}, seg{"lost", sMuted}
+		return seg{glyphOffline, sFaint}, seg{"lost", sFaint}
 	}
-	return glyphIdle, seg{st: sMuted}, seg{strings.ReplaceAll(s.State, "_", " "), sMuted}
+	return seg{glyphIdle, sFaint}, seg{strings.ReplaceAll(s.State, "_", " "), sFaint}
 }
 
 // homePath shows a path on h with its home folder as "~".

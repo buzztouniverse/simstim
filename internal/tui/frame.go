@@ -7,81 +7,110 @@ import (
 	uv "github.com/charmbracelet/ultraviolet"
 )
 
-// boxStyle colours a frame: its lines and its title.
-type boxStyle struct {
-	line  lipgloss.Style
-	title lipgloss.Style
-}
+// tone colours a frame and its title.
+type tone int
 
-var (
-	boxNormal  = boxStyle{line: sBorder, title: sBold}
-	boxDanger  = boxStyle{line: sDanger, title: sDanger.Bold(true)}
-	boxPreview = boxStyle{line: sBorder.Faint(true), title: sBold}
+const (
+	toneNormal tone = iota
+	toneDanger
 )
 
-// box draws a rounded frame exactly w cells wide and h rows high: the title
-// and its context in the top border, key hints or facts in the bottom border
-// (docs/ux.md 1.2, "status lives in borders"). right and bottom may be styled.
-func box(w, h int, title, right, bottom string, body []string, bs boxStyle) string {
-	w, h = max(w, 6), max(h, 2)
+func (t tone) styles() (line, title lipgloss.Style) {
+	if t == toneDanger {
+		return sDanger, sErrHead
+	}
+	return sPlain, sTitle
+}
+
+// box draws a notched frame exactly w cells wide and h rows high (docs/ux.md
+// 2): a rounded border in the terminal's own colour, the title set into the
+// top border, a fact at the top right, and key hints at the bottom right.
+// Each body line gets one cell of padding on both sides, so it should be w-4
+// cells wide; longer lines are cut.
+func box(w, h int, title, right, bottom string, body []string, t tone) string {
+	w, h = max(w, 8), max(h, 2)
+	line, _ := t.styles()
 	var b strings.Builder
-	b.WriteString(topBorder(w, title, right, bs))
-	side := bs.line.Render("│")
+	b.WriteString(topBorder(w, title, right, t))
+	side := line.Render("│")
 	for i := range h - 2 {
 		l := ""
 		if i < len(body) {
 			l = body[i]
 		}
-		b.WriteString("\n" + side + fit(l, w-2) + side)
+		b.WriteString("\n" + side + " " + fit(l, w-4) + " " + side)
 	}
-	b.WriteString("\n" + bottomBorder(w, bottom, bs))
+	b.WriteString("\n" + bottomBorder(w, bottom, t))
 	return b.String()
 }
 
-func topBorder(w int, title, right string, bs boxStyle) string {
+func topBorder(w int, title, right string, t tone) string {
+	line, tst := t.styles()
 	inner := w - 2
 	rw := 0
+	if cells(right) == 0 {
+		right = ""
+	}
 	if right != "" {
+		right = trunc(right, max(inner/2-4, 0))
 		rw = cells(right) + 3 // " right ─"
 	}
 	if title != "" {
-		room := inner - 1 - 2 - 1 - rw // "─", spaces round the title, at least one "─"
-		if room < 4 && rw > 0 {
-			right, rw = "", 0
-			room = inner - 4
-		}
-		title = trunc(title, room)
+		title = trunc(title, max(inner-1-2-1-rw, 1))
 	}
-	out := bs.line.Render("╭─")
+	out := line.Render("╭─")
 	used := 1
 	if title != "" {
-		out += " " + bs.title.Render(title) + " "
+		out += tst.Render(" " + title + " ")
 		used += cells(title) + 2
 	}
-	out += bs.line.Render(strings.Repeat("─", max(inner-used-rw, 0)))
+	out += line.Render(strings.Repeat("─", max(inner-used-rw, 0)))
 	if right != "" {
-		out += " " + right + " " + bs.line.Render("─")
+		out += " " + right + " " + line.Render("─")
 	}
-	return out + bs.line.Render("╮")
+	return out + line.Render("╮")
 }
 
-func bottomBorder(w int, bottom string, bs boxStyle) string {
+// bottomBorder carries hints or a fact, aligned to the right.
+func bottomBorder(w int, bottom string, t tone) string {
+	line, _ := t.styles()
 	inner := w - 2
 	if bottom == "" {
-		return bs.line.Render("╰" + strings.Repeat("─", inner) + "╯")
+		return line.Render("╰" + strings.Repeat("─", inner) + "╯")
 	}
 	bottom = trunc(bottom, inner-4)
 	fill := inner - 3 - cells(bottom)
-	return bs.line.Render("╰─") + " " + bottom + " " + bs.line.Render(strings.Repeat("─", max(fill, 0))+"╯")
+	return line.Render("╰"+strings.Repeat("─", max(fill, 0))) + " " + bottom + " " + line.Render("─╯")
 }
 
-// hint is one key and what it does, for a bottom border.
+// hint is one key and what it does.
 type hint struct{ key, desc string }
 
-// hintLine draws hints in at most w cells. When they do not fit, it drops
-// them from the second-to-last backwards: the first hints are the most useful
-// and the last one is always "? help" or "esc".
+// hintLine draws hints the way a border shows them, "Enter attach · Esc
+// back": keys in the key colour, words and dots faint. When they do not fit
+// in w cells it drops them from the second-to-last backwards: the first
+// hints are the most useful, and the last is the way out.
 func hintLine(hs []hint, w int) string {
+	hs = fitHints(hs, w)
+	parts := make([]string, len(hs))
+	for i, h := range hs {
+		parts[i] = sKey.Render(h.key) + sFaint.Render(" "+h.desc)
+	}
+	return strings.Join(parts, sFaint.Render(dot))
+}
+
+// welcomeLine draws hints the way the welcome screen shows them, "ctrl+o for
+// commands · ? for shortcuts": keys bold, words faint.
+func welcomeLine(hs []hint, w int) string {
+	hs = fitHints(hs, w)
+	parts := make([]string, len(hs))
+	for i, h := range hs {
+		parts[i] = sBold.Render(h.key) + sFaint.Render(" "+h.desc)
+	}
+	return strings.Join(parts, sFaint.Render(dot))
+}
+
+func fitHints(hs []hint, w int) []hint {
 	hs = append([]hint(nil), hs...)
 	width := func(hs []hint) int {
 		n := 0
@@ -93,18 +122,32 @@ func hintLine(hs []hint, w int) string {
 		}
 		return n
 	}
-	for len(hs) > 2 && width(hs) > w {
+	for len(hs) > 1 && width(hs) > w {
+		if len(hs) == 2 {
+			hs = hs[1:]
+			continue
+		}
 		hs = append(hs[:len(hs)-2], hs[len(hs)-1])
 	}
-	parts := make([]string, len(hs))
-	for i, h := range hs {
-		parts[i] = sKey.Render(h.key) + " " + sMuted.Render(h.desc)
-	}
-	return strings.Join(parts, sMuted.Render(dot))
+	return hs
 }
 
 // hintsFor fits hints into the bottom border of a box w cells wide.
 func hintsFor(hs []hint, w int) string { return hintLine(hs, w-6) }
+
+// listRow draws one row of a list. A selected row is a bar in the title
+// colour with black text, bold kept: the one strong colour on the screen.
+func listRow(selected bool, segs ...seg) string {
+	var b strings.Builder
+	for _, sg := range segs {
+		st := sg.st
+		if selected {
+			st = sPlain.Foreground(colOnSel).Background(colTitle).Bold(sg.st.GetBold())
+		}
+		b.WriteString(st.Render(sg.s))
+	}
+	return b.String()
+}
 
 // layer is a block drawn over the screen at a position.
 type layer struct {
@@ -113,8 +156,8 @@ type layer struct {
 }
 
 // compose draws the layers over base on a w×h canvas. With dim set, the
-// backdrop is dimmed by setting the dim attribute on its cells, so it works
-// with any theme (docs/ux.md 2.5).
+// backdrop is dimmed by setting the faint attribute on its cells, so it works
+// with any theme.
 func compose(base string, w, h int, dim bool, layers ...layer) string {
 	c := lipgloss.NewCanvas(w, h)
 	uv.NewStyledString(base).Draw(c, c.Bounds())

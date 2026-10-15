@@ -101,12 +101,12 @@ func (in *input) view(w int, focused bool) string {
 	if len(in.val) == 0 {
 		ph := []rune(trunc(in.placeholder, w))
 		if !focused {
-			return sMuted.Render(string(ph))
+			return sFaint.Render(string(ph))
 		}
 		if len(ph) == 0 {
 			return sPlain.Reverse(true).Render(" ")
 		}
-		return sPlain.Reverse(true).Render(string(ph[:1])) + sMuted.Render(string(ph[1:]))
+		return sPlain.Reverse(true).Render(string(ph[:1])) + sFaint.Render(string(ph[1:]))
 	}
 	start := 0
 	if focused && in.pos >= w {

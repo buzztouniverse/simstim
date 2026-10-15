@@ -1,0 +1,36 @@
+
+
+
+
+
+            ╭─ atlas-dev ─────────────────────────────────────────────────────────────────────────── 9ms ─╮
+            │                                                                                              │
+            │  ● auth-refactor             claude    ~/src/app                        needs input      2m  │
+            │  ≈ api-tests                 codex     ~/src/api                        working         14s  │
+            │  ○ notes                     shell     ~                                idle             1h  │
+            │  ✓ docs-pass                 opencode  ~/src/docs                       exited 0         3h  │
+            │                                                                                              │
+            ╰───────────────────────────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+
+              ✓ Copied: simstim attach atlas-dev/auth-refactor.
+              Error: Cannot reach aws-gpu: timed out.
+                     ssh aws-gpu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

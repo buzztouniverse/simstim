@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"strings"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
@@ -107,49 +108,57 @@ func (m *Model) toastErr(err error) tea.Cmd {
 	return m.after(toastErrorLife, toastTickMsg{})
 }
 
-// toastLayer draws the toasts in one box at the bottom right, above the
-// bottom border.
-func (m *Model) toastLayer() (layer, bool) {
-	if len(m.toasts.shown) == 0 || m.width < 20 {
+// noticeLines draws the toasts as short lines under the launcher's box, the
+// newest last: a glyph and the text, or for an error a bold red "Error:" and
+// the step to try next (docs/ux.md 2.8). They fit in noticeRows.
+func (m *Model) noticeLines(w int) []string {
+	var out []string
+	for _, t := range m.toasts.shown {
+		var lines []string
+		switch t.kind {
+		case toastError:
+			lines = errorBlock(t.text, "", w)
+			for _, l := range wrap(t.hint, w-7) {
+				lines = append(lines, strings.Repeat(" ", 7)+sLink.Render(l))
+			}
+		default:
+			glyph, st, text := glyphInfo, sKey, sFaint
+			switch t.kind {
+			case toastSuccess:
+				glyph, st, text = glyphOK, sSuccess, sPlain
+			case toastWarning:
+				glyph, st, text = glyphNeedsInput, sWarning, sPlain
+			}
+			for i, l := range wrap(t.text, w-2) {
+				lead := "  "
+				if i == 0 {
+					lead = st.Render(glyph) + " "
+				}
+				lines = append(lines, lead+text.Render(l))
+			}
+		}
+		out = append(out, lines...)
+	}
+	if len(out) > noticeRows {
+		out = out[len(out)-noticeRows:]
+	}
+	return out
+}
+
+// quitLayer is the popup of the Ctrl+C chord, docked at the bottom right:
+// what the next key does.
+func (m *Model) quitLayer() (layer, bool) {
+	if !m.quitArmed {
 		return layer{}, false
 	}
-	maxW := min(m.width-4, 64)
-	var lines []string
-	bs := boxNormal
-	for _, t := range m.toasts.shown {
-		glyph, st := glyphInfo, sInfo
-		switch t.kind {
-		case toastSuccess:
-			glyph, st = glyphOK, sSuccess
-		case toastWarning:
-			glyph, st = glyphNeedsInput, sWarning
-		case toastError:
-			glyph, st = glyphFail, sDanger
-			bs = boxDanger
-		}
-		for i, l := range wrap(t.text, maxW-6) {
-			lead := "   "
-			if i == 0 {
-				lead = " " + st.Render(glyph) + " "
-			}
-			lines = append(lines, lead+l)
-		}
-		if t.hint != "" {
-			for i, l := range wrap(t.hint, maxW-11) {
-				lead := "   " + sPrimary.Render("Try:") + " "
-				if i > 0 {
-					lead = "        "
-				}
-				lines = append(lines, lead+l)
-			}
-		}
+	body := []string{
+		sKeyBold.Render("Ctrl+C") + " quit",
+		fitRight(sKeyBold.Render("Esc"), 6) + sFaint.Render(" cancel"),
 	}
-	w := 0
-	for _, l := range lines {
-		w = max(w, cells(l))
-	}
-	w = min(w+3, maxW)
-	h := len(lines) + 2
-	b := box(w, h, "", "", "", lines, bs)
-	return layer{s: b, x: max(m.width-w-2, 0), y: max(m.height-h-1, 0)}, true
+	w := 24
+	b := box(w, len(body)+2, "", "", "", body, toneNormal)
+	// The title is two styles, so it is set into the border here.
+	lines := strings.Split(b, "\n")
+	lines[0] = "╭─" + sTitle.Render(" Ctrl+C") + sFaint.Render(" then ") + strings.Repeat("─", w-16) + "╮"
+	return layer{s: strings.Join(lines, "\n"), x: max(m.width-w, 0), y: max(m.height-len(lines), 0)}, true
 }

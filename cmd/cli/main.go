@@ -1,4 +1,4 @@
-// Command cli is the client: the home screen and every command.
+// Command cli is the client: the launcher and every command.
 package main
 
 import (
@@ -36,7 +36,7 @@ func rootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           brand.Name,
 		Short:         "Run any coding agent on any host, and use it as if it ran here",
-		Long:          brand.DisplayName + " runs coding agents in sessions on hosts you reach with SSH.\nSessions keep running when you leave. Run it with no arguments for the home screen.",
+		Long:          brand.DisplayName + " runs coding agents in sessions on hosts you reach with SSH.\nSessions keep running when you leave. Run it with no arguments for the launcher.",
 		Version:       fmt.Sprintf("%s (protocol %s)", version.Version, version.Protocol),
 		SilenceUsage:  true,
 		SilenceErrors: true,

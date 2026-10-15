@@ -1,24 +1,24 @@
-╭─ simstim ───────────────────────────────────────────── 3 hosts · 6 sessions ─╮
-│ HOSTS                 │ SESSIONS ─ atlas-dev                                │
-│   all hosts   6       │ ● auth-refactor          claude   needs input     2m │
-│ ▸ atlas-dev  4   9ms │ ⠶ api-tests              codex    working        14s │
-│ ╭─ Shortcuts ──────────────────────────────────────────────────────────────╮ │
-│ │                                                                          │ │
-│ │  ↑↓ jk move                               i host: details                │ │
-│ │    tab switch pane                        / view: filter                 │ │
-│ │  enter new session, or attach         space view: toggle preview         │ │
-│ │    esc back, clear filter             alt+e view: toggle exited          │ │
-│ │      n session: new                       ? view: shortcuts              │ │
-│ │   r f2 session: rename               ctrl+o view: commands               │ │
-│ │      d session: delete                    q simstim: quit                │ │
-│ │      y session: copy attach command  ctrl+c twice to quit                │ │
-│ │      a host: add                                                         │ │
-│ │                                                                          │ │
-│ ╰─ esc close ──────────────────────────────────────────────────────────────╯ │
-│                       │ │ ● Should I also migrate the old sessions table?  │ │
-│                       │ │                                                  │ │
-│                       │ │ >                                                │ │
-│                       │ │                                                  │ │
-│                       │ │                                                  │ │
-│                       │ ╰─ claude · ~/src/app · 6.1 of 8 GiB ──────────────╯ │
-╰─ enter new session · tab sessions · a add host · ctrl+o commands · ? help ───╯
+
+
+
+
+  ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
+  │                                                                          │
+  │  ● auth-refactor    claude    ~/src/app             needs input      2m  │
+  │  ≈ api-tests        codex     ~/src/api             working         14s  │
+  │                                                                          │
+  │ ──────────────────────────────────────────────────────────────────────── │
+  │ ↑↓ move                             a add host                           │
+  │ Esc back to hosts                   i host details                       │
+  │ n new session                       / filter                             │
+  │ Enter attach                        Alt+E show ended                     │
+  │ Space preview                       ? shortcuts                          │
+  │ r/F2 rename                         q quit                               │
+  │ d delete                            Ctrl+O commands                      │
+  │ y copy attach command               Ctrl+C Ctrl+C quit                   │
+  │                                                                          │
+  ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+
+
+
+

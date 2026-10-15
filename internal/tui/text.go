@@ -59,8 +59,8 @@ func center(s string, w int) string {
 	return strings.Repeat(" ", left) + s + strings.Repeat(" ", w-n-left)
 }
 
-// truncPath shortens a path in the middle, keeping its start and its last
-// part: "~/src/…/auth".
+// truncPath shortens a path in the middle, keeping its start and its end:
+// "~/src/…/auth".
 func truncPath(p string, w int) string {
 	if w <= 0 {
 		return ""
@@ -68,14 +68,23 @@ func truncPath(p string, w int) string {
 	if cells(p) <= w {
 		return p
 	}
+	// Keep as many whole parts as fit, the end first: "private/tmp/…/app/src".
 	parts := strings.Split(p, "/")
-	if len(parts) > 2 {
-		for keep := len(parts) - 2; keep >= 1; keep-- {
-			s := strings.Join(parts[:keep], "/") + "/…/" + parts[len(parts)-1]
-			if cells(s) <= w {
-				return s
+	best, most := "", 0
+	first := 1
+	if parts[0] == "" {
+		first = 2 // an absolute path keeps its first folder
+	}
+	for head := first; head < len(parts)-1; head++ {
+		for tail := 1; head+tail < len(parts); tail++ {
+			s := strings.Join(parts[:head], "/") + "/…/" + strings.Join(parts[len(parts)-tail:], "/")
+			if n := head + tail*2; cells(s) <= w && n > most {
+				best, most = s, n
 			}
 		}
+	}
+	if best != "" {
+		return best
 	}
 	r := []rune(p)
 	if w < 3 {
@@ -90,20 +99,6 @@ func truncPath(p string, w int) string {
 type seg struct {
 	s  string
 	st lipgloss.Style
-}
-
-// row renders segments, each with its own style. With reverse set, every
-// segment is drawn in reverse video, so the whole row reads as selected.
-func row(reverse bool, segs ...seg) string {
-	var b strings.Builder
-	for _, sg := range segs {
-		st := sg.st
-		if reverse {
-			st = st.Reverse(true)
-		}
-		b.WriteString(st.Render(sg.s))
-	}
-	return b.String()
 }
 
 // plural picks the word for n.

@@ -1,24 +1,24 @@
-╭─ simstim ───────────────────────────────────────────── 3 hosts · 6 sessions ─╮
-│ HOSTS                 │ SESSIONS ─ atlas-dev                                │
-│   all hosts   6       │ ● auth-refactor          claude   needs input     2m │
-│ ▸ atlas-dev  4   9ms │ ⠶ api-tests              codex    working        14s │
-│ ◌ aws-gpu     offline │ ○ notes                  shell    idle            1h │
-│   gcp-dev     2  41ms │ ✓ docs-pass              opencode exited 0        3h │
-│                       │                                                      │
-│                       │ ╭─ api-tests ──────────────────────────────────────╮ │
-│                       │ │ ⠶ Loading the last screen…                       │ │
-│ ╭─ Delete api-tests? ──────────────────────────────────────────────────────╮ │
-│ │                                                                          │ │
-│ │  This stops codex on atlas-dev and removes the session.                 │ │
-│ │  The folder ~/src/api stays. Unsaved work in the agent is lost.          │ │
-│ │                                                                          │ │
-│ ╰─ enter delete · esc keep ────────────────────────────────────────────────╯ │
-│                       │ │                                                  │ │
-│                       │ │                                                  │ │
-│                       │ │                                                  │ │
-│                       │ │                                                  │ │
-│                       │ │                                                  │ │
-│                       │ │                                                  │ │
-│                       │ │                                                  │ │
-│                       │ ╰─ codex · ~/src/api ──────────────────────────────╯ │
-╰─ enter attach · n new · d delete · r rename · / filter · ? help ─────────────╯
+
+
+
+
+  ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
+  │                                                                          │
+  │  ● auth-refactor    claude    ~/src/app             needs input      2m  │
+  │  ≈ api-tests        codex     ~/src/api             working         14s  │
+  │  ○ notes            shell     ~                     idle             1h  │
+  ╭─ Delete api-tests? ──────────────────────────────────────────────────────╮
+  │                                                                          │
+  │ This stops codex on atlas-dev and removes the session.                  │
+  │ The folder ~/src/api stays. Unsaved work in the agent is lost.           │
+  │                                                                          │
+  ╰──────────────────────────────────────────────── Enter delete · Esc keep ─╯
+
+
+
+
+
+
+
+
+

@@ -1,36 +1,36 @@
-╭─ simstim ───────────────────────────────────────────────────────────────────────────────────── 3 hosts · 6 sessions ─╮
-│ HOSTS                            │ SESSIONS ─ atlas-dev                                                             │
-│   all hosts              6       │ ● auth-refactor         claude   ~/src/app                     needs input     2m │
-│ ▸ atlas-dev             4   9ms │ ⠶ api-tests             codex    ~/src/api                     working        14s │
-│ ◌ aws-gpu                offline │ ○ notes                 shell    ~                             idle            1h │
-│   gcp-dev                2  41ms │ ✓ docs-pass             opencode ~/src/docs                    exited 0        3h │
-│                                  │                                                                                   │
-│                                  │ ╭─ auth-refactor ───────────────────────────────────────────────────────────────╮ │
-│                                  │ │ ✻ Welcome back                                                                │ │
-│                                  │ │                                                                               │ │
-│                                  │ │ > Refactor the auth module to use the new token store                         │ │
-│                                  │ │                                                                               │ │
-│                                  │ │ ● I'll start by reading the current implementation.                           │ │
-│                     ╭─ New session on atlas-dev ──────────────────────────────────────────────╮                   │ │
-│                     │                                                                          │                   │ │
-│                     │  Agent      claude   codex   opencode   shell   other…                   │                   │ │
-│                     │             ▔▔▔▔▔▔                                                       │                   │ │
-│                     │  Folder     ~/src/app                                                    │                   │ │
-│                     │                                                                          │                   │ │
-│                     │  Name       auth                                                         │                   │ │
-│                     │  Worktree   ● this folder   ○ new worktree                               │                   │ │
-│                     │                                                                          │                   │ │
-│                     ╰─ enter start · tab next field · ctrl+enter start detached · esc cancel ──╯                   │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ ╰─ claude · ~/src/app · 6.1 of 8 GiB ───────────────────────────────────────────╯ │
-╰─ enter new session · tab sessions · a add host · ctrl+o commands · ? help ───────────────────────────────────────────╯
+
+
+
+
+
+            ╭─ Hosts ──────────────────────────────────────────────────────────────────────────── 3 hosts ─╮
+            │                                                                                              │
+            │  ● atlas-dev  4 sessions · 1 needs you                                                 9ms  │
+            │  ◌ aws-gpu     offline                                                                       │
+            │  ● gcp-dev     2 sessions                                                              41ms  │
+            │                                                                                              │
+            ╰──────────────────── Enter open · n new session · a add host · Ctrl+O commands · ? shortcuts ─╯
+                      ╭─ New session on atlas-dev ──────────────────────────────────────────────╮
+                      │                                                                          │
+                      │ Agent      claude  codex  opencode  shell  other…   not installed: gemi… │
+                      │                                                                          │
+                      │ Folder     ~/src/app                                                     │
+                      │                                                                          │
+                      │ Name       auth                                                          │
+                      │                                                                          │
+                      │ Worktree   ● this folder   ○ new worktree                                │
+                      │                                                                          │
+                      ╰──────── Enter start · Tab next · Ctrl+Enter start detached · Esc cancel ─╯
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,36 +1,36 @@
-╭─ simstim ───────────────────────────────────────────────────────────────────────────────────── 3 hosts · 6 sessions ─╮
-│ HOSTS                            │ SESSIONS ─ atlas-dev                                                             │
-│   all hosts              6       │ ● auth-v2               claude   ~/src/app                     needs input     2m │
-│ ▸ atlas-dev             4   9ms │ ⠶ api-tests             codex    ~/src/api                     working        14s │
-│ ◌ aws-gpu                offline │ ○ notes                 shell    ~                             idle            1h │
-│   gcp-dev                2  41ms │ ✓ docs-pass             opencode ~/src/docs                    exited 0        3h │
-│                                  │                                                                                   │
-│                                  │ ╭─ auth-refactor ───────────────────────────────────────────────────────────────╮ │
-│                                  │ │ ✻ Welcome back                                                                │ │
-│                                  │ │                                                                               │ │
-│                                  │ │ > Refactor the auth module to use the new token store                         │ │
-│                                  │ │                                                                               │ │
-│                                  │ │ ● I'll start by reading the current implementation.                           │ │
-│                                  │ │                                                                               │ │
-│                                  │ │   Read internal/auth/store.go (212 lines)                                     │ │
-│                                  │ │   Read internal/auth/session.go (96 lines)                                    │ │
-│                                  │ │                                                                               │ │
-│                                  │ │ ● Should I also migrate the old sessions table? (y/n)                         │ │
-│                                  │ │                                                                               │ │
-│                                  │ │ >                                                                             │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ │                                                                               │ │
-│                                  │ ╰─ claude · ~/src/app · 6.1 of 8 GiB ───────────────────────────────────────────╯ │
-╰─ enter rename · esc cancel ──────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+
+
+
+            ╭─ atlas-dev ─────────────────────────────────────────────────────────────────────────── 9ms ─╮
+            │                                                                                              │
+            │  ● auth-v2                   claude    ~/src/app                        needs input      2m  │
+            │  ≈ api-tests                 codex     ~/src/api                        working         14s  │
+            │  ○ notes                     shell     ~                                idle             1h  │
+            │  ✓ docs-pass                 opencode  ~/src/docs                       exited 0         3h  │
+            │                                                                                              │
+            ╰────────────────────────────────────────────────────────────────── Enter rename · Esc cancel ─╯
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

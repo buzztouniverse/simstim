@@ -21,8 +21,8 @@ type scope int
 
 const (
 	anywhere scope = iota
-	inHosts
-	inSessions
+	onHosts
+	onSessions
 )
 
 type binding struct {
@@ -31,9 +31,10 @@ type binding struct {
 }
 
 // command is one entry of the registry. The same registry feeds the
-// palette, the help grid and the keys at home (docs/ux.md 2.6).
+// palette, the shortcuts and the keys of the launcher (docs/ux.md 2.7).
 type command struct {
 	noun, verb string
+	short      string // the words in the shortcuts, if not the verb
 	keys       []binding
 	firstRun   bool // works on the first-run screen too
 	hidden     bool // kept out of the palette
@@ -43,12 +44,30 @@ type command struct {
 
 func (c *command) name() string { return c.noun + ": " + c.verb }
 
-// keyLabel is the first key, for the palette and help.
+// keyLabel is the first key, as the palette and the shortcuts show it.
 func (c *command) keyLabel() string {
 	if len(c.keys) == 0 {
 		return ""
 	}
-	return c.keys[0].key
+	return keyName(c.keys[0].key)
+}
+
+// keyName is how a key is written on screen: "Enter", "Ctrl+O", "Opt+E", "n".
+func keyName(k string) string {
+	parts := strings.Split(k, "+")
+	for i, p := range parts {
+		switch {
+		case p == "alt":
+			parts[i] = optKey
+		case len([]rune(p)) == 1 && i < len(parts)-1:
+			parts[i] = strings.ToUpper(p)
+		case len([]rune(p)) > 1:
+			parts[i] = strings.ToUpper(p[:1]) + p[1:]
+		case i > 0:
+			parts[i] = strings.ToUpper(p)
+		}
+	}
+	return strings.Join(parts, "+")
 }
 
 // reason is why the command cannot run now, or "".
@@ -62,24 +81,22 @@ func (c *command) reason(m *Model) string {
 	return c.why(m)
 }
 
+func (c *command) applies(m *Model, b binding) bool {
+	switch b.where {
+	case onHosts:
+		return m.screen == scrHosts
+	case onSessions:
+		return m.screen == scrSessions
+	}
+	return true
+}
+
 func (c *command) matches(m *Model, key string) bool {
 	if len(m.hosts) == 0 && !c.firstRun {
 		return false
 	}
 	for _, b := range c.keys {
-		if b.key != key {
-			continue
-		}
-		switch b.where {
-		case inHosts:
-			if m.focus == paneHosts {
-				return true
-			}
-		case inSessions:
-			if m.focus == paneSessions {
-				return true
-			}
-		default:
+		if b.key == key && c.applies(m, b) {
 			return true
 		}
 	}
@@ -113,7 +130,7 @@ func registry() []*command {
 		return ""
 	}
 	return []*command{
-		{noun: "session", verb: "new", keys: []binding{{"n", anywhere}, {"enter", inHosts}},
+		{noun: "session", verb: "new", short: "new session", keys: []binding{{"n", anywhere}},
 			why: func(m *Model) string {
 				h := m.newSessionHost()
 				switch {
@@ -125,47 +142,52 @@ func registry() []*command {
 				return ""
 			},
 			run: (*Model).openNewSession},
-		{noun: "session", verb: "attach", keys: []binding{{"enter", inSessions}},
+		{noun: "session", verb: "attach", keys: []binding{{"enter", onSessions}},
 			why: func(m *Model) string {
 				if s := m.selected(); s != nil && !s.Alive {
 					return "the session has ended"
 				}
-				if m.selected() == nil && len(m.rows()) == 0 {
+				if m.screen == scrSessions && m.selected() == nil && sessionRows(m.rows()) == 0 {
 					return ""
 				}
 				return needSession(m)
 			},
 			run: (*Model).attachSelected},
-		{noun: "session", verb: "rename", keys: []binding{{"r", inSessions}, {"f2", inSessions}}, why: needSession, run: (*Model).startRename},
-		{noun: "session", verb: "delete", keys: []binding{{"d", inSessions}}, why: needSession, run: (*Model).confirmDelete},
-		{noun: "session", verb: "copy attach command", keys: []binding{{"y", inSessions}}, why: needSession, run: (*Model).copyAttach},
+		{noun: "session", verb: "preview", keys: []binding{{"space", onSessions}}, why: needSession, run: (*Model).openPreview},
+		{noun: "session", verb: "rename", keys: []binding{{"r", onSessions}, {"f2", onSessions}}, why: needSession, run: (*Model).startRename},
+		{noun: "session", verb: "delete", keys: []binding{{"d", onSessions}}, why: needSession, run: (*Model).confirmDelete},
+		{noun: "session", verb: "copy attach command", keys: []binding{{"y", onSessions}}, why: needSession, run: (*Model).copyAttach},
 
-		{noun: "host", verb: "add", keys: []binding{{"a", anywhere}}, firstRun: true, run: (*Model).openWizard},
-		{noun: "host", verb: "details", keys: []binding{{"i", inHosts}}, why: needHost,
+		{noun: "host", verb: "open", short: "open host", keys: []binding{{"enter", onHosts}},
+			why: func(m *Model) string {
+				if m.screen != scrHosts {
+					return "the sessions are open"
+				}
+				return needHost(m)
+			},
+			run: (*Model).openSelectedHost},
+		{noun: "host", verb: "add", short: "add host", keys: []binding{{"a", anywhere}}, firstRun: true, run: (*Model).openWizard},
+		{noun: "host", verb: "details", short: "host details", keys: []binding{{"i", anywhere}}, why: needHost,
 			run: func(m *Model) tea.Cmd { m.modal = &details{host: m.selectedHost().name()}; return nil }},
 		{noun: "host", verb: "test", why: needHost, run: func(m *Model) tea.Cmd { return m.testHost(m.selectedHost()) }},
 		{noun: "host", verb: "reconnect", why: needHost, run: func(m *Model) tea.Cmd { return m.reconnect(m.selectedHost()) }},
 		{noun: "host", verb: "remove", why: needHost,
 			run: func(m *Model) tea.Cmd { m.modal = removeHostDialog(m.selectedHost().host); return nil }},
 
-		{noun: "view", verb: "all hosts", run: func(m *Model) tea.Cmd { m.hostSel = 0; m.syncSel(); return nil }},
-		{noun: "view", verb: "filter", keys: []binding{{"/", anywhere}}, run: func(m *Model) tea.Cmd { m.startFilter(); return nil }},
-		{noun: "view", verb: "toggle preview", keys: []binding{{"space", anywhere}},
-			run: func(m *Model) tea.Cmd {
-				m.showPreview = !m.showPreview
-				m.syncSel()
-				if m.showPreview {
-					m.preview.key = sessKey{}
-					return m.schedulePreview()
-				}
-				return nil
-			}},
-		{noun: "view", verb: "toggle exited", keys: []binding{{"alt+e", anywhere}},
+		{noun: "view", verb: "hosts", why: func(m *Model) string {
+			if m.screen == scrHosts {
+				return "the hosts are open"
+			}
+			return ""
+		}, run: func(m *Model) tea.Cmd { m.backToHosts(); return nil }},
+		{noun: "view", verb: "all sessions", run: func(m *Model) tea.Cmd { m.openHost(nil); return nil }},
+		{noun: "view", verb: "filter", keys: []binding{{"/", anywhere}}, run: func(m *Model) tea.Cmd { m.activeFilter().typing = true; return nil }},
+		{noun: "view", verb: "toggle ended", short: "show ended", keys: []binding{{"alt+e", onSessions}},
 			run: func(m *Model) tea.Cmd { m.hideExited = !m.hideExited; m.syncSel(); return nil }},
 		{noun: "view", verb: "shortcuts", keys: []binding{{"?", anywhere}}, firstRun: true,
-			run: func(m *Model) tea.Cmd { m.modal = &helpView{}; return nil }},
+			run: func(m *Model) tea.Cmd { m.showHelp = !m.showHelp; m.scrollTo(); return nil }},
 		{noun: "view", verb: "commands", keys: []binding{{"ctrl+o", anywhere}}, firstRun: true, hidden: true,
-			run: func(m *Model) tea.Cmd { m.modal = &palette{in: newInput("", "type a command")}; return nil }},
+			run: func(m *Model) tea.Cmd { m.modal = &palette{in: newInput("", "")}; return nil }},
 
 		{noun: brand.Name, verb: "settings", firstRun: true, run: (*Model).openSettings},
 		{noun: brand.Name, verb: "about", firstRun: true,
@@ -177,11 +199,13 @@ func registry() []*command {
 	}
 }
 
-// Palette.
+// Palette (docs/ux.md 2.7): Ctrl+O, a filter line, then "noun  verb" rows
+// with the keys on the right.
 
 type palette struct {
 	in  input
 	sel int
+	top int
 }
 
 type paletteItem struct {
@@ -238,109 +262,105 @@ func (p *palette) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		return it.c.run(m)
 	default:
 		if p.in.key(k) {
-			p.sel = 0
+			p.sel, p.top = 0, 0
 		}
 	}
 	return nil
 }
 
 func (p *palette) view(m *Model) string {
-	w := m.dialogWidth(76)
-	inner := w - 2
+	w := m.dialogWidth(80)
+	cw := w - 4
 	items := p.items(m)
-	listH := min(len(items), max(m.height-8, 3), 12)
-	top := max(0, p.sel-listH+1)
-	body := []string{" " + sPrimary.Render(">") + " " + p.in.view(inner-4, true)}
-	for i := top; i < len(items) && i < top+listH; i++ {
+	listH := max(min(len(items), m.height-10), 1)
+	if p.sel < p.top {
+		p.top = p.sel
+	}
+	if p.sel >= p.top+listH {
+		p.top = p.sel - listH + 1
+	}
+	nounW := 0
+	for _, c := range commands {
+		nounW = max(nounW, cells(c.noun))
+	}
+	body := []string{"", "> " + p.in.view(cw-2, true), ""}
+	for i := p.top; i < len(items) && i < p.top+listH; i++ {
 		it := items[i]
-		nameSt, right, rightSt := sPlain, it.c.keyLabel(), sKey
+		verb := seg{it.c.verb, sBold}
 		if it.reason != "" {
-			nameSt, right, rightSt = sMuted, "not available: "+it.reason, sMuted
+			verb = seg{it.c.verb + " (unavailable)", sBold.Faint(true)}
 		}
-		// "  name  right  ": the name takes what the right side leaves.
-		right = trunc(right, max(inner-6-16, 0))
-		nameW := inner - 6 - cells(right)
-		body = append(body, row(i == p.sel, seg{"  ", sPlain}, seg{fit(it.c.name(), nameW), nameSt},
-			seg{"  ", sPlain}, seg{right, rightSt}, seg{"  ", sPlain}))
+		key := it.c.keyLabel()
+		verbW := cw - 1 - nounW - 2 - 2 - cells(key) - 1
+		body = append(body, listRow(i == p.sel,
+			seg{" " + fitRight(it.c.noun, nounW), sFaint}, seg{"  ", sPlain},
+			seg{fit(verb.s, verbW), verb.st}, seg{"  ", sPlain},
+			seg{key, sKeyBold}, seg{" ", sPlain}))
 	}
 	if len(items) == 0 {
-		body = append(body, "  "+sMuted.Render(trunc(fmt.Sprintf("Nothing matches '%s'.", p.in.value()), inner-4)))
+		body = append(body, sFaint.Render(trunc(fmt.Sprintf("Nothing matches '%s'.", p.in.value()), cw)))
 	}
-	hints := []hint{{"↑↓", "choose"}, {"enter", "run"}, {"esc", "close"}}
-	return box(w, len(body)+2, "Commands", "", hintsFor(hints, w), body, boxNormal)
+	return box(w, len(body)+2, "Commands", "", "", body, toneNormal)
 }
 
-func (p *palette) top() bool { return true }
+// Shortcuts (docs/ux.md 2.7): ? shows them inside the list's own box, built
+// from the live registry, the way Amp shows them inside its prompt box.
 
-// Help (docs/ux.md 2.7): a grid built from the live registry.
-
-type helpView struct{}
-
-func (helpView) top() bool { return true }
-
-func (h *helpView) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
-	switch k.String() {
-	case "esc", "?", "q", "enter":
-		m.modal = nil
+// helpItems are the keys that work on this screen.
+func (m *Model) helpItems() [][2]string {
+	items := [][2]string{{"↑↓", "move"}}
+	if len(m.hosts) == 0 {
+		items = nil
 	}
-	return nil
-}
-
-// helpItems are the keys at home, from the registry, after the moves.
-func helpItems() [][2]string {
-	items := [][2]string{
-		{"↑↓ jk", "move"},
-		{"tab", "switch pane"},
-		{"enter", "new session, or attach"},
-		{"esc", "back, clear filter"},
+	if m.screen == scrSessions && len(m.hosts) > 0 {
+		items = append(items, [2]string{"Esc", "back to hosts"})
 	}
-	seen := map[string]bool{"enter": true}
 	for _, c := range commands {
-		if len(c.keys) == 0 {
+		if c.hidden || len(m.hosts) == 0 && !c.firstRun {
 			continue
 		}
 		var keys []string
 		for _, b := range c.keys {
-			if !seen[b.key] && !slices.Contains(keys, b.key) {
-				keys = append(keys, b.key)
+			if c.applies(m, b) && !slices.Contains(keys, keyName(b.key)) {
+				keys = append(keys, keyName(b.key))
 			}
 		}
 		if len(keys) == 0 {
 			continue
 		}
-		items = append(items, [2]string{strings.Join(keys, " "), c.name()})
+		words := c.short
+		if words == "" {
+			words = c.verb
+		}
+		items = append(items, [2]string{strings.Join(keys, "/"), words})
 	}
-	return append(items, [2]string{"ctrl+c", "twice to quit"})
+	return append(items, [2]string{"Ctrl+O", "commands"}, [2]string{"Ctrl+C Ctrl+C", "quit"})
 }
 
-func (h *helpView) view(m *Model) string {
-	w := min(max(m.width-4, 40), 80)
-	inner := w - 2
-	items := helpItems()
-	keyW := 0
-	for _, it := range items {
-		keyW = max(keyW, cells(it[0]))
+// helpLines lays the shortcuts out in two columns, or one when narrow.
+func (m *Model) helpLines(cw int) []string {
+	items := m.helpItems()
+	cell := func(it [2]string, w int) string {
+		return sKey.Render(it[0]) + sFaint.Render(" "+trunc(it[1], max(w-cells(it[0])-1, 1)))
 	}
-	var body []string
-	if w < 50 {
-		for _, it := range items {
-			body = append(body, " "+sKey.Render(it[0]), "   "+sMuted.Render(trunc(it[1], inner-4)))
+	if cw < 56 {
+		out := make([]string, len(items))
+		for i, it := range items {
+			out[i] = cell(it, cw)
 		}
-	} else {
-		colW := (inner - 2) / 2
-		half := (len(items) + 1) / 2
-		cell := func(i int) string {
-			if i >= len(items) {
-				return ""
-			}
-			return sKey.Render(fitRight(items[i][0], keyW)) + " " + sMuted.Render(fit(items[i][1], colW-keyW-2))
-		}
-		for i := range half {
-			body = append(body, " "+fit(cell(i), colW)+" "+cell(i+half))
-		}
+		return out
 	}
-	body = append([]string{""}, append(body, "")...)
-	return box(w, min(len(body)+2, max(m.height-2, 6)), "Shortcuts", "", hintsFor([]hint{{"esc", "close"}}, w), body, boxNormal)
+	colW := cw / 2
+	half := (len(items) + 1) / 2
+	var out []string
+	for i := range half {
+		l := fit(cell(items[i], colW-2), colW)
+		if i+half < len(items) {
+			l += cell(items[i+half], cw-colW)
+		}
+		out = append(out, l)
+	}
+	return out
 }
 
 // Settings open in $EDITOR.

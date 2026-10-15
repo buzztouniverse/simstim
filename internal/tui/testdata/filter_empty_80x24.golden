@@ -1,24 +1,24 @@
-╭─ simstim ───────────────────────────────────────────── 3 hosts · 6 sessions ─╮
-│ HOSTS                 │ SESSIONS ─ atlas-dev  /xyz                          │
-│   all hosts   6       │ Nothing matches 'xyz'.                               │
-│ ▸ atlas-dev  4   9ms │                                                      │
-│ ◌ aws-gpu     offline │                                                      │
-│   gcp-dev     2  41ms │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-╰─ enter keep filter · ↑↓ move · esc clear ────────────────────────────────────╯
+
+
+
+
+  ╭─ atlas-dev ─────────────────────────────────────────────────────── 9ms ─╮
+  │                                                                          │
+  │ > xyz                                                                    │
+  │                                                                          │
+  │ Nothing matches 'xyz'.                                                   │
+  │                                                                          │
+  ╰──────────────────────────────── Enter keep filter · ↑↓ move · Esc clear ─╯
+
+
+
+
+
+
+
+
+
+
+
+
+

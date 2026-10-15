@@ -1,24 +1,24 @@
-╭─ simstim ───────────────────────────────────────────── 3 hosts · 6 sessions ─╮
-│ HOSTS                 │ SESSIONS ─ aws-gpu                                   │
-│   all hosts   6       │ ◌ aws-gpu is offline.                                │
-│   atlas-dev  4   9ms │                                                      │
-│ ▸ aws-gpu     offline │   Cannot reach aws-gpu: ssh: connect to host         │
-│   gcp-dev     2  41ms │   198.51.100.4 port 22: Operation timed out.             │
-│                       │                                                      │
-│                       │   Try: ssh aws-gpu   (check that this works first)   │
-│                       │                                                      │
-│                       │   Retrying in the background.                        │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-│                       │                                                      │
-╰─ enter new session · tab sessions · a add host · ctrl+o commands · ? help ───╯
+
+
+
+
+  ╭─ aws-gpu ────────────────────────────────────────────────────── offline ─╮
+  │                                                                          │
+  │ Error: Cannot reach aws-gpu: ssh: connect to host 198.51.100.4 port 22:      │
+  │        Operation timed out.                                              │
+  │                                                                          │
+  │ ssh aws-gpu   (check that this works first)                              │
+  │                                                                          │
+  │ Retrying in the background.                                              │
+  │                                                                          │
+  ╰───────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+
+
+
+
+
+
+
+
+
+

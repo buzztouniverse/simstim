@@ -6,7 +6,7 @@ import (
 	"github.com/iAmLakshya/simstim/internal/tui"
 )
 
-// runHome opens the home screen.
+// runHome opens the launcher.
 func runHome(ctx context.Context) error {
 	return tui.Run(ctx)
 }

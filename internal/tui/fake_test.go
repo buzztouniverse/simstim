@@ -16,6 +16,9 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
+// The golden screens are the same on every platform.
+func init() { optKey = "Alt" }
+
 // now is the fixed clock of every test.
 var now = time.Date(2026, 10, 15, 12, 0, 0, 0, time.UTC)
 

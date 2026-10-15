@@ -13,27 +13,29 @@ import (
 	"github.com/iAmLakshya/simstim/internal/client"
 )
 
-type pane int
+// screen is the one list the launcher shows (docs/ux.md 2): the hosts, or
+// the sessions on one host.
+type screen int
 
 const (
-	paneHosts pane = iota
-	paneSessions
+	scrHosts screen = iota
+	scrSessions
 )
 
 // sessKey names a session across hosts.
 type sessKey struct{ host, id string }
 
-// Options configure the home screen.
+// Options configure the launcher.
 type Options struct {
 	// Motion turns animation on. See motionOn.
 	Motion bool
 	// Now is the clock. Tests set it.
 	Now func() time.Time
-	// Switcher opens on the session list of all hosts, for a quick switch.
+	// Switcher opens on the sessions of every host, for a quick switch.
 	Switcher bool
 }
 
-// Model is the home screen and everything drawn over it.
+// Model is the launcher: one list at a time, and the dialogs drawn over it.
 type Model struct {
 	ctx      context.Context
 	be       Backend
@@ -43,34 +45,35 @@ type Model struct {
 
 	width, height int
 	dark          bool
-	truecolor     bool
+	richColor     bool // 256 colours or more: the brand gradient shows
 
 	hosts   []*hostConn
 	loadErr error
 
-	focus      pane
-	hostSel    int // 0 is "all hosts"; i+1 is visibleHosts()[i]
+	screen     screen
+	cur        string // the host the sessions screen shows; "" for every host
+	hostSel    int    // index into visibleHosts()
+	hostTop    int
 	sel        sessKey
 	selIdx     int
 	autoSel    bool // the selection was not picked by the user, so it stays on top
 	sessTop    int
-	hostTop    int
 	hostFilter filter
 	sessFilter filter
 	hideExited bool
+	showHelp   bool
 
-	showPreview bool
-	preview     previewState
+	preview previewState
 
-	rename *renameState
-	modal  modal
-	toasts toastStack
+	rename    *renameState
+	modal     modal
+	toasts    toastStack
+	quitArmed bool
 
-	spin      int
-	spinning  bool
-	hero      int
-	heroOn    bool
-	quitArmed time.Time
+	spin     int
+	spinning bool
+	hero     int
+	heroOn   bool
 
 	// attach is kept for the whole run, so attaching to the same session
 	// again continues from the byte the terminal already shows.
@@ -92,6 +95,8 @@ type filter struct {
 
 func (f *filter) query() string { return strings.TrimSpace(f.in.value()) }
 
+func (f *filter) shown() bool { return f.typing || f.query() != "" }
+
 // renameState is the inline rename of a session row.
 type renameState struct {
 	key  sessKey
@@ -100,13 +105,13 @@ type renameState struct {
 	busy bool
 }
 
-// New builds the home screen. It reads the saved hosts at once; everything
+// New builds the launcher. It reads the saved hosts at once; everything
 // that touches the network runs later, in commands.
 func New(ctx context.Context, be Backend, o Options) *Model {
 	m := &Model{
 		ctx: ctx, be: be, now: o.Now, motion: o.Motion,
 		width: 80, height: 24, dark: true,
-		showPreview: true, autoSel: true,
+		autoSel:   true,
 		attach:    &client.AttachState{},
 		lastAgent: map[string]string{},
 		conns:     newConnSet(),
@@ -126,11 +131,12 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 	for _, h := range hosts {
 		m.hosts = append(m.hosts, &hostConn{host: h})
 	}
-	if len(m.hosts) == 1 {
-		m.hostSel = 1
-	}
-	if o.Switcher && len(m.hosts) > 0 {
-		m.hostSel, m.focus = 0, paneSessions
+	switch {
+	case o.Switcher && len(m.hosts) > 0:
+		m.screen, m.cur = scrSessions, ""
+	case len(m.hosts) == 1:
+		// One host: its sessions are the only useful list.
+		m.screen, m.cur = scrSessions, m.hosts[0].name()
 	}
 	return m
 }
@@ -211,7 +217,7 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 		m.dark = msg.IsDark()
 		return nil
 	case tea.ColorProfileMsg:
-		m.truecolor = msg.Profile == colorprofile.TrueColor
+		m.richColor = msg.Profile == colorprofile.TrueColor || msg.Profile == colorprofile.ANSI256
 		return nil
 	case tea.KeyPressMsg:
 		return m.onKey(msg)
@@ -377,13 +383,17 @@ func (m *Model) visibleHosts() []*hostConn {
 	return out
 }
 
-// selectedHost is the host picked in the hosts pane, or nil for all hosts.
+// selectedHost is the host in play: the one picked in the hosts list, or
+// the one whose sessions are shown. It is nil on the list of every host.
 func (m *Model) selectedHost() *hostConn {
+	if m.screen == scrSessions {
+		return m.hostByName(m.cur)
+	}
 	vh := m.visibleHosts()
-	if m.hostSel <= 0 || m.hostSel > len(vh) {
+	if m.hostSel < 0 || m.hostSel >= len(vh) {
 		return nil
 	}
-	return vh[m.hostSel-1]
+	return vh[m.hostSel]
 }
 
 type rowKind int
@@ -394,7 +404,7 @@ const (
 	rowNote
 )
 
-// sessRow is one row of the sessions pane.
+// sessRow is one row of the sessions list.
 type sessRow struct {
 	kind rowKind
 	h    *hostConn
@@ -427,9 +437,12 @@ func matchSession(q string, s client.Session) bool {
 	return strings.HasPrefix(s.ID, q) || strings.Contains(strings.ToLower(s.Agent), lq) || strings.Contains(strings.ToLower(s.Cwd), lq)
 }
 
-// rows lists the sessions pane: one host's sessions, or every host's grouped
-// under a header.
+// rows lists the sessions screen: one host's sessions, or every host's
+// grouped under its name.
 func (m *Model) rows() []sessRow {
+	if m.screen != scrSessions {
+		return nil
+	}
 	if h := m.selectedHost(); h != nil {
 		var out []sessRow
 		for _, s := range m.sessionsOf(h) {
@@ -446,8 +459,10 @@ func (m *Model) rows() []sessRow {
 			for _, s := range list {
 				out = append(out, sessRow{kind: rowSession, h: h, s: s})
 			}
-		case !h.online() && h.status != stConnecting && m.sessFilter.query() == "":
+		case h.status == stFailed && m.sessFilter.query() == "":
 			out = append(out, sessRow{kind: rowHeader, h: h}, sessRow{kind: rowNote, h: h})
+		case h.status == stOffline && m.sessFilter.query() == "":
+			out = append(out, sessRow{kind: rowHeader, h: h})
 		}
 	}
 	return out
@@ -473,7 +488,7 @@ func (m *Model) selected() *client.Session {
 }
 
 func (m *Model) selectedPair() (*hostConn, *client.Session) {
-	if m.sel == (sessKey{}) {
+	if m.screen != scrSessions || m.sel == (sessKey{}) {
 		return nil, nil
 	}
 	h := m.hostByName(m.sel.host)
@@ -491,6 +506,7 @@ func (m *Model) selectedPair() (*hostConn, *client.Session) {
 // syncSel keeps the selection on the same session after the list changes,
 // or on the nearest one if it went away.
 func (m *Model) syncSel() {
+	m.hostSel = max(min(m.hostSel, len(m.visibleHosts())-1), 0)
 	rows := m.rows()
 	idx := -1
 	for i, r := range rows {
@@ -511,7 +527,7 @@ func (m *Model) syncSel() {
 	} else {
 		m.sel = sessKey{}
 	}
-	m.scrollTo(len(rows))
+	m.scrollTo()
 }
 
 func nearestSession(rows []sessRow, i int) int {
@@ -532,28 +548,32 @@ func nearestSession(rows []sessRow, i int) int {
 	return -1
 }
 
-// scrollTo keeps the selected row and the selected host in view.
-func (m *Model) scrollTo(n int) {
-	l := m.layout()
+// scrollTo keeps the selected row in view.
+func (m *Model) scrollTo() {
+	listH := m.listRoom()
+	if m.screen == scrHosts {
+		n := len(m.visibleHosts())
+		if m.hostSel < m.hostTop {
+			m.hostTop = m.hostSel
+		}
+		if m.hostSel >= m.hostTop+listH {
+			m.hostTop = m.hostSel - listH + 1
+		}
+		m.hostTop = max(0, min(m.hostTop, n-listH))
+		return
+	}
+	n := len(m.rows())
 	if m.selIdx < m.sessTop {
 		m.sessTop = m.selIdx
 	}
-	if m.selIdx >= m.sessTop+l.listH {
-		m.sessTop = m.selIdx - l.listH + 1
+	if m.selIdx >= m.sessTop+listH {
+		m.sessTop = m.selIdx - listH + 1
 	}
-	m.sessTop = max(0, min(m.sessTop, n-l.listH))
+	m.sessTop = max(0, min(m.sessTop, n-listH))
 	// A group header just above the first row stays in view.
 	if m.sessTop == 1 && m.selIdx == 1 {
 		m.sessTop = 0
 	}
-	hostRows := l.bodyH - 1
-	if m.hostSel < m.hostTop {
-		m.hostTop = m.hostSel
-	}
-	if m.hostSel >= m.hostTop+hostRows {
-		m.hostTop = m.hostSel - hostRows + 1
-	}
-	m.hostTop = max(0, m.hostTop)
 }
 
 // moveSel moves the session selection by d rows, skipping headers.
@@ -573,13 +593,45 @@ func (m *Model) moveSel(d int) {
 		}
 	}
 	m.selIdx, m.sel, m.autoSel = i, rows[i].key(), false
-	m.scrollTo(len(rows))
+	m.scrollTo()
+}
+
+func (m *Model) jumpSel(d int) {
+	rows := m.rows()
+	target := min(max(m.selIdx+d, 0), len(rows)-1)
+	if i := nearestSession(rows, target); i >= 0 {
+		m.selIdx, m.sel, m.autoSel = i, rows[i].key(), false
+		m.scrollTo()
+	}
 }
 
 func (m *Model) moveHost(d int) {
 	n := len(m.visibleHosts())
-	m.hostSel = min(max(m.hostSel+d, 0), n)
+	m.hostSel = min(max(m.hostSel+d, 0), max(n-1, 0))
+	m.scrollTo()
+}
+
+// openHost shows the sessions of h, or of every host for nil.
+func (m *Model) openHost(h *hostConn) {
+	m.screen, m.cur = scrSessions, ""
+	if h != nil {
+		m.cur = h.name()
+	}
+	m.sessFilter, m.showHelp = filter{}, false
 	m.selIdx, m.sessTop, m.autoSel = 0, 0, true
 	m.sel = sessKey{}
+	m.syncSel()
+}
+
+// backToHosts returns to the hosts list, on the host that was open.
+func (m *Model) backToHosts() {
+	cur := m.cur
+	m.screen, m.sel, m.sessFilter, m.rename = scrHosts, sessKey{}, filter{}, nil
+	m.hostFilter = filter{}
+	for i, h := range m.visibleHosts() {
+		if h.name() == cur {
+			m.hostSel = i
+		}
+	}
 	m.syncSel()
 }

@@ -174,8 +174,7 @@ func (w *wizard) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 				h := m.hostByName(w.host.Name)
 				m.modal = nil
 				if h != nil {
-					m.hostSel = indexOf(m.visibleHosts(), h) + 1
-					m.syncSel()
+					m.openHost(h)
 					m.modal = newSessionDialog(m, h)
 				}
 			}
@@ -435,8 +434,7 @@ func (w *wizard) onMsg(m *Model, msg tea.Msg) tea.Cmd {
 		cmd := m.addHost(w.host, conn, w.info)
 		m.hostFilter = filter{}
 		if h := m.hostByName(w.host.Name); h != nil {
-			m.hostSel, m.focus, m.autoSel = indexOf(m.visibleHosts(), h)+1, paneHosts, true
-			m.syncSel()
+			m.openHost(h)
 		}
 		return cmd
 	}
@@ -445,127 +443,120 @@ func (w *wizard) onMsg(m *Model, msg tea.Msg) tea.Cmd {
 
 func (w *wizard) view(m *Model) string {
 	width := m.dialogWidth(76)
-	inner := width - 2
+	cw := width - 4
 	title := "Add a host"
 	var body []string
 	var hints []hint
 	switch w.step {
 	case wzWhere:
-		body, hints = w.whereView(inner)
+		body, hints = w.whereView(cw)
 	case wzTest:
-		body = append([]string{"", "  " + sBold.Render("Testing "+w.host.Name), ""}, w.checkLines(m, inner)...)
-		hints = []hint{{"enter", "next"}, {"esc", "back"}}
+		body = append([]string{"", sBold.Render("Testing " + w.host.Name), ""}, w.checkLines(m, cw)...)
+		hints = []hint{{"Enter", "next"}, {"Esc", "back"}}
 		if w.err != nil {
-			hints = []hint{{"enter", "try again"}, {"esc", "back"}}
+			hints = []hint{{"Enter", "try again"}, {"Esc", "back"}}
 		}
 	case wzInstall:
 		title = fmt.Sprintf("Install %s on %s?", brand.HostBinary, w.host.Name)
-		body = w.installView(m, inner)
-		hints = []hint{{"enter", "install"}, {"esc", "back"}}
+		body = w.installView(m, cw)
+		hints = []hint{{"Enter", "install"}, {"Esc", "back"}}
 	case wzReady:
-		body = w.readyView(m, inner)
-		hints = []hint{{"enter", "start a session"}, {"esc", "close"}}
+		body = w.readyView(m, cw)
+		hints = []hint{{"Enter", "start a session"}, {"Esc", "close"}}
 		if !w.saved {
-			hints = []hint{{"esc", "back"}}
+			hints = []hint{{"Esc", "back"}}
 			if w.err != nil {
-				hints = []hint{{"enter", "try again"}, {"esc", "back"}}
+				hints = []hint{{"Enter", "try again"}, {"Esc", "back"}}
 			}
 		}
 	}
 	if w.err != nil {
-		body = append(append(body, ""), errorLines(w.err, inner)...)
+		body = append(append(body, ""), errorLines(w.err, cw)...)
 	}
 	body = append(body, "")
-	step := sMuted.Render(fmt.Sprintf("step %d of %d", int(w.step)+1, wizSteps))
-	return box(width, len(body)+2, title, step, hintsFor(hints, width), body, boxNormal)
+	step := sFaint.Render(fmt.Sprintf("step %d of %d", int(w.step)+1, wizSteps))
+	return box(width, len(body)+2, title, step, hintsFor(hints, width), body, toneNormal)
 }
 
-func (w *wizard) whereView(inner int) ([]string, []hint) {
+func (w *wizard) whereView(cw int) ([]string, []hint) {
 	const lw = 13
 	label := func(i int, s string) string {
 		if w.field == i {
-			return "  " + sBold.Render(fit(s, lw))
+			return sBold.Render(fit(s, lw))
 		}
-		return "  " + sMuted.Render(fit(s, lw))
+		return sFaint.Render(fit(s, lw))
 	}
-	fw := inner - 4 - lw
+	fw := cw - lw
 	body := []string{
 		"",
-		"  " + sBold.Render("Where does it live?"),
+		sBold.Render("Where does it live?"),
 		"",
 		label(0, "SSH target") + w.in[0].view(fw, w.field == 0),
 	}
 	if list := w.matches(); len(list) > 0 {
 		shown := strings.Join(list, ", ")
 		count := fmt.Sprintf("  (%d found)", len(list))
-		body = append(body, "  "+strings.Repeat(" ", lw)+sMuted.Render(trunc("From your SSH config: "+shown, fw-cells(count))+count))
+		body = append(body, strings.Repeat(" ", lw)+sFaint.Render(trunc("From your SSH config: "+shown, fw-cells(count))+count))
 	} else if len(w.known) > 0 {
-		body = append(body, "  "+strings.Repeat(" ", lw)+sMuted.Render(trunc("Nothing in your SSH config matches.", fw)))
+		body = append(body, strings.Repeat(" ", lw)+sFaint.Render(trunc("Nothing in your SSH config matches.", fw)))
 	}
 	body = append(body,
 		label(1, "Name")+w.in[1].view(fw, w.field == 1),
 		label(2, "SSH config")+w.in[2].view(fw, w.field == 2),
 	)
-	hints := []hint{{"↑↓", "pick from SSH config"}, {"tab", "next field"}, {"enter", "test"}, {"esc", "cancel"}}
+	hints := []hint{{"↑↓", "pick from SSH config"}, {"Tab", "next field"}, {"Enter", "test"}, {"Esc", "cancel"}}
 	if w.field != 0 {
 		hints[0] = hint{"↑↓", "field"}
 	}
 	return body, hints
 }
 
-func (w *wizard) checkLines(m *Model, inner int) []string {
+func (w *wizard) checkLines(m *Model, cw int) []string {
 	var out []string
 	for _, c := range w.checks {
 		var mark string
 		switch c.state {
 		case ckRunning:
-			mark = sPrimary.Render(m.spinner())
+			mark = sKey.Render(m.spinner())
 		case ckOK:
 			mark = sSuccess.Render(glyphOK)
 		case ckFailed:
 			mark = sDanger.Render(glyphFail)
 		default:
-			mark = sMuted.Render(glyphIdle)
+			mark = sFaint.Render(glyphIdle)
 		}
 		detail := c.detail
 		if c.took >= time.Millisecond {
 			detail = strings.TrimSpace(detail + " " + fmtLatency(c.took))
 		}
-		out = append(out, "  "+mark+" "+fit(c.name, 12)+sMuted.Render(trunc(detail, inner-18)))
+		out = append(out, mark+" "+fit(c.name, 12)+sFaint.Render(trunc(detail, cw-14)))
 	}
 	return out
 }
 
-func (w *wizard) installView(m *Model, inner int) []string {
+func (w *wizard) installView(m *Model, cw int) []string {
 	ver := m.be.HelperVersion()
 	size := ""
 	if n, ok := m.be.HelperSize(w.plat); ok {
 		size = fmt.Sprintf(", about %.0f MB", float64(n)/1e6)
 	}
-	field := func(k, v string) string { return "    " + sMuted.Render(fit(k, 8)) + trunc(v, inner-14) }
-	prose := func(s string) []string {
-		var out []string
-		for _, l := range wrap(s, inner-4) {
-			out = append(out, "  "+l)
-		}
-		return out
-	}
+	field := func(k, v string) string { return "  " + sFaint.Render(fit(k, 8)) + trunc(v, cw-10) }
 	body := []string{""}
-	body = append(body, prose(brand.DisplayName+" needs a small helper on the host to keep sessions alive.")...)
+	body = append(body, wrap(brand.DisplayName+" needs a small helper on the host to keep sessions alive.", cw)...)
 	body = append(body, "",
 		field("What", brand.HostBinary+" "+ver+size+", SHA-256 checked"),
 		field("Where", fmt.Sprintf("~/.local/share/%s/bin/%s/", brand.Name, ver)),
 		field("Also", "turn on linger, install this terminal's terminfo"),
 		"")
-	body = append(body, prose("Nothing listens on the network, and nothing runs until you start a session.")...)
+	body = append(body, wrap("Nothing listens on the network, and nothing runs until you start a session.", cw)...)
 	if w.run || len(w.checks) > 0 && w.checks[0].state == ckFailed {
-		body = append(append(body, ""), w.checkLines(m, inner)...)
+		body = append(append(body, ""), w.checkLines(m, cw)...)
 	}
 	return body
 }
 
-func (w *wizard) readyView(m *Model, inner int) []string {
-	body := append([]string{""}, w.checkLines(m, inner)...)
+func (w *wizard) readyView(m *Model, cw int) []string {
+	body := append([]string{""}, w.checkLines(m, cw)...)
 	if !w.saved || w.info == nil {
 		return body
 	}
@@ -575,7 +566,7 @@ func (w *wizard) readyView(m *Model, inner int) []string {
 		names = append(names, k)
 	}
 	sort.Strings(names)
-	field := func(k, v string) string { return "    " + sMuted.Render(fit(k, 8)) + trunc(v, inner-14) }
+	field := func(k, v string) string { return "  " + sFaint.Render(fit(k, 8)) + trunc(v, cw-10) }
 	sys := []string{}
 	for _, s := range []string{i.Distro, i.Arch, plural(i.CPUs, "CPU", "CPUs"), fmtSize(i.MemTotal)} {
 		if s != "" && !strings.HasPrefix(s, "0 ") {
@@ -584,12 +575,10 @@ func (w *wizard) readyView(m *Model, inner int) []string {
 	}
 	return append(body,
 		"",
-		"  "+sBold.Render(w.host.Name+" is ready."),
+		sSuccess.Render(glyphOK)+" "+sBold.Render(w.host.Name+" is ready."),
 		"",
 		field("Agents", strings.Join(names, dot)),
 		field("System", strings.Join(sys, dot)),
 		field("Limits", fmtSize(i.MemoryMax)+" per session"),
-		"",
-		"  "+row(true, seg{" " + glyphPointer + " Start a session ", sBold}),
 	)
 }

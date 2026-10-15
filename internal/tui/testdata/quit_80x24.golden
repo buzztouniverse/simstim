@@ -1,0 +1,24 @@
+
+
+
+
+  ╭─ Hosts ──────────────────────────────────────────────────────── 3 hosts ─╮
+  │                                                                          │
+  │  ● atlas-dev  4 sessions · 1 needs you                             9ms  │
+  │  ◌ aws-gpu     offline                                                   │
+  │  ● gcp-dev     2 sessions                                          41ms  │
+  │                                                                          │
+  ╰────────────────── Enter open · n new session · a add host · ? shortcuts ─╯
+
+
+
+
+
+
+
+
+
+                                                        ╭─ Ctrl+C then ────────╮
+                                                        │ Ctrl+C quit          │
+                                                        │    Esc cancel        │
+                                                        ╰──────────────────────╯

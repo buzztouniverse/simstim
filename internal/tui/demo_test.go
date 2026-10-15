@@ -3,7 +3,10 @@ package tui
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
+
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/iAmLakshya/simstim/internal/client"
 )
@@ -46,5 +49,20 @@ func TestDemoBackend(t *testing.T) {
 	}
 	if hosts, _ := newDemoBackend(true).LoadHosts(); len(hosts) != 0 {
 		t.Fatal("the empty demo has hosts")
+	}
+}
+
+// The demo's agent screen fills every row and column, like a real session.
+func TestDemoScreenFillsTheTerminal(t *testing.T) {
+	be := newDemoBackend(false)
+	for _, s := range be.sessions["homelab"] {
+		shot := renderScreen([]byte(demoScreen(s, 90, 30)), 90, 30)
+		top, bottom := shot.lines[26].String(), shot.lines[29].String()
+		if !strings.HasPrefix(top, "╭") || !strings.HasSuffix(top, "╮") || ansi.StringWidth(top) != 90 {
+			t.Errorf("%s: the prompt box does not span the width: %q", s.Name, top)
+		}
+		if !strings.HasSuffix(strings.TrimRight(bottom, " "), s.Agent) {
+			t.Errorf("%s: no status line on the last row: %q", s.Name, bottom)
+		}
 	}
 }

@@ -1,0 +1,36 @@
+
+
+
+
+
+            ╭─ All sessions ───────────────────────────────────────────────────────────────────── 3 hosts ─╮
+            │                                                                                              │
+            │  atlas-dev  9ms                                                                             │
+            │  ● auth-refactor             claude    ~/src/app                        needs input      2m  │
+            │  ≈ api-tests                 codex     ~/src/api                        working         14s  │
+            │  ○ notes                     shell     ~                                idle             1h  │
+            │  ✓ docs-pass                 opencode  ~/src/docs                       exited 0         3h  │
+            │  aws-gpu  offline                                                                            │
+            │  gcp-dev  41ms                                                                               │
+            │  ≈ bench                     gemini    /srv/bench                       working          5m  │
+            │  ✕ scratch                   shell     /tmp                             exited 1         2d  │
+            │                                                                                              │
+            ╰───────────────────────────── Enter attach · n new · Space preview · Esc hosts · ? shortcuts ─╯
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
