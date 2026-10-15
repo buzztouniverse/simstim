@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-10-15
 ---
 
 # 0020 A guided setup: one command and one sheet, over one engine
 
-**Status:** Proposed. The owner asked for a guided setup at Gate 2 on 15 October 2026. This record is the design, for the owner's yes.
+**Status:** Accepted. The owner asked for a guided setup at Gate 2 on 15 October 2026, and accepted this design the same day.
 
 ## Context
 
