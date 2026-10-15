@@ -18,12 +18,12 @@ Research in October 2026 found no tool that meets the whole brief:
 
 | Tool | What breaks the brief |
 | --- | --- |
-| tmux, Zellij, screen | Their own scrollback replaces the terminal's (no Cmd+F). Their prefix keys clash with agent keys. tmux has no kitty keyboard protocol. |
+| tmux, Zellij, screen | Their own scrollback replaces the terminal's (no Cmd+F). Their prefix keys clash with agent keys. tmux has no kitty keyboard protocol (still none in 3.8). Zellij passes OSC 9 and 777 notifications on since 0.45, but redraws the screen. |
 | mosh | No kitty keyboard protocol (Shift+Enter becomes Enter), no scrollback, no OSC 9/777 notifications. |
 | Herdr | A full multiplexer. It redraws panes from its own terminal model, direct attach uses the alternate screen, and it drops OSC 52 and OSC 9/777. Pull requests from outside are closed automatically. |
 | Web and phone UIs (CloudCLI, Happy, Paseo) | They replace the agent's real interface. Several had critical security bugs in 2026. |
 | Amp Orbs, Claude Remote Control, Codex remote | One vendor's cloud and one agent each. |
-| Coder, DevPod, Daytona | Coder's agent features now need its own agent and API keys. DevPod has stalled and Daytona is archived. |
+| Coder, DevPod, Daytona | Coder's agent features now need its own agent and API keys. DevPod has stalled, and Daytona went closed source in June 2026 ([competitors](research/competitors.md)). |
 
 The gap: **any agent, on any host you can reach by SSH, with the agent's bytes passed through untouched, sessions that survive sleep, and image paste that works remotely.**
 
