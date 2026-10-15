@@ -24,9 +24,12 @@ Every change keeps the tests green, and every bug fix adds the test that would h
 
 `test/e2e/run.py` drives the real client in a pseudo-terminal, as a person in Ghostty would, against a real Linux host.
 
-1. Use a disposable Linux VM with systemd that you can reach with `ssh`. The suite starts and deletes sessions named `e2e-*`, installs the helper, and briefly fills memory to test the cap. Do not point it at a machine you care about.
-2. Add the host: `simstim host add <name> <ssh-target>`.
+1. Use a disposable Linux VM with systemd. The suite starts and deletes sessions named `e2e-*`, installs the helper, and briefly fills memory to test the cap. Do not point it at a machine you care about.
+2. Make one with `simstim host create lima e2e` ([how to](../how-to/create-a-host.md)), or add one you reach with `ssh`: `simstim host add <name> <ssh-target>`.
 3. Run `E2E_HOST=<name> just e2e`. It prints `PASS` or `FAIL` for each check and a total.
+4. Delete a created host afterwards with `simstim host destroy e2e`.
+
+A container made with `host create docker` runs the suite too, over `docker exec` instead of SSH. It has no systemd, so the memory cap check is skipped. CI runs the suite this way on every change (the `docker-host` job).
 
 It covers start, attach and detach, resize, byte-exact output, replay after a dropped link, a simulated laptop sleep, the memory cap, snapshots after the ring wraps, a crashed shadow terminal, image paste and file drops, worktrees, ports, rename and delete. Host reboots are tested by hand, with the host owner's agreement.
 

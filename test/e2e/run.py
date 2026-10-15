@@ -24,11 +24,24 @@ results = []
 def ok(c, m):
     results.append(bool(c)); print(("PASS " if c else "FAIL ") + m); return c
 
-def host_ssh(cmd, data=None):
+def host_entry():
     import tomllib
     hosts = tomllib.load(open(os.path.join(os.path.dirname(os.path.dirname(WRAPPER)), "hosts.toml"), "rb"))["host"]
-    target = [h for h in hosts if h["name"] == HOST][0]["ssh"]
-    return subprocess.run(["ssh", "-F", WRAPPER, "-o", "BatchMode=yes", target, cmd], input=data, capture_output=True, check=True)
+    return [h for h in hosts if h["name"] == HOST][0]
+
+def host_machine():
+    """The [host.machine] table of a host made by `host create`, or {}."""
+    return host_entry().get("machine") or {}
+
+def host_ssh(cmd, data=None):
+    """Run a shell command on the host, the way the client reaches it."""
+    h = host_entry()
+    machine = h.get("machine") or {}
+    if machine.get("provider") == "docker":  # made by `host create docker`: no SSH
+        argv = ["docker", "exec", "-i", "-u", machine.get("user", "root"), machine["id"], "sh", "-c", cmd]
+    else:
+        argv = ["ssh", "-F", WRAPPER, "-o", "BatchMode=yes", h["ssh"], cmd]
+    return subprocess.run(argv, input=data, capture_output=True, check=True)
 
 def start(name, *argv):
     t = Term([cli, "new", HOST, "--name", name, "--detach", "--"] + list(argv), env=env)
@@ -138,15 +151,21 @@ ls = subprocess.run([cli, "ls", "--json"], capture_output=True, text=True).stdou
 ok('"id": "%s"' % sid4 in ls and '"alive": true' in ls, "session survives a killed client")
 
 # F. Memory cap: a hog is OOM-killed and marked; another session is unaffected.
-sid5 = start("e2e-oom", "/bin/bash", "-c", "head -c 3G /dev/zero | tail > /dev/null; sleep 600")
-time.sleep(40)
-ls = subprocess.run([cli, "ls", "--json"], capture_output=True, text=True).stdout
-rows = {s["id"]: s for h in json.loads(ls) for s in (h["sessions"] or [])}
-r5 = rows.get(sid5, {})
-ok(rows.get(sid4, {}).get("alive"), "other sessions keep running")
-print("oom session:", {k: r5.get(k) for k in ("state", "reason", "memory_current", "memory_max")})
-ok(r5.get("oom_killed") is True, "the over-the-cap process was stopped and the session marked (reason: %s)" % r5.get("reason"))
-created += [sid, sid2, sid3, sid4, sid5]
+#    A container has no systemd, so no memory caps: there the hog would only
+#    fill the container, and the check is skipped.
+if host_machine().get("provider") == "docker":
+    print("SKIP memory cap: a container has no systemd user manager, so sessions have no memory caps")
+    created += [sid, sid2, sid3, sid4]
+else:
+    sid5 = start("e2e-oom", "/bin/bash", "-c", "head -c 3G /dev/zero | tail > /dev/null; sleep 600")
+    time.sleep(40)
+    ls = subprocess.run([cli, "ls", "--json"], capture_output=True, text=True).stdout
+    rows = {s["id"]: s for h in json.loads(ls) for s in (h["sessions"] or [])}
+    r5 = rows.get(sid5, {})
+    ok(rows.get(sid4, {}).get("alive"), "other sessions keep running")
+    print("oom session:", {k: r5.get(k) for k in ("state", "reason", "memory_current", "memory_max")})
+    ok(r5.get("oom_killed") is True, "the over-the-cap process was stopped and the session marked (reason: %s)" % r5.get("reason"))
+    created += [sid, sid2, sid3, sid4, sid5]
 
 # G. Laptop sleep: freeze the client and cut its network path; on wake it must
 #    be back to live output within 5 s, with what it missed replayed.
@@ -189,7 +208,8 @@ t.send(b"\x1c"); t.exit_code(10)
 sid8 = start("e2e-vtcrash", "/bin/bash", "-c", 'printf "\\033[>1u"; i=0; while :; do i=$((i+1)); printf "TICK-%d\\n" $i; sleep 0.2; done')
 created.append(sid8)
 time.sleep(3)
-host_ssh("pkill -KILL -x %s-vt; sleep 3" % NAME)
+# Through /proc, not pkill: a slim container image has no procps.
+host_ssh("for p in /proc/[0-9]*; do [ \"$(cat $p/comm 2>/dev/null)\" = '%s' ] && kill -9 \"${p#/proc/}\"; done; sleep 3" % (NAME + "-vt")[:15])
 t = Term([cli, "attach", HOST + "/" + sid8], env=env)
 t.read(4)
 ticks = [int(x) for x in re.findall(rb"TICK-(\d+)", t.buf)]

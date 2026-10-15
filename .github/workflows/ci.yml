@@ -56,6 +56,40 @@ jobs:
             exit 1
           fi
 
+  docker-host:
+    # `host create docker`, then the end-to-end suite against the container,
+    # then `host destroy`: the exec transport, proved live (record 0013).
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.16.0
+      - name: Build the client, with the host helper and the shadow terminal
+        run: |
+          echo "XDG_CONFIG_HOME=$RUNNER_TEMP/config" >> "$GITHUB_ENV"
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o internal/client/helpers/host-linux-amd64 ./cmd/host
+          (cd vt && zig build linux)
+          cp vt/zig-out/linux/shadow-vt-amd64 internal/client/helpers/vt-linux-amd64
+          CGO_ENABLED=0 go build -trimpath -o bin/client .
+      - name: Create a host in a container
+        run: bin/client host create docker ci
+      - name: End-to-end tests against it
+        env:
+          E2E_HOST: ci
+        run: python3 test/e2e/run.py bin/client
+      - name: Destroy it
+        if: always()
+        run: bin/client host destroy ci --yes --force
+
   docs-impact:
     # A pull request that changes commands, config, keys or agents must change
     # the docs and the CHANGELOG too, unless it is labelled "no docs needed".
