@@ -41,7 +41,7 @@ fi
 # Matches that are fine: generic users, documentation names and addresses,
 # the bots' addresses, and another project's public contact addresses that an
 # old version of a research note quoted.
-allow='/Users/(me|you|runner|shared)([/" ]|$)|/home/(me|you|u|dev|user|runner|linuxbrew|admin|ubuntu|debian|vscode|node)([/" .:;)\<&]|$)|example-tailnet\.ts\.net|@([A-Za-z0-9-]+\.)*(example|example\.(com|org|net|invalid)|openssh\.com|users\.noreply\.github\.com)([^A-Za-z0-9.-]|$)|git@github\.com|noreply@|user@UID|@v[0-9]|@sha256|@latest|[a-z]+@herdr\.dev'
+allow='/Users/(me|you|runner|shared)([/" ]|$)|/home/(me|you|u|dev|user|runner|linuxbrew|admin|ubuntu|debian|vscode|node)([/" .:;)\<&]|$)|example-tailnet\.ts\.net|@([A-Za-z0-9-]+\.)*(example|example\.(com|org|net|invalid)|openssh\.com|users\.noreply\.github\.com)([^A-Za-z0-9.-]|$)|git@github\.com|support@github\.com|noreply@|user@UID|@v[0-9]|@sha256|@latest|[a-z]+@herdr\.dev'
 allow+="$more_allow"
 
 # --history checks every version of every file in every commit, plus the
@@ -61,14 +61,18 @@ if [ "${1:-}" = "--history" ]; then
     while read -r sha path; do
         text=$(git cat-file -p "$sha" | sed -E "s#${allow}##g")
         for p in "${patterns[@]}"; do
-            if printf '%s\n' "$text" | grep -q -E -- "$p"; then
+            # No -q: grep must read all its input, or the writer dies of
+            # SIGPIPE and, under pipefail, the match goes unreported.
+            if printf '%s\n' "$text" | grep -E -- "$p" >/dev/null; then
                 echo "history: $path (blob ${sha:0:7}): $p"
                 fail=1
             fi
         done
     done <"$tmp/blobs"
+    # No grep -q in these pipes: it stops reading at the first match, the
+    # writer dies of SIGPIPE, and under pipefail the match goes unreported.
     for p in "${patterns[@]}"; do
-        if sed -E "s#${allow}##g" "$tmp/messages" | grep -q -E -- "$p"; then
+        if sed -E "s#${allow}##g" "$tmp/messages" | grep -E -- "$p" >/dev/null; then
             echo "history: a commit message: $p"
             fail=1
         fi

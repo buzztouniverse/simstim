@@ -120,6 +120,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- `check-private.sh --history` could miss a match on macOS: `grep -q` stopped reading early, the writer died of SIGPIPE, and under `pipefail` the match went unreported. Linux CI caught Dependabot's sign-off address on its branches, which is now allowed with the other bots' addresses.
 - `scripts/check-scripts.sh` never ran on macOS, whose grep has no `-P`; it uses perl now, and no longer flags its own comment on Linux.
 - `new` could read a session's record before the host's holder wrote the agent's start, return a row that had not started, and save it over the holder's record. It now waits up to 5 s for the start.
 - A host with no sessions, or one that is offline, no longer offers attach, peek and rename in the launcher's footer: it shows the keys that work there.
