@@ -34,6 +34,7 @@ if [ -n "$newmod" ]; then
     go mod edit -module "$newmod"
     git ls-files '*.go' | xargs sed -i.bak "s#\"$oldmod/#\"$newmod/#g"
     git ls-files '*.go' | sed 's/$/.bak/' | xargs rm -f
+    sed -i.bak "s#^MODULE=\"$oldmod\"#MODULE=\"$newmod\"#" install.sh && rm -f install.sh.bak
 fi
 
 # 3. The docs.
