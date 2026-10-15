@@ -25,3 +25,4 @@ coverage.*
 *.swp
 .drop-test.txt
 __pycache__/
+.clip-test.png

@@ -197,6 +197,31 @@ ok(ticks and max(ticks) > 20, "shadow terminal killed: the agent kept running (t
 ok(b"\x1b[>1u" in t.buf, "shadow terminal killed: it restarted, and a new client still got a snapshot")
 t.send(b"\x1c"); t.exit_code(10)
 
+# J. Ctrl+V with an image on the clipboard uploads it and pastes the remote
+#    path. The test hook stands in for the clipboard, so the user's real
+#    clipboard is never touched.
+import base64
+png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==")
+img = os.path.join(HERE, ".clip-test.png")
+open(img, "wb").write(png)
+sid9 = start("e2e-clip", "/bin/bash", "--norc", "-i")
+created.append(sid9)
+env_clip = dict(env); env_clip[NAME.upper() + "_TEST_CLIPBOARD_IMAGE"] = img
+t = Term([cli, "attach", HOST + "/" + sid9], env=env_clip)
+time.sleep(2); t.read(1)
+t.send(b"cat -v\r"); time.sleep(0.5)
+t.buf = b""
+t.send(b"\x16")  # Ctrl+V
+ok(t.wait_for(rb"/paste/[0-9a-f]{12}-clipboard\.png", 20), "image paste: Ctrl+V uploaded the image and pasted its path on the host")
+m = re.search(rb"(/[^ \r\n]*/paste/[0-9a-f]{12}-clipboard\.png)", t.buf)
+if m:
+    out = host_ssh("sha256sum " + m.group(1).decode()).stdout.decode()
+    import hashlib
+    ok(hashlib.sha256(png).hexdigest() in out, "image paste: the file on the host is the same image")
+t.send(b"\x04"); time.sleep(0.3)
+t.send(b"\x1c"); t.exit_code(10)
+os.remove(img)
+
 # Clean up.
 for s in created:
     subprocess.run([cli, "kill", HOST + "/" + s], capture_output=True)
