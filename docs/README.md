@@ -1,7 +1,11 @@
 # Docs
 
+New here? Start with [getting started](tutorials/getting-started.md).
+
 | Page | What it covers |
 | --- | --- |
+| [Tutorials](tutorials/README.md) | Learn by doing: getting started in five minutes |
+| [How-to guides](how-to/README.md) | One task per page: hosts, worktrees, ports, images, keys, troubleshooting |
 | [Reference](reference/_index.md) | Every command, the configuration, the keys and the agent table, generated from the code |
 | [Roadmap](roadmap.md) | Every candidate feature, scored by demand, impact and effort: now, next and later |
 | [Design](explanation/design.md) | Why it exists, goals, non-goals, principles, risks |

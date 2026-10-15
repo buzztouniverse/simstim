@@ -133,6 +133,10 @@ docs:
 docs-site version="dev":
     scripts/docs-site.sh {{version}}
 
+# Run the commands in the tutorials and how-to guides. Set DOCS_HOST (and DOCS_HOST_TARGET, DOCS_HOST_SSH_CONFIG) to run them on a test host.
+test-docs: build
+    python3 scripts/test-docs-commands.py bin/{{name}}
+
 # Check the docs: generated pages, Markdown lint, spelling, prose and links (--external for other sites).
 docs-check *args:
     scripts/docs-check.sh {{args}}

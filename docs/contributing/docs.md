@@ -44,6 +44,7 @@ CI builds the site on every push and keeps it as an artifact named `docs-site`. 
 - Markdown lint (markdownlint-cli2; `.markdownlint-cli2.yaml`);
 - British spelling (typos; `.typos.toml`);
 - plain English (Vale, with the project's small style in `.vale/styles/Plain`);
+- every command in the tutorials and how-to guides: each must exist with its flags, and with `DOCS_HOST` set, `just test-docs` runs them on a test host (a comment before a block can mark it `skip` or `help`);
 - every link on the built site (lychee, offline). `just docs-check --external` also checks links to other sites, which CI does on `main` and weekly.
 
 ## Images

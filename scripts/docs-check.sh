@@ -37,6 +37,10 @@ typos --force-exclude "${md[@]}" || fail=1
 step "Plain English"
 vale --minAlertLevel=error "${md[@]}" || fail=1
 
+step "Commands in the tutorials and how-to guides"
+name=$(sed -n 's/^const Name = "\(.*\)"/\1/p' internal/brand/brand.go)
+go build -o "$ref/$name" . && python3 scripts/test-docs-commands.py "$ref/$name" || fail=1
+
 step "Site build and internal links"
 scripts/docs-site.sh dev /
 lychee --offline --no-progress --root-dir "$PWD/build/site/public" 'build/site/public/**/*.html' || fail=1

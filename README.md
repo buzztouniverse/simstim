@@ -113,14 +113,13 @@ The images use a dark Ghostty theme and show still frames. In your terminal, the
 
 ## Docs
 
-| Page | What it covers |
-| --- | --- |
-| [Design](docs/explanation/design.md) | Why it exists, goals, non-goals, principles, risks |
-| [Roadmap](docs/roadmap.md) | What comes next, scored by demand, impact and effort |
-| [Architecture](docs/explanation/architecture.md) | Components, flows, protocol, fidelity contract, security |
-| [UX](docs/contributing/ux-spec.md) | Screens, keys, visual language, CLI |
-| [Decisions](docs/contributing/decisions/) | The decision records |
-| [Research](docs/research/README.md) | The evidence behind the design |
+Start with [getting started](docs/tutorials/getting-started.md): five minutes from install to an agent on your host. Then:
+
+- [How-to guides](docs/how-to/README.md): add a host, worktrees, ports, image paste, restore after a reboot, keys, troubleshooting.
+- [Reference](docs/reference/_index.md): every command and flag, the configuration, the keys and the agent table, generated from the code.
+- [Explanation](docs/explanation/design.md): why it exists, [how it works](docs/explanation/architecture.md), [the fidelity contract](docs/explanation/fidelity.md) and [the security model](docs/explanation/security.md).
+- [Roadmap](docs/roadmap.md): what comes next, scored by demand, impact and effort.
+- [Contributing](docs/contributing/README.md), [decisions](docs/contributing/decisions/README.md) and [research](docs/research/README.md).
 
 ## Contributing
 
