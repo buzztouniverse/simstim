@@ -1,7 +1,7 @@
 # Websites for developer tools: what works (research for the site)
 
 - Date: 15 October 2026
-- Lane: the public web. The landing pages and docs of terminal and developer tools that developers praise, their source where it is open, and well-known write-ups. Used for [decision 0021](../contributing/decisions/0021-site-design.md), the design of this project's site.
+- Lane: the public web. The landing pages and docs of terminal and developer tools that developers praise, their source where it is open, and well-known write-ups. Sections 1 to 10 were used for [decision 0021](../contributing/decisions/0021-site-design.md), the first design of this project's site. Sections 11 to 16 are a second round, after the owner's review of that site, and were used for [decision 0022](../contributing/decisions/0022-site-rebuild.md), which rebuilt it.
 - Method: a script drove headless Chrome over the DevTools protocol, at desktop size (1440 × 1800) and phone size (390 × 844, at 2×, with touch), with the cache off. For each page it recorded every request and its size, took a screenshot, read the fonts, colours and contrast, pressed Tab to see the focus style, scrolled to the bottom, and counted animation frames at the top, at the bottom and under reduced motion. It also searched each page's own scripts for reduced-motion, IntersectionObserver and visibility handling. Where the source is public, I read it.
 - Clean-room: this note describes what the sites do, in our own words. It copies no code, art or text, and the site copies nothing from them.
 - Each weight is one run on one network, so treat the numbers as rough. Headless Chrome drew some WebGL heroes empty; I say where. Anything I could not confirm is marked **UNVERIFIED**.
@@ -269,3 +269,90 @@ We checked the full JetBrains Mono 2.304 release file ourselves: it has the box 
 - Whether Zed's two home pages are a test or depend on the browser.
 - The full Codrops article on shape-aware ASCII in three.js: only its listing was read.
 - The weights are single runs. Our own site's numbers are in decision 0021.
+
+## 11. The second round: why
+
+The owner's review of the first site, on 15 October 2026, found problems in the navigation, a landing page heavy with text and short of white space, and too little explanation. [The audit](website-audit.md) measured each one. In short: 1,631 words in eight sections of cards on the landing page, cards wider than a phone's screen, one sidebar of nine groups for users and contributors together, and guides sorted by the alphabet.
+
+Four research lanes followed, each with its own notes, sources and screenshots; each claim below was read on 15 October 2026. The notes themselves are kept outside the repository; this section keeps what they found, with the primary sources.
+
+## 12. Docs frameworks
+
+Each was built against our own `docs/` (118 pages) on an Apple M3 Pro. Versions are from the registries and release pages.
+
+| | Starlight | Docusaurus | VitePress | Material for MkDocs | Zensical | Hugo with Hextra |
+| --- | --- | --- | --- | --- | --- | --- |
+| Version | 0.42.6, on Astro 7 | 3.10.2 | 1.6.4 (2.0 in alpha) | 9.7.7 | 0.0.70 | Hextra 0.13.0 |
+| Search, local | Pagefind, in small pieces when used | none built in; a plugin loads 4 MB at once | MiniSearch, 220 KB with gzip at once | lunr, 988 KB at once | its own, 1 MB at once | FlexSearch, 871 KB at once |
+| Versions | build each with its own base (works) | built in | build each with its own base | mike | a fork of mike | our own script |
+| Relative `.md` links | not resolved | resolved | resolved; a README is not a folder's page | resolved | resolved; changes links that leave `docs/` | a render hook |
+| Breadcrumbs | no | yes | no | yes | yes | yes |
+| npm or Python packages | 270 | 1,174 | 126 | 29 | 11 | one binary |
+| Build, about 120 pages | 2–5 s | 4–5 s | 3 s | 1 s | 1–1.5 s | 2–3 s |
+| Requests to others | none | none | none | Google Fonts | Google Fonts | none |
+
+What decided it:
+
+- **Starlight** has local search that loads only when used ([site search](https://starlight.astro.build/guides/site-search/), [Pagefind](https://pagefind.app/docs/)), no requests to anyone else, a skip link and landmarks by default, overrides for every part of the page ([overriding components](https://starlight.astro.build/guides/overriding-components/)), i18n that keeps today's addresses ([i18n](https://starlight.astro.build/guides/i18n/)), and a moderate tree. Our plain Markdown built with no changes. It lacks `.md` links, breadcrumbs, `/` for search and a version menu; each is small to add.
+- **Its risks:** it is 0.x, with five breaking minor releases between March and October 2026 ([changelog](https://github.com/withastro/starlight/blob/main/packages/starlight/CHANGELOG.md)); Astro's telemetry is on by default, in CI too, until `ASTRO_TELEMETRY_DISABLED=1` ([Astro telemetry](https://astro.build/telemetry/)); its landing-page template has no phone menu ([issue 977](https://github.com/withastro/starlight/issues/977)); and its Markdown turns `--` into a dash unless smart punctuation is off.
+- **Docusaurus** has the most built in, but four times the packages, no local search of its own ([search resources](https://docusaurus.io/community/resources#search)), and plain Markdown only in a mode it calls experimental.
+- **Material for MkDocs** reaches its end of life on 5 May 2027 ([getting started](https://squidfunk.github.io/mkdocs-material/getting-started/)). **Zensical**, its successor, is at 0.0.x ([repository](https://github.com/zensical/zensical)).
+- **VitePress** 1.x depends on Vite 5, which no longer gets fixes ([Vite releases](https://vite.dev/releases)), and our docs broke its build twice: `<host>` in plain text and `{{ }}` in code are read as Vue.
+
+## 13. Information architecture
+
+Sixteen sites read: Ghostty, Bun, Deno, Astro, Tailwind CSS, Charm, Zed, Tauri, Biome, uv, mise, GoReleaser, Atuin, Fly.io and Tailscale, and our own.
+
+- **Order by the reader's path.** All of them set the order by hand: install and a short first run, then guides, then concepts, then reference. None sorts guides by title ([uv](https://docs.astral.sh/uv/), [mise](https://mise.jdx.dev/), [Deno](https://docs.deno.com/runtime/)).
+- **Tabs, each with its own sidebar,** once there is more than one kind of reader: Tauri, Deno, Bun, Fly.io and GoReleaser ([GoReleaser](https://goreleaser.com/), on Hextra).
+- **Plain labels:** "Get started", "Guides", "Concepts", "Reference". No site uses "Explanation" as a label.
+- **Long command lists** nest under their parent command, collapsed, with an overview of every command ([mise commands](https://mise.jdx.dev/cli/), [Fly.io](https://fly.io/docs/flyctl/)).
+- **Decision records and research notes** are never in the user's path: they live on GitHub or in a separate project area.
+- **Where-am-I cues:** breadcrumbs, the current item marked, "on this page", previous and next in the curated order.
+- **Pages users look for:** a short concepts page in plain words ([uv concepts](https://docs.astral.sh/uv/concepts/)), and common questions ([Atuin FAQ](https://docs.atuin.sh/latest/faq/), [mise FAQ](https://mise.jdx.dev/faq.html)).
+
+## 14. Landing pages: words and space
+
+Twenty-three landing pages measured at 1440 × 900 and 400 × 860: words per screen, the hero, the gaps between sections, and the type sizes.
+
+| Measure | Median of the 23 | Our first site |
+| --- | --- | --- |
+| Headline | 4 words | 13 words |
+| Sub-headline | 17 words | 39 words |
+| Words per screen | 106 | 161 |
+| Gap above a section heading | about 155 px; the calm pages 210–284 px | 133 px |
+
+- **The pages that read as calm** make one point per section: a heading that states it, one or two lines, then one picture, a short list or a command. Detail is one click away. Single-purpose CLI tools use about 20 to 950 words in all ([OpenCode](https://opencode.ai/), [Atuin](https://atuin.sh/), [Zellij](https://zellij.dev/), [Ghostty](https://ghostty.org/)).
+- **The hero** is a short headline, one plain sentence, the install line and at most two actions, with the product in view on the first screen ([Bun](https://bun.com/), [Linear](https://linear.app/)).
+- **Prose in boxes reads as stacks of grey lines.** Our first site had 23 text boxes, some inside others, a median of 34 words each, in columns of about 35 characters.
+- **Copy:** say what only this tool does. A hosted agent now makes the "close the laptop" promise in its own words ([Amp](https://ampcode.com/)), so our first line says what is ours: any agent, on your own machines, in your own terminal.
+
+## 15. Motion that explains
+
+- **Examples that explain:** Electric's figure of a client catching up from an offset ([Electric Streams](https://electric.ax/streams)) is nearly our story, in about 4.4 KB with gzip; [Stripe Connect](https://stripe.com/connect) and [Restate](https://restate.dev/) draw their figures from one clock with named steps, and keep the meaning in real text beside them. Several fall back, under reduced motion, to their last frame alone, so the drop and the recovery vanish. A still frame for a recovery story must show before, during and after.
+- **Standards:** WCAG 2.2.2 asks for a visible pause or stop for motion that starts by itself and lasts over 5 s; the reduced-motion setting alone is not one of its techniques ([Understanding 2.2.2](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)). Scroll-driven animations are in Chrome and Safari but not yet in a released Firefox ([MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline)). SMIL in SVG ignores the reduced-motion setting.
+- **Measured in headless Chrome:** CSS animations of properties other than `transform` and `opacity` keep costing style or layout work every frame, also off screen.
+- **The three.js field** explained nothing and cost 133 KB with gzip; the same piece in plain WebGL is 2.5 KB. The rebuilt site drops it.
+- **What we built:** the figures in [decision 0022](../contributing/decisions/0022-site-rebuild.md#motion). Each story plays once when mostly in view, rests on its last frame, and has its steps as buttons, so it also works by hand and with motion off.
+
+## 16. The new site, measured
+
+Built locally on 15 October 2026 and served with gzip, as GitHub Pages serves it; Lighthouse 13.5.0 in Chrome 155.
+
+| Page | Transfer | Requests | Performance | Accessibility | Best practices | SEO | LCP | TBT | CLS |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Landing, phone (slow 4G, 4× slower CPU) | 146 KiB | 16 | 99 | 100 | 100 | 100 | 1.8 s | 0 ms | 0.006 |
+| Landing, desktop | 146 KiB | 16 | 100 | 100 | 100 | 100 | 0.4 s | 0 ms | 0 |
+| A guide, phone | 138 KiB | 19 | 99 | 100 | 100 | 100 | 1.8 s | 0 ms | 0 |
+| A guide, desktop | 138 KiB | 19 | 100 | 100 | 100 | 100 | 0.4 s | 0 ms | 0.002 |
+
+| Measure | First site | New site |
+| --- | --- | --- |
+| Landing page, words in its main part | 1,631 | 499 |
+| Landing page, height on a laptop (1440 wide) | 7,782 px | 5,711 px |
+| Landing page, height on a phone (400 wide) | 11,932 px | 6,942 px |
+| Sizes of type on the landing page | 15 | 6 |
+| three.js on a laptop | 133 KB with gzip | none |
+| Requests to other sites | none | none |
+
+The search's interface (26 KB with gzip) loads when the browser is idle, so search opens at once; its index loads only when a reader searches.
