@@ -49,7 +49,15 @@ func IsQuery(t Token) bool {
 		}
 	case OSC:
 		// Colour, clipboard, status and pointer queries end with "?".
-		return bytes.HasSuffix(t.Payload, []byte("?")) || bytes.Contains(t.Payload, []byte(";?;"))
+		if bytes.HasSuffix(t.Payload, []byte("?")) || bytes.Contains(t.Payload, []byte(";?;")) {
+			return true
+		}
+		// Kitty's notification protocol asks for capabilities with p=? in its metadata.
+		if rest, ok := bytes.CutPrefix(t.Payload, []byte("99;")); ok {
+			meta, _, _ := bytes.Cut(rest, []byte(";"))
+			return bytes.Contains(meta, []byte("p=?"))
+		}
+		return false
 	case DCS:
 		// XTGETTCAP (DCS + q) and DECRQSS (DCS $ q).
 		return bytes.HasPrefix(t.Payload, []byte("+q")) || bytes.HasPrefix(t.Payload, []byte("$q"))

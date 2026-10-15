@@ -201,7 +201,7 @@ func infoFrom(m *Manifest, alive bool) SessionInfo {
 	}
 	return SessionInfo{
 		ID: m.ID, Name: m.Name, Agent: m.Agent.Kind, Cwd: m.Cwd,
-		State: st.State, Since: st.Since, Reason: st.Reason, ExitCode: st.ExitCode, Signal: st.Signal, OOM: st.OOM,
+		State: st.State, Source: st.Source, Since: st.Since, Reason: st.Reason, ExitCode: st.ExitCode, Signal: st.Signal, OOM: st.OOM,
 		CreatedAt: m.CreatedAt, LastActivityAt: m.LastActivityAt, LastAttachedAt: m.LastAttachedAt,
 		Alive: alive, Unit: m.Run.Unit, MemoryMax: m.Limits.MemoryMax, MemoryCurrent: memoryCurrent(m.Run.Unit),
 		HostVersion: m.HostVersion, Cols: m.Term.Cols, Rows: m.Term.Rows,

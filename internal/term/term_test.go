@@ -102,7 +102,7 @@ func TestTrackerPopAndLeaveAlt(t *testing.T) {
 }
 
 func TestSanitizerDropsQueries(t *testing.T) {
-	in := "a\x1b[c\x1b[>c\x1b[6n\x1b[>q\x1b[?u\x1b]11;?\x07\x1b]52;c;?\x1b\\\x1bP+q544e\x1b\\\x1b[?2004$p\x1b[14tb" +
+	in := "\x1b]99;i=opentui-notifications:p=?;\x1b\\a\x1b[c\x1b[>c\x1b[6n\x1b[>q\x1b[?u\x1b]11;?\x07\x1b]52;c;?\x1b\\\x1bP+q544e\x1b\\\x1b[?2004$p\x1b[14tb" +
 		"\x1b[>4n\x1b[22;0t\x1b[31mc\x1b]0;keep\x07"
 	var s Sanitizer
 	got := string(s.Feed([]byte(in)))

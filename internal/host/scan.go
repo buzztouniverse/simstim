@@ -1,5 +1,7 @@
 package host
 
+import "strings"
+
 // scanner watches a session's output for signals, without changing it.
 // It finds the bell, desktop notifications (OSC 9 and OSC 777) and progress
 // reports (OSC 9;4). It keeps its state across chunks.
@@ -89,8 +91,20 @@ func (s *scanner) endOSC(fn func(outSignal)) {
 		} else {
 			fn(sigProgressBusy)
 		}
-	case hasPrefix(o, "9;"), hasPrefix(o, "777;notify"), hasPrefix(o, "99;"):
+	case hasPrefix(o, "777;notify"):
 		fn(sigNotify)
+	case hasPrefix(o, "9;"):
+		// iTerm2-style OSC 9;text is a notification. ConEmu uses OSC 9;<number>;…
+		// for other commands (for example 9;9 to report the folder), which are not.
+		if len(o) > 2 && !(o[2] >= '0' && o[2] <= '9' && (len(o) == 3 || o[3] == ';')) {
+			fn(sigNotify)
+		}
+	case hasPrefix(o, "99;"):
+		// Kitty's notification protocol. "p=?" in the metadata is a capability query.
+		meta, _, _ := strings.Cut(string(o[3:]), ";")
+		if !strings.Contains(meta, "p=?") {
+			fn(sigNotify)
+		}
 	}
 }
 

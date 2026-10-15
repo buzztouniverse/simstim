@@ -40,6 +40,7 @@ type SessionInfo struct {
 	Agent          string    `json:"agent"`
 	Cwd            string    `json:"cwd"`
 	State          string    `json:"state"`
+	Source         string    `json:"source,omitempty"` // what the state was learnt from
 	Since          time.Time `json:"since"`
 	Reason         string    `json:"reason,omitempty"`
 	ExitCode       *int      `json:"exit_code,omitempty"`
