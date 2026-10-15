@@ -117,6 +117,7 @@ func New(ctx context.Context, be Backend, o Options) *Model {
 		m.now = time.Now
 	}
 	m.settings = be.Settings()
+	commands = withKeymap(registry(), m.settings.Keymap)
 	hosts, err := be.LoadHosts()
 	m.loadErr = err
 	sort.SliceStable(hosts, func(i, j int) bool { return hosts[i].Name < hosts[j].Name })
@@ -278,6 +279,7 @@ func (m *Model) update(msg tea.Msg) tea.Cmd {
 		return reload
 	case settingsMsg:
 		m.settings = msg.s
+		commands = withKeymap(registry(), m.settings.Keymap)
 		return nil
 	case sshHostsMsg:
 		if w, ok := m.modal.(*wizard); ok {

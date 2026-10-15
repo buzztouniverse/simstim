@@ -41,6 +41,9 @@ type Settings struct {
 		ImagePasteKey string `toml:"image_paste_key"`
 		Scrollback    string `toml:"scrollback"`
 	} `toml:"attach"`
+	// Keymap rebinds home-screen commands by name ("session: delete"). A value is
+	// a key, a list of keys, or "" to unbind.
+	Keymap map[string]any `toml:"keymap"`
 }
 
 type hostsFile struct {
