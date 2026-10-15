@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- An explanation page, [how simstim compares](docs/explanation/comparison.md): multiplexers, pass-through session tools, hosted agents, vendor agents on your own machine and cloud development environments, with when to choose each instead, and where simstim is behind.
 - `host create <provider> [name]` makes a host and sets it up in one step: a local Lima VM (`lima`), a Docker container for testing (`docker`, experimental) or an E2B sandbox (`e2b`). It creates the machine, installs the helper (printing what and where), and connects. `host destroy <name>` asks first, refuses while a session is working unless `--force`, deletes the machine, and forgets the host. `hosts.toml` records the provider and the machine in a `[host.machine]` table. See [Create a host](docs/how-to/create-a-host.md).
 - A transport seam: the bridge, the helper's install and the hello run over SSH, `docker exec -i`, or E2B's envd process API, with no SSH and no new port for the last two. Bridges started over envd end themselves when the client's pings stop for 30 s.
 - Idle stop for created VMs: a systemd user timer powers the VM off after 30 minutes with no client connected and no session working (`host idle <name> <time|never>`; it needs passwordless sudo, and `host doctor` says when it is missing). E2B sandboxes are kept on a lease instead: while a client is connected it is renewed every minute, for 60 minutes while a session works and 15 when none does.

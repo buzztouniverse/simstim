@@ -23,6 +23,8 @@ Research in October 2026 found no tool that meets the whole brief:
 | Amp Orbs, Claude Remote Control, Codex remote | One vendor's cloud and one agent each. |
 | Coder, DevPod, Daytona | Coder's agent features now need its own agent and API keys. DevPod has stalled, and Daytona went closed source in June 2026 ([competitors](../research/competitors.md)). |
 
+[How simstim compares](comparison.md) goes through each kind of tool, and says when to choose one instead.
+
 The gap: **any agent, on any host you can reach by SSH, with the agent's bytes passed through untouched, sessions that survive sleep, and image paste that works remotely.**
 
 ## Goals

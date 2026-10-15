@@ -13,6 +13,7 @@ New here? Start with [getting started](tutorials/getting-started.md).
 | [Architecture](explanation/architecture.md) | Components, flows, protocol, files and paths, providers |
 | [The fidelity contract](explanation/fidelity.md) | What "byte for byte" covers, and the test behind each part |
 | [Security model](explanation/security.md) | What the tool does to keep hosts and laptops safe |
+| [How it compares](explanation/comparison.md) | Multiplexers, hosted agents and cloud environments, and when to choose them instead |
 | [UX](contributing/ux-spec.md) | Screens, keys, visual language, CLI |
 | [Decisions](contributing/decisions/README.md) | Decision records |
 | [Research](research/README.md) | The evidence behind the design |
