@@ -124,12 +124,18 @@ func Attach(ctx context.Context, o AttachOptions) (AttachResult, error) {
 		return AttachResult{}, err
 	}
 	a.inCh = make(chan []byte, 256)
+	stop, readDone := make(chan struct{}), make(chan struct{})
 	go func() {
+		defer close(readDone)
 		buf := make([]byte, 32<<10)
 		for {
 			n, err := cr.Read(buf)
 			if n > 0 {
-				a.inCh <- append([]byte(nil), buf[:n]...)
+				select {
+				case a.inCh <- append([]byte(nil), buf[:n]...):
+				case <-stop:
+					return
+				}
 			}
 			if err != nil {
 				close(a.inCh)
@@ -145,9 +151,16 @@ func Attach(ctx context.Context, o AttachOptions) (AttachResult, error) {
 
 	runErr := a.loop(ctx)
 
+	// Stop the reader before its files are closed, and before anything else
+	// reads the terminal.
+	cr.Cancel()
+	close(stop)
+	select {
+	case <-readDone:
+	case <-time.After(time.Second):
+	}
 	// Put the terminal back exactly as we found it: undo the session's modes,
 	// never with RIS, which would wipe the scrollback.
-	cr.Cancel()
 	a.write(a.tracker.M.ResetSequence())
 	a.write([]byte("\x1b]9;4;0\x1b\\\x1b[23;0t"))
 	_ = xterm.Restore(a.fd, old)

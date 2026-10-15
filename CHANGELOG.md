@@ -123,6 +123,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- After a detach on Linux, the next attach in the same terminal could lose the keys typed into it: the old attach's reader of the terminal was still running, and it was closed under that reader. Each attach now stops its reader before it returns.
 - An attached client could miss an agent's last output, often the reason it ended: the holder announced the end before it had read that output from the terminal. It now reads it first.
 - A deleted session could come back in `ls`, as ended: its holder, slow to exit, saved its manifest once more after `kill` had removed the session's folder. Nothing saves after a holder's last save now.
 - A session's holder saved its manifest without its lock when the agent exited, while other goroutines could change it: a data race, which the new unit tests found.
