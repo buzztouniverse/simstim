@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/iAmLakshya/simstim/internal/agents"
 	"github.com/iAmLakshya/simstim/internal/brand"
 	"github.com/iAmLakshya/simstim/internal/client"
 	"github.com/iAmLakshya/simstim/internal/tui"
@@ -65,7 +66,7 @@ func newCmd() *cobra.Command {
 			return attach(cmd.Context(), h, s.ID, s.Name)
 		},
 	}
-	cmd.Flags().StringVarP(&agent, "agent", "a", "shell", "the agent: claude, codex, opencode, gemini, amp, cursor, aider, goose or shell")
+	cmd.Flags().StringVarP(&agent, "agent", "a", "shell", "the agent: "+agentKinds())
 	cmd.Flags().StringVarP(&dir, "dir", "d", "~", "the folder on the host")
 	cmd.Flags().StringVarP(&name, "name", "n", "", "a name for the session (default: the folder name)")
 	cmd.Flags().BoolVar(&detach, "detach", false, "start it without attaching")
@@ -369,4 +370,17 @@ func demoCmd() *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&empty, "empty", false, "start with no hosts, as on the first run")
 	return cmd
+}
+
+// agentKinds lists the agents for help text, from the agent table: "claude,
+// codex, … or shell".
+func agentKinds() string {
+	kinds := make([]string, 0, len(agents.Table))
+	for _, a := range agents.Table {
+		kinds = append(kinds, a.Kind)
+	}
+	if len(kinds) < 2 {
+		return strings.Join(kinds, "")
+	}
+	return strings.Join(kinds[:len(kinds)-1], ", ") + " or " + kinds[len(kinds)-1]
 }
