@@ -20,5 +20,7 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0014](0014-code-layout.md) | Code layout: thin mains, an importable command tree, black-box tests under test/ | Proposed |
 | [0015](0015-docs-toolchain.md) | Docs toolchain: Hugo with Hextra, a Diátaxis docs folder and generated reference | Proposed |
 | [0016](0016-public-repo-layout.md) | Public repo layout: full community files at the root, GitHub config in .github/, private material out | Proposed |
+| [0017](0017-release-signatures.md) | Release signatures that any machine with OpenSSH can check | Accepted |
+| [0018](0018-feature-set.md) | The feature set: what we build now, next and later | Proposed |
 
 Write a new record from [the template](template.md).
