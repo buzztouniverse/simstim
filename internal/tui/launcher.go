@@ -210,6 +210,11 @@ func (m *Model) sessionsView(cw int) listView {
 	}
 	rows := m.rows()
 	if sessionRows(rows) == 0 {
+		// With no session to act on, offer only what works here.
+		v.hints = []hint{{"n", "new session"}, {"esc", "hosts"}, {"ctrl+o", "commands"}, {"?", "keys"}}
+		if h != nil && (h.status == stOffline || h.status == stFailed) {
+			v.hints = []hint{{"esc", "hosts"}, {"i", "details"}, {"ctrl+o", "commands"}, {"?", "keys"}}
+		}
 		for _, l := range m.emptyState(cw - 2) {
 			v.rows = append(v.rows, "  "+l)
 		}

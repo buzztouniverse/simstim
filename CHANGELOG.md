@@ -110,6 +110,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- A host with no sessions, or one that is offline, no longer offers attach, peek and rename in the launcher's footer: it shows the keys that work there.
 - Old helper versions piled up on hosts, about 5 MB for each version installed; a test host had 33 of them. After each install the new helper now removes the versions that nothing uses: it keeps the current one, any that a session's holder or shadow terminal runs from, any that a unit file names, and any installed in the last hour.
 - On a Mac whose cache folder has a long path, `host add` failed with "ControlPath too long": OpenSSH's socket path went over macOS's 104-byte limit. The shared connections' sockets now move to a private folder in `/tmp` when the cache path is too long, and the client checks that the folder is its own.
 - `scripts/setup.sh` had the same ellipsis bug as `install.sh`; `just lint` now checks every script for it.
