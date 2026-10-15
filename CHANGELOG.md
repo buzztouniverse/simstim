@@ -129,6 +129,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- `scripts/setup.sh` threw away the test output, so a failed check said nothing about which test failed; it now prints the failures.
 - A session's out-of-memory count came from whatever cgroup its holder ran in; without a systemd user manager that could be another program's service, so its kills counted for the session. Only the session's own unit counts now.
 - `new --worktree` with an agent that is not installed left the worktree and its branch behind; the agent is now found before anything is made.
 - `host restore` could say "restored" for an agent that then failed to start, and a session restored within a second of its last start waited 30 s for secrets that nobody can send after a restart. Restore now waits for the start, clears the old process IDs, and stamps the restore to the nanosecond.

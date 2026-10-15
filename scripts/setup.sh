@@ -87,7 +87,14 @@ command -v python3 >/dev/null 2>&1 || say "Note: python3 is missing; it runs the
 say ""
 say "Building and testing once, to check the setup…"
 just build
-go test -count=1 ./... >/dev/null
+log=$(mktemp)
+if ! go test -count=1 ./... >"$log" 2>&1; then
+    say ""
+    grep -E -- '--- FAIL|^FAIL|panic:' "$log" >&2 || tail -40 "$log" >&2
+    rm -f "$log"
+    die "a test failed; the lines above say which. Run it again with go test -run <name> -v."
+fi
+rm -f "$log"
 say ""
 say "Ready. Run \`just\` to see the commands. To use the tools outside just:"
 say "  export PATH=\"$PWD/$tools/bin:\$PATH\""
