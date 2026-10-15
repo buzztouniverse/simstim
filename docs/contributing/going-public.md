@@ -1,6 +1,6 @@
 # Going public
 
-The repository is private until its owner makes it public. This page lists what is already done, what `just public-check` proves, and the owner's steps on the day.
+What had to be true before the repository went public, what `just public-check` proves, and the owner's steps.
 
 ## Already done
 
@@ -16,13 +16,18 @@ Run `just public-check`. It must pass. Then read the README and the docs home on
 
 ## The owner's steps
 
-1. **Make the repository public:** Settings → General → Danger zone → Change visibility.
-2. **Turn on private vulnerability reporting:** Settings → Security → Private vulnerability reporting. SECURITY.md links to it.
-3. **Turn on Discussions:** Settings → General → Features → Discussions. The forms in `.github/DISCUSSION_TEMPLATE/` appear by themselves.
-4. **Protect `main`:** Settings → Rules → New branch ruleset: block force pushes and deletion, and require the CI checks to pass.
-5. **Turn on GitHub Pages:** Settings → Pages → Source: GitHub Actions. The docs workflow then deploys the site.
-6. **Publish the Homebrew tap:** create the repository `homebrew-tap`, add a fine-grained token that can write to it as the Actions secret `HOMEBREW_TAP_TOKEN`, and the next release pushes the cask.
-7. **Cut the first release** with the steps in [releasing](releasing.md).
-8. **Check the Scorecard:** the Scorecard workflow runs on the next push to `main`. Add its badge to the README when the score is 8 or more. Apply for the OpenSSF Best Practices badge at <https://www.bestpractices.dev>, which also raises the score.
-9. **Ask GitHub Support to purge cached views** of the commits from before the history rewrite, if any were ever shared.
-10. **Announce it.**
+The repository went public on 15 October 2026.
+
+| Step | State |
+| --- | --- |
+| Make the repository public | Done, 15 October 2026 |
+| Delete the workflow runs that pointed at commits from before the history rewrite (63 runs) | Done, 15 October 2026 |
+| Turn on private vulnerability reporting (SECURITY.md links to it) | Done |
+| Turn on Discussions (the forms in `.github/DISCUSSION_TEMPLATE/` appear by themselves) | Done |
+| Protect `main`: a ruleset blocks force pushes and deletion | Done |
+| Turn on GitHub Pages, from GitHub Actions; the docs workflow deploys the site | Done |
+| Ask GitHub Support to purge the old commits by SHA (the request with the SHAs is in `private/`) | The owner |
+| Publish the Homebrew tap: create `homebrew-tap`, and add a token that can write to it as the Actions secret `HOMEBREW_TAP_TOKEN` | The owner |
+| Cut the first release, with the steps in [releasing](releasing.md) | Next |
+| Add the Scorecard badge to the README once the score is 8 or more, and apply for the OpenSSF Best Practices badge at <https://www.bestpractices.dev> | After the first release |
+| Announce it | The owner |

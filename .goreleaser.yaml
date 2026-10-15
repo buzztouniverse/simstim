@@ -39,6 +39,17 @@ archives:
     formats: [tar.gz]
     name_template: "{{ .Env.APP_NAME }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files: [LICENSE, NOTICE, README.md, build/man/*, build/completions/*]
+  # The host helpers and shadow terminals the client embeds, for a client
+  # built with go install, which fetches this bundle (internal/client/helpers).
+  - id: helpers
+    meta: true
+    formats: [tar.gz]
+    name_template: "helpers_{{ .Version }}"
+    files:
+      - src: internal/client/helpers/host-linux-*
+        strip_parent: true
+      - src: internal/client/helpers/vt-linux-*
+        strip_parent: true
   - id: host
     ids: [host]
     formats: [tar.gz]

@@ -21,6 +21,8 @@ It downloads the release for your system, checks its signature with `ssh-keygen`
 go install github.com/iAmLakshya/simstim@latest
 ```
 
+A client built this way has no host helpers inside it. The first time it connects a host, it downloads the helper bundle of its own release, checks the release's signature with `ssh-keygen` and the bundle's SHA-256, and keeps it in `~/.cache/simstim/helpers/`. Set `SIMSTIM_RELEASES_URL` to fetch from a mirror instead.
+
 ## With Homebrew
 
 The tap opens with the first public release.

@@ -34,6 +34,9 @@ type Platform struct {
 
 // Probe finds the host's platform and whether the helper is installed.
 func Probe(ctx context.Context, s *SSH) (Platform, error) {
+	if err := EnsureHelpers(ctx); err != nil {
+		return Platform{}, err
+	}
 	const marker = "__HELPER_PRESENT__"
 	cmd := fmt.Sprintf(`uname -sm; test -x %s && echo %s; true`, RemoteHelper(HelperVersion()), marker)
 	out, err := s.Run(ctx, cmd, nil)

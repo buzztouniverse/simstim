@@ -2,43 +2,75 @@
 //
 // The binaries are build output and are not in git. `just helpers` (or the release
 // build) writes them here before the client is built. A client built without them
-// can still talk to hosts that already have a matching helper.
+// (go install) fetches them from its release with Fetch, and can still talk to
+// hosts that already have a matching helper.
 package helpers
 
 import (
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
+	"fmt"
 	"io/fs"
+	"path/filepath"
 	"sort"
 )
 
 //go:embed *
 var files embed.FS
 
-// For returns the helper binary for a host platform, such as "linux", "amd64".
-func For(goos, goarch string) ([]byte, bool) {
-	b, err := fs.ReadFile(files, "host-"+goos+"-"+goarch)
-	return b, err == nil && len(b) > 0
+// read returns a helper by name: from this build, or else from the helpers
+// Fetch downloaded.
+func read(name string) ([]byte, bool) {
+	if b, err := fs.ReadFile(files, name); err == nil && len(b) > 0 {
+		return b, true
+	}
+	fetchMu.Lock()
+	defer fetchMu.Unlock()
+	b, ok := fetched[name]
+	return b, ok && len(b) > 0
 }
 
-// VT returns the shadow-terminal binary for a host platform, if this build has it.
-func VT(goos, goarch string) ([]byte, bool) {
-	b, err := fs.ReadFile(files, "vt-"+goos+"-"+goarch)
-	return b, err == nil && len(b) > 0
+// fsGlob lists helpers by pattern: this build's, or else the fetched ones.
+func fsGlob(pattern string) ([]string, error) {
+	names, err := fs.Glob(files, pattern)
+	if err != nil {
+		return nil, fmt.Errorf("glob %s: %w", pattern, err)
+	}
+	return names, nil
 }
+
+func allNames(pattern string) []string {
+	if names, _ := fsGlob(pattern); len(names) > 0 {
+		return names
+	}
+	fetchMu.Lock()
+	defer fetchMu.Unlock()
+	var names []string
+	for n := range fetched {
+		if ok, _ := filepath.Match(pattern, n); ok {
+			names = append(names, n)
+		}
+	}
+	sort.Strings(names)
+	return names
+}
+
+// For returns the helper binary for a host platform, such as "linux", "amd64".
+func For(goos, goarch string) ([]byte, bool) { return read("host-" + goos + "-" + goarch) }
+
+// VT returns the shadow-terminal binary for a host platform, if this build has it.
+func VT(goos, goarch string) ([]byte, bool) { return read("vt-" + goos + "-" + goarch) }
 
 // Version identifies this set of helpers. It changes whenever any helper changes,
 // so each build installs into its own folder on the host and running sessions
 // keep their own binary.
 func Version() string {
-	names, _ := fs.Glob(files, "host-*")
-	vts, _ := fs.Glob(files, "vt-*")
-	names = append(names, vts...)
+	names := append(allNames("host-*"), allNames("vt-*")...)
 	sort.Strings(names)
 	h := sha256.New()
 	for _, n := range names {
-		b, _ := fs.ReadFile(files, n)
+		b, _ := read(n)
 		h.Write([]byte(n))
 		h.Write(b)
 	}
@@ -48,8 +80,5 @@ func Version() string {
 	return hex.EncodeToString(h.Sum(nil))[:12]
 }
 
-// Platforms lists the embedded host platforms.
-func Platforms() []string {
-	names, _ := fs.Glob(files, "host-*")
-	return names
-}
+// Platforms lists the host platforms there are helpers for.
+func Platforms() []string { return allNames("host-*") }
