@@ -127,7 +127,43 @@ func waitSocket(id string, timeout time.Duration) error {
 	}
 	if b, err := os.ReadFile(paths.HolderLog(id)); err == nil && len(b) > 0 {
 		lines := strings.Split(strings.TrimSpace(string(b)), "\n")
-		return fmt.Errorf("the session did not start: %s", lines[len(lines)-1])
+		return fmt.Errorf("the session did not start: %s", logText(lines[len(lines)-1]))
 	}
 	return errors.New("the session did not start in time")
+}
+
+// logText turns a line of a holder's log into text for the user: its message
+// and its error, without the time and the level. A line in another form, such
+// as one an older helper wrote, comes back as it is.
+func logText(line string) string {
+	var msg, errText string
+	for rest := line; rest != ""; {
+		key, val, ok := strings.Cut(rest, "=")
+		if !ok {
+			break
+		}
+		if strings.HasPrefix(val, `"`) {
+			q, err := strconv.QuotedPrefix(val)
+			if err != nil {
+				break
+			}
+			rest = strings.TrimPrefix(val[len(q):], " ")
+			val, _ = strconv.Unquote(q)
+		} else {
+			val, rest, _ = strings.Cut(val, " ")
+		}
+		switch key {
+		case "msg":
+			msg = val
+		case "err":
+			errText = val
+		}
+	}
+	switch {
+	case msg == "":
+		return line
+	case errText == "":
+		return msg
+	}
+	return msg + ": " + errText
 }

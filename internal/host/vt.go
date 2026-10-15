@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os/exec"
 	"sync"
 	"time"
@@ -82,9 +83,9 @@ type VTOptions struct {
 	// OnWrite and OnEvent run one at a time on the VT's own goroutine. They
 	// must not block for long, or the child waits for them. Both may be nil.
 	OnEvent func(e VTEvent)
-	// Logf, if set, gets a line for each crash and restart, and what the
-	// child writes to stderr.
-	Logf func(format string, args ...any)
+	// Log, if set, gets a line for each crash and restart, and each line
+	// the child writes to stderr.
+	Log *slog.Logger
 }
 
 // VTEvent is something the session's output asked the terminal for.
@@ -134,6 +135,7 @@ type VTProfile struct {
 // the child to exit.
 type VT struct {
 	opt       VTOptions
+	log       *slog.Logger // opt.Log, or one that drops every line
 	maxBehind int
 
 	mu         sync.Mutex
@@ -188,7 +190,10 @@ func StartVT(opt VTOptions) (*VT, error) {
 	if opt.Rows <= 0 {
 		opt.Rows = 24
 	}
-	v := &VT{opt: opt, maxBehind: vtMaxBehind, done: make(chan struct{}), cols: opt.Cols, rows: opt.Rows}
+	v := &VT{opt: opt, log: opt.Log, maxBehind: vtMaxBehind, done: make(chan struct{}), cols: opt.Cols, rows: opt.Rows}
+	if v.log == nil {
+		v.log = slog.New(slog.DiscardHandler)
+	}
 	if err := v.start(); err != nil {
 		return nil, err
 	}
@@ -221,7 +226,7 @@ func (v *VT) Feed(off int64, p []byte) {
 	}
 	if c.queued+len(p) > c.limit {
 		// It is stuck or too slow. The history will catch up a new one.
-		v.logf("shadow terminal is %d bytes behind: restarting it", c.queued)
+		v.log.Warn("shadow terminal fell behind, restarting it", "queued", c.queued)
 		c.dropped = true
 		c.kill()
 		return

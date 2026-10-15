@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 	"os"
 	"os/exec"
@@ -57,7 +57,7 @@ func (c *hclient) close() {
 // Holder owns one session: its PTY, output ring, socket and manifest.
 type Holder struct {
 	id   string
-	log  *log.Logger
+	log  *slog.Logger
 	ln   net.Listener
 	ptmx *os.File
 	fd   int
@@ -117,20 +117,20 @@ func RunHolder(id string) error {
 	h := &Holder{
 		id:       id,
 		m:        m,
-		log:      log.New(lf, "", log.LstdFlags|log.Lmicroseconds),
+		log:      newHolderLog(lf),
 		ring:     ring.New(RingSize),
 		clients:  map[*hclient]struct{}{},
 		readDone: make(chan struct{}),
 	}
-	h.log.Printf("holder %s starting (%s %s)", id, brand.HostBinary, version.Version)
+	h.log.Info("holder starting", "session", id, "helper", brand.HostBinary, "version", version.Version)
 	restored := wasRestored(m)
 	if err := h.listen(); err != nil {
-		h.log.Printf("listen: %v", err)
+		h.log.Error("listen failed", "err", err)
 		return err
 	}
 	h.secretsBeforeStart(restored)
 	if err := h.start(); err != nil {
-		h.log.Printf("start agent: %v", err)
+		h.log.Error("agent did not start", "err", err)
 		h.mu.Lock()
 		code := 127
 		h.m.Status = Status{State: StateErrored, Since: time.Now().UTC(), ExitCode: &code, Reason: err.Error()}
@@ -150,12 +150,19 @@ func RunHolder(id string) error {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	s := <-sig
-	h.log.Printf("signal %v: stopping", s)
+	h.log.Info("stopping on a signal", "signal", s.String())
 	// A signal means the system (or the user's manager) is stopping the
 	// session, for example at shutdown. The agent did not end by itself, so the
 	// session stays eligible for restore after the restart.
 	h.stop("stopped with the host", true)
 	return nil
+}
+
+// newHolderLog returns the logger of a holder's log file: one line for each
+// event, with a short message and its details as key=value text. It never
+// gets a secret's value or the agent's output.
+func newHolderLog(w io.Writer) *slog.Logger {
+	return slog.New(slog.NewTextHandler(w, nil))
 }
 
 func (h *Holder) listen() error {
@@ -238,9 +245,9 @@ func (h *Holder) start() error {
 	h.lastOut = time.Now()
 	h.mu.Unlock()
 	if err := m.Save(); err != nil {
-		h.log.Printf("save manifest: %v", err)
+		h.log.Warn("manifest not saved", "err", err)
 	}
-	h.log.Printf("agent %v started, pid %d", m.Agent.Argv, cmd.Process.Pid)
+	h.log.Info("agent started", "argv", m.Agent.Argv, "pid", cmd.Process.Pid)
 	return nil
 }
 
@@ -254,7 +261,7 @@ func (h *Holder) readLoop() {
 		}
 		if err != nil {
 			if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.EIO) {
-				h.log.Printf("pty read: %v", err)
+				h.log.Warn("pty read failed", "err", err)
 			}
 			return
 		}
@@ -277,7 +284,7 @@ func (h *Holder) output(data []byte) {
 		select {
 		case c.out <- outFrame{proto.TOutput, payload}:
 		default:
-			h.log.Printf("client too slow, dropping it")
+			h.log.Warn("client too slow, dropping it")
 			go c.close()
 		}
 	}
@@ -328,7 +335,7 @@ func (h *Holder) waitLoop() {
 			ended.ExitCode = 1
 		}
 	}
-	h.log.Printf("agent exited: code %d signal %q oom %v", ended.ExitCode, ended.Signal, ended.OOM)
+	h.log.Info("agent exited", "code", ended.ExitCode, "signal", ended.Signal, "oom", ended.OOM)
 	h.mu.Lock()
 	h.exited = true
 	h.ended = ended
@@ -382,7 +389,7 @@ func (h *Holder) tick() {
 		h.mu.Unlock()
 		if dirty {
 			if err := h.save(&snapshot, false); err != nil {
-				h.log.Printf("save manifest: %v", err)
+				h.log.Warn("manifest not saved", "err", err)
 			}
 		}
 	}

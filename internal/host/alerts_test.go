@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -87,7 +87,7 @@ func alertHolder(t *testing.T, cfg string) (*Holder, chan alerts.Event) {
 	if err := os.WriteFile(paths.AlertsConfig(), []byte(cfg), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	h := &Holder{id: "abc123", log: log.New(io.Discard, "", 0),
+	h := &Holder{id: "abc123", log: slog.New(slog.DiscardHandler),
 		m: &Manifest{Name: "auth-fix", Agent: AgentInfo{Kind: "claude"}, Cwd: "/src"}}
 	h.startAlerts(false)
 	t.Cleanup(func() { h.al.d.Close(time.Second) })

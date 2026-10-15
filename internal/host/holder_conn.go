@@ -129,7 +129,7 @@ func (h *Holder) snapshotFor(a proto.Attach) (snap []byte, snapAt int64) {
 		if s, upTo, err := vt.Snapshot(a.Cols, a.Rows, snapshotLines, 3*time.Second); err == nil {
 			snap, snapAt = s, upTo
 		} else {
-			h.log.Printf("snapshot failed, replaying the ring instead: %v", err)
+			h.log.Warn("snapshot failed, replaying the ring", "err", err)
 		}
 	}
 	return snap, snapAt
@@ -193,7 +193,7 @@ func (h *Holder) input(c *hclient, p []byte) {
 	h.mu.Unlock()
 	noteTyping(d, p)
 	if _, err := h.ptmx.Write(p); err != nil {
-		h.log.Printf("pty write: %v", err)
+		h.log.Warn("pty write failed", "err", err)
 	}
 }
 

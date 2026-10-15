@@ -2,7 +2,6 @@ package host
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -52,7 +51,7 @@ func secretHolder(t *testing.T, argv ...string) *Holder {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { lf.Close() })
-	h := &Holder{id: id, m: m, log: log.New(lf, "", log.LstdFlags), ring: ring.New(1 << 16), clients: map[*hclient]struct{}{}}
+	h := &Holder{id: id, m: m, log: newHolderLog(lf), ring: ring.New(1 << 16), clients: map[*hclient]struct{}{}}
 	if err := h.listen(); err != nil {
 		t.Fatal(err)
 	}

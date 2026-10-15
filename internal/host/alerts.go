@@ -1,7 +1,6 @@
 package host
 
 import (
-	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -30,7 +29,7 @@ func (h *Holder) startAlerts(restored bool) {
 	h.al.d = alerts.New(alerts.Options{
 		Env:    append([]string(nil), h.m.Env...),
 		Dir:    home,
-		Logger: slog.New(slog.NewTextHandler(h.log.Writer(), nil)),
+		Logger: h.log,
 	})
 	h.al.workSince = time.Now() // a session starts out working
 	kind := alerts.Started

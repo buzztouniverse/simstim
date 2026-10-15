@@ -88,13 +88,13 @@ func (h *Holder) awaitSecrets(want []string, timeout time.Duration) []string {
 	for {
 		conn, err := ul.Accept()
 		if err != nil {
-			h.log.Printf("the secrets did not arrive in %s; starting without them", timeout)
+			h.log.Warn("secrets did not arrive, starting without them", "waited", timeout)
 			return nil
 		}
 		env, err := readSecrets(conn, want, deadline)
 		conn.Close()
 		if err == nil {
-			h.log.Printf("received %s", plural(len(env), "secret", "secrets"))
+			h.log.Info("secrets received", "count", len(env))
 			return env
 		}
 	}

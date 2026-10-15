@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,12 +74,13 @@ func TestVTFramesWithAFakeChild(t *testing.T) {
 	path, log := fakeVT(t, bell, reply)
 	var mu sync.Mutex
 	var events []VTEvent
-	var writes, logs []string
+	var writes []string
+	var logs lineLog
 	v, err := StartVT(VTOptions{
 		Path: path, Cols: 100, Rows: 30, Scrollback: 500,
 		OnEvent: func(e VTEvent) { mu.Lock(); events = append(events, e); mu.Unlock() },
 		OnWrite: func(p []byte) { mu.Lock(); writes = append(writes, string(p)); mu.Unlock() },
-		Logf:    func(f string, a ...any) { mu.Lock(); logs = append(logs, fmt.Sprintf(f, a...)); mu.Unlock() },
+		Log:     logs.logger(),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -127,8 +129,8 @@ func TestVTFramesWithAFakeChild(t *testing.T) {
 	if len(events) != 1 || events[0].Type != "bell" || len(writes) != 1 || writes[0] != "\x1b[?62;22c" {
 		t.Errorf("events %+v, writes %q", events, writes)
 	}
-	if len(logs) == 0 || logs[0] != "shadow terminal: fake shadow terminal --cols 100 --rows 30 --scrollback 500" {
-		t.Errorf("logs = %q", logs)
+	if lines := logs.get(); len(lines) == 0 || !strings.Contains(lines[0], `msg="shadow terminal stderr" line="fake shadow terminal --cols 100 --rows 30 --scrollback 500"`) {
+		t.Errorf("logs = %q", lines)
 	}
 }
 
@@ -139,21 +141,11 @@ func TestVTRestartsWithBackoff(t *testing.T) {
 	path, log := fakeVT(t)
 	var mu sync.Mutex
 	hist := []byte("history")
-	var logs []string
-	logged := func(s string) bool {
-		mu.Lock()
-		defer mu.Unlock()
-		for _, l := range logs {
-			if strings.Contains(l, s) {
-				return true
-			}
-		}
-		return false
-	}
+	var logs lineLog
 	v, err := StartVT(VTOptions{
 		Path:    path,
 		History: func() ([]byte, int64) { mu.Lock(); defer mu.Unlock(); return bytes.Clone(hist), 10 },
-		Logf:    func(f string, a ...any) { mu.Lock(); logs = append(logs, fmt.Sprintf(f, a...)); mu.Unlock() },
+		Log:     logs.logger(),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -189,8 +181,8 @@ func TestVTRestartsWithBackoff(t *testing.T) {
 	if err := v.sync(); err != nil {
 		t.Fatal(err)
 	}
-	if !logged("shadow terminal stopped") || !logged("restarting it in 10ms") {
-		t.Errorf("logs = %q", logs)
+	if !logs.has(`msg="shadow terminal stopped, restarting it"`, "wait=10ms") {
+		t.Errorf("logs = %q", logs.get())
 	}
 	got := strings.Join(childFrames(t, log, 8), " ")
 	if strings.Count(got, `D"history"`) != 1 || !strings.Contains(got, `D"history more"`) {
@@ -201,7 +193,7 @@ func TestVTRestartsWithBackoff(t *testing.T) {
 		t.Fatal(err)
 	}
 	_ = syscall.Kill(pid(), syscall.SIGKILL)
-	waitUntil(t, func() bool { return logged("trying again in 40ms") })
+	waitUntil(t, func() bool { return logs.has(`msg="shadow terminal did not start, trying again"`, "wait=40ms") })
 	if _, _, err := v.Snapshot(80, 24, 0, time.Second); err == nil {
 		t.Error("a snapshot worked with no shadow terminal")
 	}
@@ -227,12 +219,50 @@ func waitUntil(t *testing.T, cond func() bool) {
 }
 
 func TestVTLogWriter(t *testing.T) {
-	var got []string
-	w := &vtLogWriter{logf: func(f string, a ...any) { got = append(got, fmt.Sprintf(f, a...)) }}
+	var logs lineLog
+	w := &vtLogWriter{log: logs.logger()}
 	_, _ = w.Write([]byte("one\ntw"))
 	_, _ = w.Write([]byte("o\n"))
 	_, _ = w.Write(bytes.Repeat([]byte("x"), 5000))
-	if len(got) != 3 || got[0] != "shadow terminal: one" || got[1] != "shadow terminal: two" || len(got[2]) != 5017 {
-		t.Errorf("logged %d lines: %.40q", len(got), got)
+	got := logs.get()
+	if len(got) != 3 || !strings.HasSuffix(got[0], `msg="shadow terminal stderr" line=one`) ||
+		!strings.HasSuffix(got[1], " line=two") || !strings.HasSuffix(got[2], " line="+strings.Repeat("x", 5000)) {
+		t.Errorf("logged %d lines: %.80q", len(got), got)
 	}
+}
+
+// lineLog keeps the lines that a logger writes, for tests.
+type lineLog struct {
+	mu    sync.Mutex
+	lines []string
+}
+
+func (l *lineLog) Write(p []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.lines = append(l.lines, strings.TrimSuffix(string(p), "\n"))
+	return len(p), nil
+}
+
+// logger returns a logger that writes its lines to l, as the holder's does.
+func (l *lineLog) logger() *slog.Logger { return newHolderLog(l) }
+
+func (l *lineLog) get() []string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return append([]string(nil), l.lines...)
+}
+
+// has reports whether one line holds all the parts.
+func (l *lineLog) has(parts ...string) bool {
+	for _, line := range l.get() {
+		all := true
+		for _, p := range parts {
+			all = all && strings.Contains(line, p)
+		}
+		if all {
+			return true
+		}
+	}
+	return false
 }

@@ -44,7 +44,7 @@ func (h *Holder) stop(reason string, system bool) {
 	if h.vt != nil {
 		_ = h.vt.Close()
 	}
-	h.log.Printf("holder exiting: %s", reason)
+	h.log.Info("holder exiting", "reason", reason)
 	h.mu.Lock()
 	switch {
 	case system:
@@ -156,7 +156,7 @@ func (h *Holder) startVT() {
 	}
 	path := filepath.Join(filepath.Dir(exe), brand.VTBinary)
 	if _, err := os.Stat(path); err != nil {
-		h.log.Printf("no shadow terminal at %s; new clients get the raw output", path)
+		h.log.Info("no shadow terminal, new clients get the raw output", "path", path)
 		return
 	}
 	h.ptyOut = make(chan []byte, 256)
@@ -183,10 +183,10 @@ func (h *Holder) startVT() {
 			default: // the agent is not reading its input; drop the reply
 			}
 		},
-		Logf: h.log.Printf,
+		Log: h.log,
 	})
 	if err != nil {
-		h.log.Printf("shadow terminal did not start: %v", err)
+		h.log.Warn("shadow terminal did not start", "err", err)
 		return
 	}
 	if tp != "" {

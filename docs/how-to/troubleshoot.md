@@ -51,7 +51,13 @@ The doctor never uses sudo. When a fix needs root, for example linger on some ho
 
 ## Logs
 
-On the host, each session keeps a log at `~/.local/state/simstim/sessions/<id>/holder.log`.
+On the host, each session keeps a log at `~/.local/state/simstim/sessions/<id>/holder.log`. Each line is one event: the time, a level (`INFO`, `WARN` or `ERROR`), a short message, and its details as `key=value` pairs:
+
+```text
+time=2026-10-15T09:12:03.512+00:00 level=WARN msg="snapshot failed, replaying the ring" err="the shadow terminal did not answer within 3s. Try: attach again"
+```
+
+The log never holds what the agent prints, or the value of a secret.
 
 ## Still stuck
 

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"math"
 	"os/exec"
 	"strconv"
@@ -104,8 +105,8 @@ func (v *VT) spawn(cols, rows int) (*vtChild, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to the shadow terminal's output: %w", err)
 	}
-	if v.opt.Logf != nil {
-		cmd.Stderr = &vtLogWriter{logf: v.opt.Logf}
+	if v.opt.Log != nil {
+		cmd.Stderr = &vtLogWriter{log: v.opt.Log}
 	}
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start the shadow terminal %s: %w. Try: reinstall the host helper", v.opt.Path, err)
@@ -242,7 +243,7 @@ func (v *VT) exited(c *vtChild, err error) {
 	if err == nil {
 		err = errors.New("it closed its output")
 	}
-	v.logf("shadow terminal stopped (%v): restarting it in %v", err, wait)
+	v.log.Warn("shadow terminal stopped, restarting it", "err", err, "wait", wait)
 	go v.restart(wait)
 }
 
@@ -261,7 +262,7 @@ func (v *VT) restart(wait time.Duration) {
 		wait = vtBackoff[min(v.crashes, len(vtBackoff)-1)]
 		v.crashes++
 		v.mu.Unlock()
-		v.logf("shadow terminal did not start (%v): trying again in %v", err, wait)
+		v.log.Warn("shadow terminal did not start, trying again", "err", err, "wait", wait)
 	}
 }
 
@@ -280,12 +281,6 @@ func (v *VT) queriesFrame() []byte {
 		on = 1
 	}
 	return vtFrame(vtFrameQueries, []byte{on})
-}
-
-func (v *VT) logf(format string, args ...any) {
-	if v.opt.Logf != nil {
-		v.opt.Logf(format, args...)
-	}
 }
 
 // push queues a frame for the writer. VT.mu is held.
@@ -338,10 +333,10 @@ func clamp32(n int) uint32 {
 	return uint32(min(max(int64(n), 0), math.MaxUint32))
 }
 
-// vtLogWriter passes the child's stderr to Logf, a line at a time.
+// vtLogWriter passes the child's stderr to the log, a line at a time.
 type vtLogWriter struct {
-	logf func(format string, args ...any)
-	buf  []byte
+	log *slog.Logger
+	buf []byte
 }
 
 func (w *vtLogWriter) Write(p []byte) (int, error) {
@@ -351,11 +346,11 @@ func (w *vtLogWriter) Write(p []byte) (int, error) {
 		if i < 0 {
 			break
 		}
-		w.logf("shadow terminal: %s", w.buf[:i])
+		w.log.Info("shadow terminal stderr", "line", string(w.buf[:i]))
 		w.buf = w.buf[i+1:]
 	}
 	if len(w.buf) > 4096 {
-		w.logf("shadow terminal: %s", w.buf)
+		w.log.Info("shadow terminal stderr", "line", string(w.buf))
 		w.buf = nil
 	}
 	return len(p), nil

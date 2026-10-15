@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -99,8 +100,8 @@ func vtStartTest(t *testing.T, opt VTOptions) *VT {
 	if opt.Path == "" {
 		opt.Path = vtBinary(t)
 	}
-	if opt.Logf == nil {
-		opt.Logf = t.Logf
+	if opt.Log == nil {
+		opt.Log = slog.New(slog.NewTextHandler(t.Output(), nil))
 	}
 	v, err := StartVT(opt)
 	if err != nil {
