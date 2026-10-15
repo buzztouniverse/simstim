@@ -8,8 +8,8 @@
     space          peek at the screen
     r f2           rename
     d              delete
-    y              copy the attach command
-    w              go to the next session that needs you
+    y              copy attach command
+    w              next waiting session
     a              add host
     i              host details
     /              search every host

@@ -69,6 +69,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- The keys sheet fits an 80-column terminal: "next waiting session" and "copy attach command" are shorter, here and in the command palette.
 - `host start`, `host stop` and `host status` drive a created host through its provider, as well as hosts with a provider script. `forward` says plainly that it needs SSH on hosts reached through `docker exec` or E2B. `host rm` on a created host says that its machine is kept.
 - `go install github.com/iAmLakshya/simstim@latest` installs the client under its own name: its main moved to the root of the module, and the command tree to `internal/cli`.
 - CI is hardened: every action is pinned to a full commit SHA, each job asks for the least token permissions, the checkout keeps no credentials, and zizmor lints the workflows. govulncheck runs on every push, and the toolchain is Go 1.26.9, which fixes two standard-library issues it found.

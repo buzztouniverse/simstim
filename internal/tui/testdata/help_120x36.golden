@@ -23,7 +23,7 @@
 
   ── Keys ────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-    ↑↓ jk          move                                     w              go to the next session that needs you
+    ↑↓ jk          move                                     w              next waiting session
     1–9            open that row                            a              add host
     esc            back to hosts                            i              host details
     n              new session                              /              search every host
@@ -31,6 +31,6 @@
     space          peek at the screen                       ?              keys
     r f2           rename                                   q              quit
     d              delete                                   ctrl+o         commands
-    y              copy the attach command                  ctrl+c ctrl+c  quit
+    y              copy attach command                      ctrl+c ctrl+c  quit
 
     esc close
