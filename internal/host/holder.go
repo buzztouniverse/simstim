@@ -77,6 +77,9 @@ type Holder struct {
 	oomBase   int64
 	// stopping is true while the system stops the session (for example at shutdown).
 	stopping bool
+	// saveMu orders the manifest's saves; closed is set by the last one.
+	saveMu sync.Mutex
+	closed bool
 	// From agent hooks.
 	hookSeen    bool
 	hookBusy    bool
@@ -344,7 +347,7 @@ func (h *Holder) waitLoop() {
 	// Save a copy: other goroutines change the manifest under the lock.
 	m := *h.m
 	h.mu.Unlock()
-	_ = m.Save()
+	_ = h.save(&m, false)
 }
 
 // tick updates the status and saves the manifest when it changed.
@@ -409,7 +412,7 @@ func (h *Holder) tick() {
 		}
 		h.mu.Unlock()
 		if dirty {
-			if err := snapshot.Save(); err != nil {
+			if err := h.save(&snapshot, false); err != nil {
 				h.log.Printf("save manifest: %v", err)
 			}
 		}

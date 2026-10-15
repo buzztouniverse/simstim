@@ -54,12 +54,25 @@ func (h *Holder) stop(reason string, system bool) {
 	}
 	m := *h.m
 	h.mu.Unlock()
-	_ = m.Save()
+	_ = h.save(&m, true)
 	if h.ln != nil {
 		h.ln.Close()
 	}
 	os.Remove(paths.Socket(h.id))
 	os.Exit(0)
+}
+
+// save writes m, a copy of the manifest, unless the holder has made its
+// last save. After that, Delete may remove the session's folder at any
+// moment, and a late save would bring it back.
+func (h *Holder) save(m *Manifest, last bool) error {
+	h.saveMu.Lock()
+	defer h.saveMu.Unlock()
+	if h.closed {
+		return nil
+	}
+	h.closed = last
+	return m.Save()
 }
 
 // selfUnit returns the systemd unit this process runs in, if any.

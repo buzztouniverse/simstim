@@ -122,3 +122,27 @@ func TestDeleteRefusesWhatIsNotASession(t *testing.T) {
 		}
 	}
 }
+
+// A holder that is slow to exit must not write its manifest again after
+// Delete removed the session's folder.
+func TestDeletedSessionStaysDeleted(t *testing.T) {
+	h := hosttest.New(t)
+	// Under the race detector, each holder pauses for a second as it exits:
+	// long enough for its once-a-second save to run again. Without the race
+	// detector the window is short, but it is there.
+	t.Setenv("GORACE", "log_path="+filepath.Join(h.Root, "race"))
+	s := start(t, "busy", "/bin/sh", "-c", "while :; do echo tick; sleep 0.1; done")
+	waitOutput(t, s.ID, "tick")
+	time.Sleep(1100 * time.Millisecond) // a save while the session works
+	pid := hosttest.HolderPID(t, s.ID)
+	if _, err := host.Delete(s.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := hosttest.Reap(pid, 10*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(paths.SessionDir(s.ID)); !os.IsNotExist(err) {
+		b, _ := os.ReadFile(paths.Manifest(s.ID))
+		t.Fatalf("the deleted session came back: %v\n%s", err, b)
+	}
+}
