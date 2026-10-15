@@ -108,7 +108,7 @@ def setup_checks(c, envx, tmp, created):
               'exit $(cat "$HOME/.e2e-setup-exit" 2>/dev/null || echo 0)\\n') % (env_name, env_name)
     c.host_ssh("set -e; rm -rf ~/e2e-setup-repo ~/.e2e-setup-exit; mkdir -p ~/e2e-setup-repo/.%s; cd ~/e2e-setup-repo; "
                "git init -q -b main; printf '%s' > .%s/setup; chmod +x .%s/setup; "
-               "git add -A; git -c user.name=e2e -c user.email=e2e@example.invalid commit -qm init" % (c.NAME, script, c.NAME, c.NAME))
+               "git add -A; git -c user.name=e2e -c user.email=e2e@example.com commit -qm init" % (c.NAME, script, c.NAME, c.NAME))
     prog = ["--", "/bin/sh", "-c", "echo AGENT-RAN; sleep 600"]
 
     # Without a terminal and without an answer, the script is skipped, and new says so.
