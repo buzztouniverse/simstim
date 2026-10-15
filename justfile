@@ -71,9 +71,10 @@ cover:
 # Fuzz the input filter for a while.
 fuzz time="30s":
     go test ./internal/keys -run '^$' -fuzz FuzzFilter -fuzztime {{time}}
+    go test ./internal/proto -run '^$' -fuzz FuzzRead -fuzztime {{time}}
 
 # Static checks.
-lint: check-name check-private check-scripts
+lint: check-name check-private check-scripts check-size
     go vet ./...
     golangci-lint run
 
@@ -97,6 +98,10 @@ check-name:
 # Fail if a shell script lets a variable name run into a non-ASCII character.
 check-scripts:
     scripts/check-scripts.sh
+
+# Fail if a Go source file is over 500 lines.
+check-size:
+    scripts/check-size.sh
 
 # Fail if a tracked file holds a personal path, a private address or an email.
 check-private:

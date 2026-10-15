@@ -51,6 +51,8 @@ jobs:
         run: scripts/check-private.sh
       - name: Shell script check
         run: scripts/check-scripts.sh
+      - name: No Go source file over 500 lines
+        run: scripts/check-size.sh
       - name: Generated docs are current
         run: |
           go run ./cmd/docgen

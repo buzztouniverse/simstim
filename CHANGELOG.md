@@ -80,6 +80,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- The strict lint set is now the repository's own (`.golangci.yml`), with a reason beside each exclusion; `scripts/check-size.sh` keeps Go source files at 500 lines or fewer, and depguard keeps logs on `log/slog`. The testing page lists every quality bar and what checks it.
 - The log of each session on the host (`holder.log`) is written with Go's `log/slog`: each line has the time, a level, a short message and its details as `key=value` pairs, as [troubleshoot](docs/how-to/troubleshoot.md#logs) shows. When a session cannot start, the error shows the message and the error from its last line, without the time.
 - Folders that the host helper makes for worktrees, for the files `.worktreeinclude` copies, and for systemd user units are now the user's only (0700). Unit files stay readable (0644), because systemd warns about a unit file that others cannot read.
 - Errors from the host helper say what it was doing, and for which session or file, before the system's own message: for example `read the manifest of session ab12cd34: …` instead of the bare `open …: no such file or directory`.

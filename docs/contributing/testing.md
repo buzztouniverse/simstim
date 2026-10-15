@@ -7,12 +7,30 @@ Every change keeps the tests green, and every bug fix adds the test that would h
 | `just test` | Unit tests with the race detector | Anywhere |
 | `just cover` | The unit tests' coverage, which must stay at 70 % or more | Anywhere |
 | `go test ./internal/tui -run TestGolden -update` | Rewrites the golden screens after an intended change; review the diff | Anywhere |
-| `just fuzz` | Fuzzes the input filter for 30 s (`just fuzz 5m` for longer) | Anywhere |
-| `just lint` | `go vet`, golangci-lint, the name check and the private-detail check | Anywhere |
+| `just fuzz` | Fuzzes the input filter and the frame reader for 30 s each (`just fuzz 5m` for longer) | Anywhere |
+| `just lint` | `go vet`, the strict golangci-lint set, and the name, private-detail, script and file-size checks | Anywhere |
 | `just e2e` | The end-to-end suite against a real host | Needs a test host |
 | `just screenshots` | The README images, drawn from `demo` | Anywhere |
 | `just repro` | Two release builds from empty caches; every binary must match | Needs GoReleaser and Zig |
 | `just test-install` | `install.sh` against a local, signed snapshot release | Needs GoReleaser and Zig |
+
+## Quality bars
+
+Each bar is checked by a tool, locally and in CI; a change that breaks one does not merge.
+
+| Bar | Checked by |
+| --- | --- |
+| No Go source file over 500 lines (tests aside) | `scripts/check-size.sh` |
+| Cognitive complexity of 30 or less in every function | gocognit |
+| A doc comment on every exported name, and on each package | revive |
+| Errors from other packages wrapped with what was being done | wrapcheck |
+| A context on every blocking call | noctx, contextcheck |
+| Logs through `log/slog` | sloglint, and depguard, which keeps the standard `log` package to tests |
+| The strict lint set (`.golangci.yml`) reports nothing; every `nolint` names its linter and gives a reason | golangci-lint, nolintlint |
+| No known vulnerability in the code we call, and no dead code | govulncheck, deadcode (`just vulncheck`) |
+| Race-free tests, and 70 % or more coverage of `internal/` without the launcher | `go test -race`, `just cover` |
+| The frame reader and the input filter never lose a byte | fuzz targets (`just fuzz`) |
+| The attach pump is no slower than before | benchmarks (`just bench`), on every pull request |
 
 ## Unit and golden tests
 

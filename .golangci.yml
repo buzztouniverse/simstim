@@ -1,21 +1,106 @@
+# The strict lint set, the quality bar in docs/contributing/testing.md: every
+# exclusion below says why, and every nolint in the code names its linter and
+# its reason (nolintlint checks this).
 version: "2"
 
 run:
-  timeout: 5m
+  timeout: 10m
+  # Paths in the exclusions below are relative to the module's root.
+  relative-path-mode: gomod
 
 linters:
   default: standard
   enable:
     - bodyclose
+    - contextcheck
+    - copyloopvar
+    - depguard
+    - durationcheck
+    - errname
     - errorlint
+    - exhaustive
+    - gocognit
+    - gocritic
+    - gosec
+    - intrange
     - misspell
+    - nilerr
+    - noctx
     - nolintlint
+    - perfsprint
+    - prealloc
+    - revive
+    - sloglint
     - unconvert
+    - unparam
+    - usestdlibvars
+    - wrapcheck
+  settings:
+    depguard:
+      rules:
+        # Logs use log/slog; the standard log package is only for tests.
+        logs:
+          files: ["$all", "!$test"]
+          deny:
+            - pkg: "log$"
+              desc: use log/slog
+    gocognit:
+      # The quality bar in docs/contributing/testing.md.
+      min-complexity: 30
+    exhaustive:
+      # A switch with a default case handles the values it does not name.
+      default-signifies-exhaustive: true
+    revive:
+      rules:
+        - name: exported
+          arguments: ["disableStutteringCheck"]
+        - name: package-comments
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    wrapcheck:
+      # Our own packages already return errors with context.
+      ignore-package-globs:
+        - "*/internal/*"
+      # The defaults, plus ctx.Err(): a cancellation is passed on as it is,
+      # so callers can test it with errors.Is.
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - errors.Unwrap(
+        - errors.Join(
+        - .Wrap(
+        - .Wrapf(
+        - .WithMessage(
+        - .WithMessagef(
+        - .WithStack(
+        - (context.Context).Err()
+    gosec:
+      excludes:
+        # errcheck reports unhandled errors, with the std-error-handling
+        # exclusions below; G104 would report the same ones again.
+        - G104
+        # Starting ssh, git and the agents with arguments is this tool's job.
+        - G204
+        # Paths come from the tool's own folders, its config, or the user.
+        - G304
   exclusions:
     presets:
-      - comments
       - std-error-handling
+    rules:
+      # Tests use math/rand, fake credentials, loose file modes and plain
+      # errors on purpose.
+      - path: _test\.go
+        linters: [gosec, wrapcheck, noctx, perfsprint, prealloc, gocognit]
+      # The same for the packages that only tests import.
+      - path: internal/.*test/
+        linters: [gosec, wrapcheck]
+      # The docs generator and the test tools write public files for people.
+      - path: ^(cmd/docgen|test/)
+        linters: [gosec]
+        text: "G301|G306"
 
 formatters:
   enable:
     - gofmt
+    - goimports
