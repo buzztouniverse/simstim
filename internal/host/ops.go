@@ -31,8 +31,10 @@ func UserError(code, msg, hint string) *proto.Error {
 	return &proto.Error{Code: code, Message: msg, Hint: hint}
 }
 
+// NewArgs describes a session to start.
 type NewArgs = api.NewArgs
 
+// SessionInfo is one row of the session list.
 type SessionInfo = api.SessionInfo
 
 const idAlphabet = "abcdefghijklmnopqrstuvwxyz234567"

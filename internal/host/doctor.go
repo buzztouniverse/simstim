@@ -17,8 +17,10 @@ import (
 	"github.com/iamlakshya/simstim/internal/version"
 )
 
+// Check is one line of the host doctor.
 type Check = api.Check
 
+// HostInfo is what the host doctor reports about the host.
 type HostInfo = api.HostInfo
 
 // Doctor inspects the host.
@@ -96,8 +98,10 @@ func memoryDelegated() bool {
 	return err == nil && strings.Contains(string(b), "memory")
 }
 
+// SetupArgs asks the host to prepare itself: linger and terminfo entries.
 type SetupArgs = api.SetupArgs
 
+// SetupResult reports each step that setup took.
 type SetupResult = api.SetupResult
 
 // Setup turns on linger and installs terminfo entries.
