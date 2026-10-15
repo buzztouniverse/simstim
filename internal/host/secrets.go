@@ -94,7 +94,7 @@ func (h *Holder) awaitSecrets(want []string, timeout time.Duration) []string {
 		env, err := readSecrets(conn, want, deadline)
 		conn.Close()
 		if err == nil {
-			h.log.Printf("received %d secrets", len(env))
+			h.log.Printf("received %s", plural(len(env), "secret", "secrets"))
 			return env
 		}
 	}
