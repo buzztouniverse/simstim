@@ -20,11 +20,16 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - name: Build the host helpers (the client embeds them)
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+      - name: Build the host helpers and the shadow terminal (the client embeds them)
         run: |
           for arch in amd64 arm64; do
             CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -o internal/client/helpers/host-linux-$arch ./cmd/host
           done
+          (cd vt && zig build linux)
+          for arch in amd64 arm64; do cp vt/zig-out/linux/shadow-vt-$arch internal/client/helpers/vt-linux-$arch; done
       - run: go vet ./...
       - run: go test -race -count=1 ./...
       - name: Cross-build the client

@@ -5,10 +5,15 @@
 *.out
 coverage.*
 
-# Host helpers embedded into the client at build time (see justfile: helpers)
+# Host helpers embedded into the client at build time (see justfile: helpers, vt)
 /internal/client/helpers/*
 !/internal/client/helpers/embed.go
 !/internal/client/helpers/README.md
+
+# Zig build output and fetched packages for the shadow terminal
+/vt/zig-out/
+/vt/.zig-cache/
+/vt/zig-pkg/
 
 # Notes that must never reach git history (clean-room material, private notes)
 /docs/research/private/

@@ -19,6 +19,9 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
       - uses: anchore/sbom-action/download-syft@v0.24.3
       - name: Read the product name and module path
         run: |

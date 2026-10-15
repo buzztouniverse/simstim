@@ -1,0 +1,22 @@
+[
+  {
+    "name": "shell",
+    "cols": 80,
+    "rows": 24
+  },
+  {
+    "name": "fullscreen",
+    "cols": 100,
+    "rows": 30
+  },
+  {
+    "name": "inline",
+    "cols": 80,
+    "rows": 24
+  },
+  {
+    "name": "vim",
+    "cols": 100,
+    "rows": 30
+  }
+]

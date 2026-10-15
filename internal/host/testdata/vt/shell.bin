@@ -1,0 +1,145 @@
+]2;shell\]7;file://box/home/user/project\]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34mgamma0[0m  [32mbeta1[0m  [0mepsilon2[0m  [35mbeta3[0m  [1;36mtheta4[0m  [1;34mtheta5[0m  [32mtheta6[0m  [0meta7[0m  [35mdelta8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(1)[0m
+[32m+	new := compute(1, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3mbeta theta alpha eta eta alpha theta epsilon delta beta zeta[23m[4m alpha alpha alpha alpha eta delta eta alpha delta theta theta delta zeta delta delta theta epsilon alpha eta beta gamma epsilon beta zeta eta delta epsilon epsilon theta[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34meta0[0m  [32malpha1[0m  [0mtheta2[0m  [35mdelta3[0m  [1;36meta4[0m  [1;34meta5[0m  [32mgamma6[0m  [0mzeta7[0m  [35mzeta8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(6)[0m
+[32m+	new := compute(6, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3mbeta theta beta gamma eta zeta theta alpha theta alpha epsil[23m[4mon eta gamma gamma delta alpha delta delta eta zeta zeta theta epsilon alpha eta gamma delta eta alpha theta zeta delta eta theta zeta eta zeta alpha zeta theta[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34malpha0[0m  [32mdelta1[0m  [0mgamma2[0m  [35mgamma3[0m  [1;36mbeta4[0m  [1;34mepsilon5[0m  [32malpha6[0m  [0mbeta7[0m  [35mbeta8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(11)[0m
+[32m+	new := compute(11, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3malpha theta alpha epsilon delta epsilon beta gamma zeta epsi[23m[4mlon beta gamma gamma epsilon gamma epsilon epsilon theta zeta theta theta beta alpha epsilon eta zeta eta delta epsilon beta epsilon delta eta alpha delta alpha eta gamma alpha gamma[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34mtheta0[0m  [32meta1[0m  [0mdelta2[0m  [35mtheta3[0m  [1;36mdelta4[0m  [1;34malpha5[0m  [32meta6[0m  [0mzeta7[0m  [35meta8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(16)[0m
+[32m+	new := compute(16, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3malpha epsilon gamma delta alpha epsilon beta beta epsilon ep[23m[4msilon gamma eta epsilon gamma alpha alpha delta theta gamma alpha eta delta zeta beta delta eta delta theta beta eta epsilon theta alpha zeta eta epsilon alpha gamma delta zeta[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34mgamma0[0m  [32mzeta1[0m  [0meta2[0m  [35mdelta3[0m  [1;36mepsilon4[0m  [1;34mbeta5[0m  [32meta6[0m  [0mzeta7[0m  [35mtheta8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(21)[0m
+[32m+	new := compute(21, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3mdelta beta alpha beta gamma gamma gamma delta epsilon zeta e[23m[4mpsilon zeta zeta zeta beta epsilon delta theta gamma beta zeta alpha eta beta eta gamma gamma zeta beta eta beta delta beta epsilon zeta epsilon beta theta epsilon beta[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34malpha0[0m  [32mepsilon1[0m  [0malpha2[0m  [35malpha3[0m  [1;36mbeta4[0m  [1;34meta5[0m  [32mbeta6[0m  [0malpha7[0m  [35mdelta8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(26)[0m
+[32m+	new := compute(26, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3mdelta eta gamma beta theta gamma delta gamma beta eta eta ep[23m[4msilon epsilon theta zeta beta delta zeta alpha alpha alpha epsilon zeta theta eta zeta eta beta beta zeta theta beta epsilon delta theta zeta epsilon gamma delta epsilon[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34mdelta0[0m  [32mdelta1[0m  [0mzeta2[0m  [35mbeta3[0m  [1;36mepsilon4[0m  [1;34mbeta5[0m  [32mtheta6[0m  [0mbeta7[0m  [35mzeta8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(31)[0m
+[32m+	new := compute(31, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3mdelta eta epsilon alpha zeta gamma zeta epsilon delta zeta b[23m[4meta beta delta delta alpha delta eta beta epsilon beta beta alpha alpha epsilon zeta theta theta gamma beta zeta beta gamma gamma gamma gamma zeta epsilon beta epsilon gamma[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\ls --color
+]133;C\[1;34mdelta0[0m  [32mgamma1[0m  [0malpha2[0m  [35mzeta3[0m  [1;36mdelta4[0m  [1;34mgamma5[0m  [32mepsilon6[0m  [0meta7[0m  [35mgamma8[0m
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\git diff
+]133;C\[1mdiff --git a/main.go b/main.go[0m
+[36m@@ -10,6 +10,7 @@[0m func main() {
+[31m-	old := compute(36)[0m
+[32m+	new := compute(36, true)[0m
+[42m [0m		trailing
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\cat notes.txt
+]133;C\[3malpha delta epsilon beta theta eta epsilon theta theta alpha[23m[4m eta zeta gamma epsilon theta alpha eta alpha alpha zeta gamma gamma gamma epsilon epsilon eta eta gamma beta delta theta alpha gamma zeta theta delta delta zeta theta theta[24m
+日本語のテキストと絵文字 🎉👍🏽 mixed with ASCII
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\make build
+]133;C\[38;2;250;179;135m░░░░░░░░░░░░░░░░░░░░[0m   0%[38;2;250;179;135m████░░░░░░░░░░░░░░░░[0m  20%[38;2;250;179;135m████████░░░░░░░░░░░░[0m  40%[38;2;250;179;135m████████████░░░░░░░░[0m  60%[38;2;250;179;135m████████████████░░░░[0m  80%[38;2;250;179;135m████████████████████[0m 100%
+[1;32mok[0m	built in 1.2s
+]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\status
+]133;C\[48;2;24;24;37m[38;2;205;214;244m build: passing [K[0m
+[4:3m[58:2::255:0:0mcurly red underline[0m
+[9mstruck[0m [7minverse[0m [2mfaint[0m [53mover[0m
+[?2004h]133;A\[48;2;30;30;46m[38;2;137;180;250m ~/project [48;2;49;50;68m[38;2;166;227;161m main ✓ [0m[38;2;49;50;68m[0m ]133;B\

@@ -20,8 +20,30 @@ helpers:
     done
     ls -l {{helpers}}
 
+# Build the shadow terminal (vt/, Zig 0.16) for every host platform, into the client's embed folder.
+vt:
+    #!/usr/bin/env sh
+    set -eu
+    (cd vt && zig build linux)
+    for arch in amd64 arm64; do
+        cp vt/zig-out/linux/shadow-vt-$arch {{helpers}}/vt-linux-$arch
+    done
+    ls -l {{helpers}}/vt-linux-*
+
+# Build the shadow terminal if Zig 0.16 is installed; otherwise say so and go on.
+_vt-if-zig:
+    #!/usr/bin/env sh
+    set -eu
+    if ! command -v zig >/dev/null 2>&1; then
+        echo "note: zig not found, so the shadow terminal was not built (see vt/README.md)"
+    elif ! zig version | grep -q '^0\.16\.'; then
+        echo "note: the shadow terminal needs Zig 0.16, not $(zig version), so it was not built (see vt/README.md)"
+    else
+        {{just_executable()}} vt
+    fi
+
 # Build the helpers, then the client for this machine, into ./bin.
-build: helpers
+build: helpers _vt-if-zig
     mkdir -p bin
     CGO_ENABLED=0 go build -trimpath -ldflags '{{ldflags}}' -o bin/{{name}} ./cmd/cli
     cp {{helpers}}/host-linux-amd64 bin/{{name}}-host-linux-amd64

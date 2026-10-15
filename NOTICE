@@ -14,6 +14,13 @@ licence and the files it appears in.
   Copyright the Herdr authors, licensed under the Apache License, Version 2.0.
   The rule format and engine are our own; the patterns were simplified.
 
-Projects whose designs informed this one, with no code copied:
-- zmx (https://github.com/neurosnap/zmx), MIT
+- vt/src/snapshot.zig: the approach to serialising terminal state is adapted
+  from zmx's serializeTerminalState (https://github.com/neurosnap/zmx,
+  src/util.zig), Copyright (c) 2025 Eric Bower, licensed under the MIT License.
+  The full notice is in the file's header.
+- vt/: links libghostty-vt from Ghostty (https://github.com/ghostty-org/ghostty),
+  Copyright Mitchell Hashimoto and contributors, licensed under the MIT License.
+
+Projects whose designs informed this one:
+- zmx (https://github.com/neurosnap/zmx), MIT (and the code above)
 - Herdr (https://github.com/herdrdev/herdr), Apache-2.0 (and the rule data above)
