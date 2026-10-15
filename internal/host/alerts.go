@@ -1,0 +1,169 @@
+package host
+
+import (
+	"log/slog"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/iAmLakshya/simstim/internal/alerts"
+	"github.com/iAmLakshya/simstim/internal/proto"
+	"github.com/iAmLakshya/simstim/internal/term"
+)
+
+// holderAlerts links a holder to its alert dispatcher (decision 0019), and
+// keeps the time the agent worked in the current turn, for turn_done.
+type holderAlerts struct {
+	d         *alerts.Dispatcher
+	workSince time.Time     // when the current working spell began
+	worked    time.Duration // working time in this turn so far
+}
+
+// startAlerts starts the session's alert dispatcher and raises started, or
+// restored when restore brought the session back after a host restart.
+func (h *Holder) startAlerts(restored bool) {
+	home, _ := os.UserHomeDir()
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	// Commands run in the session's login environment, so they find the
+	// same programs the user's shell finds.
+	h.al.d = alerts.New(alerts.Options{
+		Env:    append([]string(nil), h.m.Env...),
+		Dir:    home,
+		Logger: slog.New(slog.NewTextHandler(h.log.Writer(), nil)),
+	})
+	h.al.workSince = time.Now() // a session starts out working
+	kind := alerts.Started
+	if restored {
+		kind = alerts.Restored
+	}
+	h.al.d.Notify(h.alertEvent(kind))
+}
+
+// wasRestored reports whether restore started this holder: restore labels a
+// session after the start before.
+func wasRestored(m *Manifest) bool {
+	at, err := time.Parse(time.RFC3339, m.Labels["restored_at"])
+	return err == nil && at.After(m.Run.StartedAt)
+}
+
+// alertEvent starts an event about this session. The caller holds h.mu.
+func (h *Holder) alertEvent(kind string) alerts.Event {
+	return alerts.Event{Event: kind, Session: alerts.Session{ID: h.id, Name: h.m.Name, Agent: h.m.Agent.Kind, Dir: h.m.Cwd}}
+}
+
+// alertState tells the dispatcher that the state changed from prev to next,
+// and raises needs_input or turn_done. The caller holds h.mu.
+func (h *Holder) alertState(prev, next string) {
+	a := &h.al
+	if a.d == nil {
+		return
+	}
+	now := time.Now()
+	a.d.StateChanged()
+	if prev == StateWorking && !a.workSince.IsZero() {
+		a.worked += now.Sub(a.workSince)
+		a.workSince = time.Time{}
+	}
+	switch next {
+	case StateWorking:
+		a.workSince = now
+	case StateNeedsInput:
+		ev := h.alertEvent(alerts.NeedsInput)
+		ev.Detail = h.question()
+		a.d.Notify(ev)
+	case StateIdle:
+		// The dispatcher drops a turn shorter than min_turn.
+		if a.worked > 0 {
+			ev := h.alertEvent(alerts.TurnDone)
+			ev.Turn = a.worked
+			a.d.Notify(ev)
+		}
+		a.worked = 0
+	}
+}
+
+// question is the detail of needs_input: the agent's message from its hook,
+// or else the bottom of the screen that a rule matched. The dispatcher drops
+// it unless the user turned detail on. The caller holds h.mu.
+func (h *Holder) question() string {
+	if h.notifyMsg != "" {
+		return h.notifyMsg
+	}
+	if h.ruleState != StateNeedsInput || h.scr == nil {
+		return ""
+	}
+	var lines []string
+	for _, l := range h.scr.screen().Lines {
+		if l = strings.TrimRight(l, " "); strings.TrimSpace(l) != "" {
+			lines = append(lines, l)
+		}
+	}
+	if len(lines) > 8 {
+		lines = lines[len(lines)-8:]
+	}
+	s := strings.Join(lines, "\n")
+	if len(s) > 1000 {
+		s = s[len(s)-1000:]
+	}
+	return s
+}
+
+// alertOOM raises oom: the memory cap stopped a process. The caller holds h.mu.
+func (h *Holder) alertOOM() {
+	if h.al.d != nil {
+		h.al.d.Notify(h.alertEvent(alerts.OOM))
+	}
+}
+
+// alertEnded raises exited, failed or oom when the program ends by itself.
+// The caller holds h.mu.
+func (h *Holder) alertEnded(ended proto.Ended) {
+	if h.al.d == nil {
+		return
+	}
+	kind := alerts.Exited
+	switch {
+	case ended.OOM:
+		kind = alerts.OOM
+	case ended.ExitCode != 0 || ended.Signal != "":
+		kind = alerts.Failed
+	}
+	ev := h.alertEvent(kind)
+	code := ended.ExitCode
+	ev.ExitCode, ev.Signal = &code, ended.Signal
+	h.al.d.Notify(ev)
+}
+
+// closeAlerts stops the dispatcher when the holder stops the session itself:
+// for a host shutdown or a kill, no event goes out. It waits a moment for
+// deliveries already under way.
+func (h *Holder) closeAlerts() {
+	h.mu.Lock()
+	d := h.al.d
+	h.mu.Unlock()
+	if d != nil {
+		d.Close(2 * time.Second)
+	}
+}
+
+// noteTyping tells the dispatcher when input holds keys a person typed, so a
+// needs_input in its delay stays quiet.
+func noteTyping(d *alerts.Dispatcher, p []byte) {
+	if d != nil && personTyped(p) {
+		d.Typed()
+	}
+}
+
+// personTyped reports whether input holds anything but terminal reports, such
+// as answers to queries and focus changes, which a terminal sends by itself.
+func personTyped(p []byte) bool {
+	var ps term.Parser
+	typed := false
+	ps.Feed(p, func(t term.Token) {
+		if !term.IsReport(t) {
+			typed = true
+		}
+	})
+	return typed || ps.Pending()
+}

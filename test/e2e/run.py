@@ -259,6 +259,57 @@ ok(not NOTIFY.sub(b"", t.buf[mark:]), "attached: the client writes nothing while
 ok(b"\x1b]2;" not in t.buf and b"\x1b]0;" not in t.buf, "attached: the client sets no window title of its own")
 t.send(b"\x1c"); t.exit_code(10)
 
+# L. Alerts (decision 0019): a command destination on the host gets the
+#    session's events as JSON on stdin. A file the user already had is put
+#    aside first and put back after.
+ALERTS_TOML = "~/.config/%s/alerts.toml" % NAME
+ALERTS_OUT = "$HOME/e2e-alerts.jsonl"
+saved = host_ssh("if [ -e %s ]; then mv %s %s.e2e-saved && echo saved; fi" % ((ALERTS_TOML,) * 3)).stdout.strip() == b"saved"
+host_ssh("rm -f " + ALERTS_OUT)
+
+def alert_events(kind, sid=None, timeout=20):
+    end = time.time() + timeout
+    while time.time() < end:
+        out = host_ssh("cat %s 2>/dev/null; true" % ALERTS_OUT).stdout.decode(errors="replace")
+        evs = [json.loads(l) for l in out.splitlines() if l.startswith("{")]
+        hits = [e for e in evs if e.get("event") == kind and (sid is None or e.get("session", {}).get("id") == sid)]
+        if hits:
+            return hits
+        time.sleep(1)
+    return []
+
+def host_cli(*args):
+    return subprocess.run([cli, "host", "alerts"] + list(args), capture_output=True, text=True)
+
+r = host_cli("set", HOST, "--command", "cat >> \"%s\"" % ALERTS_OUT, "--events", "needs_input,failed", "--delay", "2s")
+ok(r.returncode == 0 and "are on" in r.stdout, "alerts: set writes a command destination (%s)" % (r.stdout + r.stderr).strip().splitlines()[0])
+mode = host_ssh("stat -c %a " + ALERTS_TOML).stdout.decode().strip()
+ok(mode == "600", "alerts: the alerts file is mode 0600 (%s)" % mode)
+r = host_cli("test", HOST)
+ok(r.returncode == 0 and "✓ command" in r.stdout, "alerts: test reports ok for the command")
+ok(alert_events("test", timeout=5), "alerts: the test event reached the command")
+# An agent hook raises needs_input; it goes out after the 2 s delay.
+t0 = time.time()
+sid_ask = start("e2e-alert-ask", "/bin/sh", "-c", "sleep 2; echo '{\"message\":\"e2e question\"}' | %s hook notification; sleep 600" % HELPER)
+created.append(sid_ask)
+hits = alert_events("needs_input", sid_ask, timeout=2 + 2 + 10 + 5)
+ok(hits and hits[0].get("v") == 1 and hits[0]["session"]["name"] == "e2e-alert-ask" and "detail" not in hits[0],
+   "alerts: needs_input from a hook arrived %.1f s after start, without the detail" % (time.time() - t0))
+# A program that ends with code 3 sends failed.
+sid_fail = start("e2e-alert-fail", "/bin/sh", "-c", "sleep 2; exit 3")
+created.append(sid_fail)
+hits = alert_events("failed", sid_fail, timeout=15)
+ok(hits and hits[0].get("exit_code") == 3 and "failed (exit 3)" in hits[0].get("summary", ""), "alerts: a session that exits 3 sends failed with exit_code 3")
+r = host_cli("log", HOST, "-n", "10")
+ok(r.returncode == 0 and "needs_input" in r.stdout and "failed" in r.stdout, "alerts: the log shows the deliveries")
+r = host_cli("off", HOST)
+ok(r.returncode == 0 and "off" in r.stdout, "alerts: off removes the file")
+r = host_cli(HOST)
+ok(r.returncode == 0 and "are off" in r.stdout, "alerts: the host says alerts are off")
+host_ssh("rm -f " + ALERTS_OUT)
+if saved:
+    host_ssh("mv %s.e2e-saved %s" % (ALERTS_TOML, ALERTS_TOML))
+
 # Clean up.
 for s in created:
     subprocess.run([cli, "kill", HOST + "/" + s], capture_output=True)

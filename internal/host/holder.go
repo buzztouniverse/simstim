@@ -89,6 +89,8 @@ type Holder struct {
 	scr       *screenModel
 	ruleState string
 	ruleID    string
+	// Alerts to the user's own destinations (alerts.go).
+	al holderAlerts
 }
 
 // RunHolder runs the holder for session id until the session is killed.
@@ -110,6 +112,7 @@ func RunHolder(id string) error {
 		clients: map[*hclient]struct{}{},
 	}
 	h.log.Printf("holder %s starting (%s %s)", id, brand.HostBinary, version.Version)
+	restored := wasRestored(m)
 	if err := h.listen(); err != nil {
 		h.log.Printf("listen: %v", err)
 		return err
@@ -125,6 +128,7 @@ func RunHolder(id string) error {
 		os.Remove(paths.Socket(id))
 		return err
 	}
+	h.startAlerts(restored)
 	h.startVT()
 	go h.acceptLoop()
 	go h.readLoop()
@@ -324,6 +328,7 @@ func (h *Holder) waitLoop() {
 		st.State = StateErrored
 	}
 	h.m.Status = st
+	h.alertEnded(ended)
 	b, _ := json.Marshal(ended)
 	for c := range h.clients {
 		if c.attached {
@@ -367,6 +372,7 @@ func (h *Holder) tick() {
 				state, src = StateWorking, "output"
 			}
 			if state != h.m.Status.State {
+				prev := h.m.Status.State
 				oom, reason := h.m.Status.OOM, h.m.Status.Reason
 				h.m.Status = Status{State: state, Since: time.Now().UTC(), Source: src}
 				if oom {
@@ -375,6 +381,7 @@ func (h *Holder) tick() {
 					h.m.Status.Reason = h.notifyMsg
 				}
 				h.dirty = true
+				h.alertState(prev, state)
 			}
 		}
 		if n := readOOMKills(); n > h.oomBase && !h.m.Status.OOM {
@@ -383,6 +390,7 @@ func (h *Holder) tick() {
 			h.m.Status.Reason = "a process in this session ran out of memory and was stopped"
 			h.needInput = true
 			h.dirty = true
+			h.alertOOM()
 		}
 		dirty := h.dirty
 		h.dirty = false

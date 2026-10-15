@@ -72,6 +72,7 @@ func (h *Holder) request(c *hclient, req proto.Request) {
 		h.mu.Lock()
 		exited := h.exited
 		h.needInput = false
+		d := h.al.d
 		h.mu.Unlock()
 		if exited {
 			reply(nil, &proto.Error{Code: "exited", Message: "the session has ended"})
@@ -81,6 +82,7 @@ func (h *Holder) request(c *hclient, req proto.Request) {
 		if args.Enter {
 			data = append(data, '\r')
 		}
+		noteTyping(d, data)
 		if _, err := h.ptmx.Write(data); err != nil {
 			reply(nil, &proto.Error{Code: "write", Message: err.Error()})
 			return

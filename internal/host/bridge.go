@@ -21,7 +21,7 @@ import (
 )
 
 // Features this host helper offers. Clients check them before using a feature.
-var Features = []string{"attach.replay", "upload", "peek", "setup", "rename", "send", "hooks", "restore", "ports", "worktree", "folders"}
+var Features = []string{"attach.replay", "upload", "peek", "setup", "rename", "send", "hooks", "restore", "ports", "worktree", "folders", "alerts"}
 
 // MaxUpload is the largest file a client may upload.
 const MaxUpload = 16 << 20
@@ -221,6 +221,9 @@ func (b *bridge) handle(req proto.Request) {
 		var a SetupArgs
 		_ = json.Unmarshal(req.Args, &a)
 		b.reply(req.ID, Setup(a), nil)
+	case "alerts.get", "alerts.set", "alerts.test", "alerts.log", "alerts.off":
+		v, err := alertsRequest(req.Op, req.Args)
+		b.reply(req.ID, v, err)
 	default:
 		b.reply(req.ID, nil, UserError("unknown_op", "unknown request "+req.Op, "Update the host helper."))
 	}

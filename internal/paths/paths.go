@@ -29,6 +29,20 @@ func StateDir() string { return filepath.Join(xdg("XDG_STATE_HOME", ".local/stat
 // DataDir is ~/.local/share/<name>.
 func DataDir() string { return filepath.Join(xdg("XDG_DATA_HOME", ".local/share"), brand.Name) }
 
+// ConfigDir is ~/.config/<name>: the user's own settings on a host.
+func ConfigDir() string { return filepath.Join(xdg("XDG_CONFIG_HOME", ".config"), brand.Name) }
+
+// AlertsConfig is the alerts file on a host: which events to send, and where.
+func AlertsConfig() string { return filepath.Join(ConfigDir(), "alerts.toml") }
+
+// AlertsLog is the log of alert deliveries on a host, one JSON object a line.
+// It turns over to the same name with ".1" added.
+func AlertsLog() string { return filepath.Join(StateDir(), "alerts.log") }
+
+// AlertsRate counts the alerts every holder on a host sent in the last minute.
+// Holders lock it while they read or change it, and while they write the log.
+func AlertsRate() string { return filepath.Join(StateDir(), "alerts.rate") }
+
 // SessionsDir holds one folder per session.
 func SessionsDir() string { return filepath.Join(StateDir(), "sessions") }
 

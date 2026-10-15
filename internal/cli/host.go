@@ -19,7 +19,7 @@ import (
 
 func hostCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "host", Short: "Add, list, test and remove hosts"}
-	cmd.AddCommand(hostAddCmd(), hostLsCmd(), hostRmCmd(), hostTestCmd(), hostDoctorCmd(), hostRestoreCmd(),
+	cmd.AddCommand(hostAddCmd(), hostLsCmd(), hostRmCmd(), hostTestCmd(), hostDoctorCmd(), hostRestoreCmd(), hostAlertsCmd(),
 		hostProviderCmd("start", "Start the host through its provider script"),
 		hostProviderCmd("stop", "Stop the host through its provider script (its sessions stop too)"),
 		hostProviderCmd("status", "Ask the provider script whether the host is running"))

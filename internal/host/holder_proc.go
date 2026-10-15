@@ -18,6 +18,7 @@ import (
 // the session is recorded as stopped with the host, not as ended, so restore
 // brings it back after a restart.
 func (h *Holder) stop(reason string, system bool) {
+	h.closeAlerts()
 	h.mu.Lock()
 	exited := h.exited
 	h.stopping = system

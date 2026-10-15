@@ -167,7 +167,9 @@ func (h *Holder) input(c *hclient, p []byte) {
 	h.leader = c
 	h.needInput = false
 	h.notifyMsg = ""
+	d := h.al.d
 	h.mu.Unlock()
+	noteTyping(d, p)
 	if _, err := h.ptmx.Write(p); err != nil {
 		h.log.Printf("pty write: %v", err)
 	}
