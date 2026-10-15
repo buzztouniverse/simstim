@@ -77,7 +77,7 @@ func keyTester() error {
 	}
 	old, err := term.MakeRaw(fd)
 	if err != nil {
-		return err
+		return fmt.Errorf("put the terminal in raw mode: %w", err)
 	}
 	defer func() { _ = term.Restore(fd, old) }()
 	// Kitty keyboard flags 1|2|4|8|16: report everything, with event types.
@@ -102,6 +102,8 @@ func keyTester() error {
 				}
 			case keys.Paste:
 				label = "  ← a paste"
+			default:
+				// Bytes that pass through get no label.
 			}
 			fmt.Printf("%s%s\r\n", strconv.Quote(string(p.Raw)), label)
 			if string(p.Raw) == "q" || string(p.Raw) == "\x1b[113u" {

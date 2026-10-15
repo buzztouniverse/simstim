@@ -121,7 +121,7 @@ func Attach(ctx context.Context, o AttachOptions) (AttachResult, error) {
 	cr, err := cancelreader.NewReader(o.In)
 	if err != nil {
 		_ = xterm.Restore(a.fd, old)
-		return AttachResult{}, err
+		return AttachResult{}, fmt.Errorf("read the terminal: %w", err)
 	}
 	a.inCh = make(chan []byte, 256)
 	stop, readDone := make(chan struct{}), make(chan struct{})
@@ -195,13 +195,15 @@ func (a *attacher) handshake(last int64, cols, rows, xpx, ypx int) (proto.Attach
 			case proto.TAttached:
 				var att proto.Attached
 				if err := json.Unmarshal(f.Payload, &att); err != nil {
-					return att, err
+					return att, fmt.Errorf("read the host's answer to attach: %w", err)
 				}
 				return att, nil
 			case proto.TError:
 				var pe proto.Error
 				_ = json.Unmarshal(f.Payload, &pe)
 				return proto.Attached{}, &UserError{Msg: pe.Message, Hint: pe.Hint}
+			default:
+				// Other frames before the answer are ignored.
 			}
 		case <-a.conn.Done():
 			return proto.Attached{}, ErrClosed
@@ -267,17 +269,7 @@ func (a *attacher) loop(ctx context.Context) error {
 				a.conn.kill()
 			}
 		case <-watch.C:
-			conn := a.conn
-			go func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-				defer cancel()
-				if list, err := conn.Sessions(ctx); err == nil {
-					select {
-					case others <- list:
-					default:
-					}
-				}
-			}()
+			a.watchOthers(ctx, others)
 		case list := <-others:
 			a.notifyOthers(list)
 		case f := <-a.conn.Stream():
@@ -285,15 +277,8 @@ func (a *attacher) loop(ctx context.Context) error {
 				return err
 			}
 		case b, ok := <-a.inCh:
-			if !ok {
-				a.res.Detached = true
+			if a.onKeys(ctx, b, ok, &detachTimer, &flushTimer) {
 				return nil
-			}
-			if a.input(b, &detachTimer) {
-				return nil
-			}
-			if a.filter.Pending() {
-				flushTimer = time.After(escFlush)
 			}
 		case <-flushTimer:
 			flushTimer = nil
@@ -307,10 +292,7 @@ func (a *attacher) loop(ctx context.Context) error {
 			c, r, x, y := a.size()
 			_ = a.conn.SendJSON(proto.TResize, proto.Resize{Cols: c, Rows: r, XPx: x, YPx: y})
 		case <-heart.C:
-			_ = a.conn.Ping()
-			if time.Since(a.conn.LastRecv()) > deadAfter {
-				a.conn.kill()
-			}
+			a.heartbeat()
 		case <-a.conn.Done():
 			if detached, err := a.reconnect(ctx); detached || err != nil {
 				a.res.Detached = detached
@@ -323,8 +305,47 @@ func (a *attacher) loop(ctx context.Context) error {
 	}
 }
 
-// notifyOthers shows a desktop notification, through the local terminal, when
-// another session on this host starts to need the user or ends.
+// watchOthers asks the host for its sessions in the background, so the
+// loop can notify about the others; a slow answer is dropped.
+func (a *attacher) watchOthers(ctx context.Context, others chan<- []Session) {
+	conn := a.conn
+	go func() {
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		if list, err := conn.Sessions(ctx); err == nil {
+			select {
+			case others <- list:
+			default:
+			}
+		}
+	}()
+}
+
+// onKeys handles bytes from the local terminal; ok is false when it closed.
+// It returns true when the attach is over.
+func (a *attacher) onKeys(ctx context.Context, b []byte, ok bool, detachTimer, flushTimer *<-chan time.Time) bool {
+	if !ok {
+		a.res.Detached = true
+		return true
+	}
+	if a.input(ctx, b, detachTimer) {
+		return true
+	}
+	if a.filter.Pending() {
+		*flushTimer = time.After(escFlush)
+	}
+	return false
+}
+
+// heartbeat pings the host, and drops a connection that stopped answering.
+func (a *attacher) heartbeat() {
+	_ = a.conn.Ping()
+	if time.Since(a.conn.LastRecv()) > deadAfter {
+		a.conn.kill()
+	}
+}
+
+// frame handles one frame from the host. done is true when the attach is over.
 func (a *attacher) frame(f proto.Frame) (done bool, err error) {
 	switch f.Type {
 	case proto.TOutput:
@@ -350,55 +371,70 @@ func (a *attacher) frame(f proto.Frame) (done bool, err error) {
 			return true, nil
 		}
 		return true, &UserError{Msg: pe.Message, Hint: pe.Hint}
+	default:
+		// Other frames need nothing from an attached client.
 	}
 	return false, nil
 }
 
 // input handles keys typed by the user. It returns true to detach now.
-func (a *attacher) input(b []byte, detachTimer *<-chan time.Time) bool {
+func (a *attacher) input(ctx context.Context, b []byte, detachTimer *<-chan time.Time) bool {
 	for _, p := range a.filter.Feed(b) {
 		switch p.Kind {
 		case keys.Pass:
 			_ = a.conn.Send(proto.TInput, p.Raw)
 		case keys.Paste:
-			a.paste(p)
+			a.paste(ctx, p)
 		case keys.Match:
 			switch p.Index {
-			case 0: // detach
-				if p.Release || p.Repeat {
-					if !a.swallow[0] {
-						_ = a.conn.Send(proto.TInput, p.Raw)
-					}
-					continue
-				}
-				if *detachTimer != nil {
-					// A second press: send the key itself to the agent.
-					*detachTimer = nil
-					a.swallow[0] = false
-					_ = a.conn.Send(proto.TInput, p.Raw)
-					continue
-				}
-				a.swallow[0] = true
-				*detachTimer = time.After(doubleTap)
-			case 1: // image paste
-				if p.Release || p.Repeat {
-					if !a.swallow[1] {
-						_ = a.conn.Send(proto.TInput, p.Raw)
-					}
-					continue
-				}
-				img := ClipboardImage()
-				if img == nil {
-					a.swallow[1] = false
-					_ = a.conn.Send(proto.TInput, p.Raw)
-					continue
-				}
-				a.swallow[1] = true
-				a.sendUpload("clipboard.png", img)
+			case 0:
+				a.detachKey(p, detachTimer)
+			case 1:
+				a.imageKey(ctx, p)
 			}
 		}
 	}
 	return false
+}
+
+// detachKey handles the detach key. One press arms a short timer, and the
+// attach ends when it fires; a second press within it sends the key itself
+// to the agent. A release or repeat follows its press: swallowed or sent.
+func (a *attacher) detachKey(p keys.Piece, detachTimer *<-chan time.Time) {
+	if p.Release || p.Repeat {
+		if !a.swallow[0] {
+			_ = a.conn.Send(proto.TInput, p.Raw)
+		}
+		return
+	}
+	if *detachTimer != nil {
+		// A second press: send the key itself to the agent.
+		*detachTimer = nil
+		a.swallow[0] = false
+		_ = a.conn.Send(proto.TInput, p.Raw)
+		return
+	}
+	a.swallow[0] = true
+	*detachTimer = time.After(doubleTap)
+}
+
+// imageKey handles the image paste key: with an image on the clipboard it
+// uploads it, and otherwise the key goes to the agent as it is.
+func (a *attacher) imageKey(ctx context.Context, p keys.Piece) {
+	if p.Release || p.Repeat {
+		if !a.swallow[1] {
+			_ = a.conn.Send(proto.TInput, p.Raw)
+		}
+		return
+	}
+	img := ClipboardImage(ctx)
+	if img == nil {
+		a.swallow[1] = false
+		_ = a.conn.Send(proto.TInput, p.Raw)
+		return
+	}
+	a.swallow[1] = true
+	a.sendUpload(ctx, "clipboard.png", img)
 }
 
 // reconnect keeps trying to reach the session again. It returns detached=true
@@ -413,73 +449,80 @@ func (a *attacher) reconnect(ctx context.Context) (detached bool, err error) {
 			a.write(a.tracker.M.Title) // for terminals without a title stack
 		}
 	}()
-	start := time.Now()
 	banner := time.After(bannerAfter)
 	delay := time.Duration(0)
 	for {
-		retry := time.After(delay)
-	wait:
-		for {
-			select {
-			case <-banner:
-				a.flash("connection lost · reconnecting · keys are not sent · " + a.o.Settings.Attach.DetachKey + " to leave")
-			case b, ok := <-a.inCh:
-				if !ok {
-					return true, nil
-				}
-				for _, p := range a.filter.Feed(b) {
-					if p.Kind == keys.Match && p.Index == 0 && !p.Release && !p.Repeat {
-						return true, nil
-					}
-				}
-				_ = a.filter.Flush()
-				break wait // a key press: try again now
-			case <-retry:
-				break wait
-			case <-ctx.Done():
-				return true, nil
-			}
+		if a.waitToRetry(ctx, banner, time.After(delay)) {
+			return true, nil
 		}
-		a.ssh.ExitMaster()
-		dctx, cancel := context.WithTimeout(ctx, 20*time.Second)
-		conn, err := Dial(dctx, a.o.Host, false)
-		cancel()
-		if err == nil {
-			a.conn.Close()
-			a.conn = conn
-			cols, rows, xpx, ypx := a.size()
-			before := a.cu.Offset
-			att, herr := a.handshake(a.cu.Offset, cols, rows, xpx, ypx)
-			if herr == nil {
-				a.clearFlash()
-				if att.Mode == "replay" {
-					a.cu.History(att.Live)
-				} else {
-					a.begin(att, &AttachState{}, rows)
-				}
-				a.res.Missed += att.Live - before
-				return false, nil
-			}
-			var ue *UserError
-			if errors.As(herr, &ue) {
-				return false, herr
-			}
-		} else {
-			var ue *UserError
-			if errors.As(err, &ue) {
-				return false, err
-			}
+		if done, err := a.tryReconnect(ctx); done {
+			return false, err
 		}
-		if time.Since(start) > 0 {
-			switch {
-			case delay == 0:
-				delay = time.Second
-			case delay < 30*time.Second:
-				delay *= 2
-				if delay > 30*time.Second {
-					delay = 30 * time.Second
+		delay = nextRetry(delay)
+	}
+}
+
+// waitToRetry waits for the next try: the retry delay, or a key press. It
+// returns true when the user pressed the detach key, the terminal closed,
+// or the attach was cancelled. The banner shows once, after a while.
+func (a *attacher) waitToRetry(ctx context.Context, banner, retry <-chan time.Time) (detached bool) {
+	for {
+		select {
+		case <-banner:
+			a.flash("connection lost · reconnecting · keys are not sent · " + a.o.Settings.Attach.DetachKey + " to leave")
+		case b, ok := <-a.inCh:
+			if !ok {
+				return true
+			}
+			for _, p := range a.filter.Feed(b) {
+				if p.Kind == keys.Match && p.Index == 0 && !p.Release && !p.Repeat {
+					return true
 				}
 			}
+			_ = a.filter.Flush()
+			return false // a key press: try again now
+		case <-retry:
+			return false
+		case <-ctx.Done():
+			return true
 		}
 	}
+}
+
+// tryReconnect dials the host again and resumes the session. done is true
+// when the attach goes on (err is nil) or must end with err; false means
+// try again later.
+func (a *attacher) tryReconnect(ctx context.Context) (done bool, err error) {
+	a.ssh.ExitMaster(ctx)
+	dctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	conn, err := Dial(dctx, a.o.Host, false)
+	cancel()
+	var ue *UserError
+	if err != nil {
+		return errors.As(err, &ue), err
+	}
+	a.conn.Close()
+	a.conn = conn
+	cols, rows, xpx, ypx := a.size()
+	before := a.cu.Offset
+	att, err := a.handshake(a.cu.Offset, cols, rows, xpx, ypx)
+	if err != nil {
+		return errors.As(err, &ue), err
+	}
+	a.clearFlash()
+	if att.Mode == "replay" {
+		a.cu.History(att.Live)
+	} else {
+		a.begin(att, &AttachState{}, rows)
+	}
+	a.res.Missed += att.Live - before
+	return true, nil
+}
+
+// nextRetry is the wait before the next try: now, then 1 s, doubling up to 30 s.
+func nextRetry(delay time.Duration) time.Duration {
+	if delay == 0 {
+		return time.Second
+	}
+	return min(delay*2, 30*time.Second)
 }

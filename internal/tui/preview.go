@@ -79,8 +79,10 @@ func (p *previewModal) view(m *Model) string {
 			facts = append(facts, f)
 		}
 	}
-	body := []string{sFaint.Render(trunc(strings.Join(facts, dot), cw)), ""}
-	body = append(body, m.previewLines(cw, max(m.height-9, 3))...)
+	preview := m.previewLines(cw, max(m.height-9, 3))
+	body := make([]string, 0, 2+len(preview))
+	body = append(body, sFaint.Render(trunc(strings.Join(facts, dot), cw)), "")
+	body = append(body, preview...)
 	hints := []hint{{"enter", "attach"}, {"↑↓", "next"}, {"esc", "close"}}
 	return sheet(w, "Peek · "+s.Name, label.st.Render(label.s), hints, body, toneNormal)
 }

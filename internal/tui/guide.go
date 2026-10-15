@@ -96,6 +96,8 @@ func (g *guide) typing() bool {
 	switch g.step {
 	case gdName, gdRentServer, gdRentUser, gdRentName:
 		return true
+	default:
+		// The other steps have no text field.
 	}
 	return false
 }
@@ -353,7 +355,8 @@ func (g *guide) keyKey(m *Model, ks string) tea.Cmd {
 		}
 		// ssh-keygen asks its own questions, so it gets the terminal.
 		x := &funcExec{run: func(in, out *os.File) error {
-			cmd := exec.Command(onboard.KeyArgs[0], onboard.KeyArgs[1:]...)
+			// No timeout: the person answers ssh-keygen's questions.
+			cmd := exec.CommandContext(context.Background(), onboard.KeyArgs[0], onboard.KeyArgs[1:]...)
 			cmd.Stdin, cmd.Stdout, cmd.Stderr = in, out, out
 			fmt.Fprintf(out, "\r\n%s\r\n\r\n", onboard.KeyCommand)
 			return cmd.Run()

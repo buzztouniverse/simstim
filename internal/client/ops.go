@@ -106,7 +106,8 @@ type SetupResult = api.SetupResult
 func (c *Conn) Setup(ctx context.Context) (SetupResult, error) {
 	args := api.SetupArgs{Linger: true, Terminfo: map[string]string{}}
 	if t := os.Getenv("TERM"); t != "" && t != "xterm-256color" && t != "xterm" {
-		if src, err := exec.Command("infocmp", "-x", t).Output(); err == nil {
+		// TERM is passed as one argument to infocmp, never to a shell.
+		if src, err := exec.CommandContext(ctx, "infocmp", "-x", t).Output(); err == nil { //nolint:gosec // G702: see above
 			args.Terminfo[t] = string(src)
 		}
 	}
@@ -115,7 +116,7 @@ func (c *Conn) Setup(ctx context.Context) (SetupResult, error) {
 	return r, err
 }
 
-// Ping measures the round trip through the bridge.
+// RoundTrip measures the round trip through the bridge.
 func (c *Conn) RoundTrip(ctx context.Context) (time.Duration, error) {
 	start := time.Now()
 	var out []Session

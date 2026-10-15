@@ -19,14 +19,14 @@ const MaxImage = 16 << 20
 //
 // For end-to-end tests, <NAME>_TEST_CLIPBOARD_IMAGE names a file to use as the
 // clipboard's image instead, so a test never touches the user's real clipboard.
-func ClipboardImage() []byte {
+func ClipboardImage(ctx context.Context) []byte {
 	if p := os.Getenv(brand.Env("TEST_CLIPBOARD_IMAGE")); p != "" {
-		if b, err := os.ReadFile(p); err == nil && len(b) <= MaxImage {
+		if b, err := os.ReadFile(p); err == nil && len(b) <= MaxImage { //nolint:gosec // G703: a file the test chose, read only in end-to-end tests
 			return b
 		}
 		return nil
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	if err := clipboard.Init(); err == nil {
 		if b, err := clipboard.Read(ctx, clipboard.FmtImage); err == nil && len(b) > 0 && len(b) <= MaxImage {

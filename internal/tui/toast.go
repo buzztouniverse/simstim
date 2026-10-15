@@ -132,6 +132,8 @@ func (m *Model) noticeLines(w int) []noticeLine {
 				glyph, st, text = glyphOK, sSuccess, sPlain
 			case toastWarning:
 				glyph, st, text = glyphNeedsInput, sWarning, sPlain
+			default:
+				// Info keeps the defaults above; errors are drawn in the outer switch.
 			}
 			for i, l := range wrap(t.text, w-2) {
 				lead := "  "

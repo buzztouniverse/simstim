@@ -52,7 +52,8 @@ func rule(w int, title, right string, t tone) string {
 // body indented under it, and its keys on the last line. It has no side
 // borders; the dimmed list behind it is the frame.
 func sheet(w int, title, right string, hints []hint, body []string, t tone) string {
-	lines := []string{rule(w, title, right, t), ""}
+	lines := make([]string, 0, len(body)+4)
+	lines = append(lines, rule(w, title, right, t), "")
 	for _, l := range body {
 		lines = append(lines, "  "+fit(l, w-4))
 	}

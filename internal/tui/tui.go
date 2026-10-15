@@ -42,7 +42,10 @@ func runWith(ctx context.Context, be Backend, o Options) error {
 	if err != nil && ctx.Err() != nil {
 		return nil // stopped by a signal; sessions keep running
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("run the launcher: %w", err)
+	}
+	return nil
 }
 
 // motionOn applies ui.motion. "auto" turns motion off inside SSH sessions,

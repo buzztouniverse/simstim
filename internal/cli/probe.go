@@ -41,7 +41,7 @@ func terminalProbe() error {
 	}
 	old, err := term.MakeRaw(fd)
 	if err != nil {
-		return err
+		return fmt.Errorf("put the terminal in raw mode: %w", err)
 	}
 	_, _ = os.Stdout.WriteString(probeQueries)
 	reply := readUntilDA1(2 * time.Second)

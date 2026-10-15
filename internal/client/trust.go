@@ -57,7 +57,7 @@ func RememberSetup(host, repo string, run bool) error {
 	f.Hosts[host][repo] = run
 	b, err := json.MarshalIndent(f, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("save the setup answers: %w", err)
 	}
 	if err := os.MkdirAll(StateDir(), 0o700); err != nil {
 		return fmt.Errorf("make %s: %w", StateDir(), err)

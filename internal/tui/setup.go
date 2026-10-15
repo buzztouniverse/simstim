@@ -77,7 +77,7 @@ func (s *setupAsk) view(m *Model) string {
 	if h != nil {
 		repo, script = homePath(h, repo), homePath(h, script)
 	}
-	body := []string{""}
+	body := make([]string, 1, 12) // a blank line first
 	for _, l := range []string{
 		"The repository " + repo + " on " + s.host + " has a setup script, " + script + ".",
 		"It runs in the session before the agent, as you, with the session's environment and secrets. Say yes only for a repository you trust.",

@@ -35,7 +35,7 @@ func CheckCreate(p provider.Provider, req provider.Request) error {
 		}
 	}
 	if _, err := client.FindHost(req.Name); err == nil {
-		return &client.UserError{Msg: fmt.Sprintf("there is already a host called %s", req.Name), Hint: brand.Name + " host create " + p.Name() + " <another-name>"}
+		return &client.UserError{Msg: "there is already a host called " + req.Name, Hint: brand.Name + " host create " + p.Name() + " <another-name>"}
 	}
 	return nil
 }

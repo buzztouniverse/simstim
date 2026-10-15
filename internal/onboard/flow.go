@@ -200,7 +200,7 @@ func NeedsLogin(it Item) bool {
 // than the user detaching from it.
 func (f *Flow) Done(a Action, checks []api.AgentCheck, ended bool) {
 	f.update(checks)
-	it, _ := f.item(a.Agent.Kind)
+	it := f.item(a.Agent.Kind)
 	session := f.Host + "/" + a.Args.Name
 	if a.Session != "" {
 		session = f.Host + "/" + a.Session
@@ -260,13 +260,13 @@ func (f *Flow) update(checks []api.AgentCheck) {
 	}
 }
 
-func (f *Flow) item(kind string) (Item, bool) {
+func (f *Flow) item(kind string) Item {
 	for _, it := range f.Items {
 		if it.Agent.Kind == kind {
-			return it, true
+			return it
 		}
 	}
-	return Item{}, false
+	return Item{}
 }
 
 // Shown are the agents a summary covers: every first-class and supported
@@ -283,8 +283,9 @@ func (f *Flow) Shown() []Item {
 
 // Summary describes each agent of Shown, and what to try next.
 func (f *Flow) Summary() []Line {
-	var out []Line
-	for _, it := range f.Shown() {
+	shown := f.Shown()
+	out := make([]Line, 0, len(shown))
+	for _, it := range shown {
 		out = append(out, f.Line(it.Agent.Kind))
 	}
 	return out
@@ -292,7 +293,7 @@ func (f *Flow) Summary() []Line {
 
 // Line describes one agent, with the note of its last install or login.
 func (f *Flow) Line(kind string) Line {
-	it, _ := f.item(kind)
+	it := f.item(kind)
 	c := it.Check
 	if c.Kind == "" {
 		c = api.AgentCheck{Kind: it.Agent.Kind, Title: it.Agent.Title}

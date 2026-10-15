@@ -104,11 +104,11 @@ func (w *wizard) onAgentChecks(m *Model, msg agentChecksMsg) tea.Cmd {
 	if h := m.hostByName(w.host.Name); h != nil && msg.act.Kind == onboard.ActInstall {
 		cmd = m.doctor(h) // the new-session form lists the host's agents
 	}
-	return tea.Batch(cmd, w.next(m))
+	return tea.Batch(cmd, w.next())
 }
 
 // next shows what the flow does next.
-func (w *wizard) next(m *Model) tea.Cmd {
+func (w *wizard) next() tea.Cmd {
 	w.act, w.err = w.flow.Next(), nil
 	w.step = wzRun
 	if w.act.Kind == onboard.ActDone {
@@ -160,7 +160,7 @@ func (w *wizard) agentKey(m *Model, k tea.KeyPressMsg) tea.Cmd {
 				return nil
 			}
 			w.flow.Start()
-			return w.next(m)
+			return w.next()
 		}
 	case wzRun:
 		if w.starting || w.checking || w.waiting != "" {
@@ -172,12 +172,14 @@ func (w *wizard) agentKey(m *Model, k tea.KeyPressMsg) tea.Cmd {
 		case "s":
 			w.flow.Skip(w.act)
 			w.last = nil
-			return w.next(m)
+			return w.next()
 		}
 	case wzDone:
 		if ks == "enter" {
 			w.startSession(m, w.flow.FirstAgent())
 		}
+	default:
+		// The earlier steps take their keys in wizard.key.
 	}
 	return nil
 }

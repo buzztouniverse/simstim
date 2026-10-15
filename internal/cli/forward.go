@@ -78,8 +78,8 @@ func forwardCmd() *cobra.Command {
 					if err1 != nil || err2 != nil {
 						return &client.UserError{Msg: fmt.Sprintf("%q is not a port or local:remote pair", w), Hint: brand.Name + " forward " + args[0] + " 3000"}
 					}
-					if !ok && !free(lp) {
-						lp = freePort()
+					if !ok && !free(ctx, lp) {
+						lp = freePort(ctx)
 					}
 					pairs = append(pairs, client.ForwardPair{Local: lp, RemoteHost: remoteHost(addr[rp]), Remote: rp})
 				}
@@ -122,8 +122,9 @@ func remoteHost(addr string) string {
 	return addr
 }
 
-func free(port int) bool {
-	l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+func free(ctx context.Context, port int) bool {
+	var lc net.ListenConfig
+	l, err := lc.Listen(ctx, "tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		return false
 	}
@@ -131,8 +132,9 @@ func free(port int) bool {
 	return true
 }
 
-func freePort() int {
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+func freePort(ctx context.Context) int {
+	var lc net.ListenConfig
+	l, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
 	if err != nil {
 		return 0
 	}

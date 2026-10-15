@@ -53,7 +53,7 @@ func readLine(ctx context.Context, in io.Reader) (string, error) {
 			if errors.Is(err, io.EOF) && b.Len() > 0 {
 				return strings.TrimSpace(b.String()), nil
 			}
-			return "", err
+			return "", fmt.Errorf("read the answer: %w", err)
 		}
 	}
 }

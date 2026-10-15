@@ -395,7 +395,7 @@ func (m *Model) working(id string) string {
 	}
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(id))
-	i := int(m.since(m.epoch)/lifeEvery) + int(h.Sum32()%uint32(len(lifeFrames)))
+	i := int(m.since(m.epoch)/lifeEvery) + int(h.Sum32()%uint32(len(lifeFrames))) //nolint:gosec // G115: lifeFrames is a short, fixed list
 	return lifeFrames[i%len(lifeFrames)]
 }
 

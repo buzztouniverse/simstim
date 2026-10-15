@@ -130,6 +130,8 @@ func TestColourProfiles(t *testing.T) {
 					if strings.Contains(out, "\x1b[") {
 						t.Errorf("escape sequences sent with no terminal")
 					}
+				default:
+					// Unknown is never sent.
 				}
 			})
 		}

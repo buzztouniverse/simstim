@@ -2,6 +2,7 @@ package tui
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -40,17 +41,20 @@ func loadMemory() memory {
 func saveMemory(mem memory) error {
 	p := memoryPath()
 	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
-		return err
+		return fmt.Errorf("make %s: %w", filepath.Dir(p), err)
 	}
 	b, err := json.Marshal(mem)
 	if err != nil {
-		return err
+		return fmt.Errorf("save the launcher's memory: %w", err)
 	}
 	tmp := p + ".tmp"
 	if err := os.WriteFile(tmp, b, 0o600); err != nil {
-		return err
+		return fmt.Errorf("save the launcher's memory: %w", err)
 	}
-	return os.Rename(tmp, p)
+	if err := os.Rename(tmp, p); err != nil {
+		return fmt.Errorf("save the launcher's memory: %w", err)
+	}
+	return nil
 }
 
 // LastSession is the session the launcher last attached to, for

@@ -69,7 +69,7 @@ func CommandProc(cmd *exec.Cmd, unreachable func(code int, stderr string) bool) 
 	p := &cmdProc{cmd: cmd, stdin: stdin, stdout: stdout, unreachable: unreachable}
 	cmd.Stderr = &p.stderr
 	if err := cmd.Start(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("start %s: %w", cmd.Path, err)
 	}
 	return p, nil
 }

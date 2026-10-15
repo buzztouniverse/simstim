@@ -138,6 +138,8 @@ func flatten(v reflect.Value, prefix string) map[string]string {
 			}
 		case reflect.Bool:
 			out[key] = fmt.Sprintf("`%v`", fv.Bool())
+		default:
+			// Other kinds have no default worth showing.
 		}
 	}
 	return out

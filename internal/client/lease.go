@@ -34,11 +34,11 @@ func (c *Conn) keepAlive(d time.Duration) {
 // keepLease renews the lease of c's machine every period while c is open:
 // long while any session is working, short while none is. When the laptop
 // sleeps or closes, nobody renews it and the machine pauses by itself.
-func keepLease(c *Conn, l Leaser, period time.Duration) {
+func keepLease(ctx context.Context, c *Conn, l Leaser, period time.Duration) {
 	t := time.NewTicker(period)
 	defer t.Stop()
 	for {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		busy, idle := l.Leases()
 		d := idle
 		if sessions, err := c.Sessions(ctx); err != nil || anyWorking(sessions) {

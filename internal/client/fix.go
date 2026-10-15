@@ -31,7 +31,7 @@ func (c *Conn) HostFixes(ctx context.Context, apply bool, ids []string) ([]Fix, 
 		return nil, &UserError{Msg: "the helper on " + c.Host.Name + " is too old to fix itself", Hint: brand.Name + " host add " + c.Host.Name + "   (updates the helper)"}
 	}
 	a := api.FixArgs{Apply: apply, IDs: ids}
-	if src, err := exec.Command("infocmp", "-x", "xterm-ghostty").Output(); err == nil {
+	if src, err := exec.CommandContext(ctx, "infocmp", "-x", "xterm-ghostty").Output(); err == nil {
 		a.Terminfo = map[string]string{"xterm-ghostty": string(src)}
 	}
 	var out []Fix
@@ -46,7 +46,9 @@ func LocalChecks() []Check {
 	if p, err := exec.LookPath("ssh"); err != nil {
 		out = append(out, Check{Name: "ssh", Detail: "ssh is not on PATH", Fix: "install OpenSSH"})
 	} else {
-		v, _ := exec.Command(p, "-V").CombinedOutput()
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		v, _ := exec.CommandContext(ctx, p, "-V").CombinedOutput()
+		cancel()
 		out = append(out, Check{Name: "ssh", OK: true, Detail: strings.TrimSpace(string(v))})
 	}
 	out = append(out, fileCheck("config.toml", settingsPath(), &Settings{}))
@@ -116,8 +118,9 @@ func LocalFixes(apply bool, ids []string) []Fix {
 	for _, id := range ids {
 		want[id] = true
 	}
-	var out []Fix
-	for _, f := range append(sshConfigFix(), controlSocketFix()...) {
+	all := append(sshConfigFix(), controlSocketFix()...)
+	out := make([]Fix, 0, len(all))
+	for _, f := range all {
 		if apply && want[f.ID] {
 			if err := f.run(); err != nil {
 				f.Error = err.Error()
@@ -164,7 +167,8 @@ func controlSocketFix() []localFix {
 		if e.Type()&os.ModeSocket == 0 {
 			continue
 		}
-		if c, err := net.DialTimeout("unix", p, 300*time.Millisecond); err == nil {
+		d := net.Dialer{Timeout: 300 * time.Millisecond}
+		if c, err := d.DialContext(context.Background(), "unix", p); err == nil {
 			c.Close()
 			continue
 		}

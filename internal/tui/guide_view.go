@@ -146,6 +146,8 @@ func (g *guide) rentView(m *Model, cw int) (body, tail []string, hints []hint) {
 		hints = []hint{{"enter", "next"}, {"esc", "back"}}
 	case gdRentConfig:
 		body, hints = g.configView(body, cw)
+	default:
+		// The other steps draw only the body above.
 	}
 	if len(g.checks) > 0 {
 		tail = append(append(tail, ""), m.checkLines(g.checks, cw)...)

@@ -47,13 +47,13 @@ func pull(ctx context.Context, h client.Host, s *client.Session, into string, fo
 		return err
 	}
 	if repo.Branch == "HEAD" {
-		return &client.UserError{Msg: fmt.Sprintf("%s has no branch checked out (a detached HEAD)", s.Name), Hint: "create a branch in the session, then pull again"}
+		return &client.UserError{Msg: s.Name + " has no branch checked out (a detached HEAD)", Hint: "create a branch in the session, then pull again"}
 	}
 	if into == "" {
 		into = repo.Branch
 	}
 	if cur, _ := gitOut(ctx, "symbolic-ref", "--quiet", "--short", "HEAD"); cur == into {
-		return &client.UserError{Msg: fmt.Sprintf("%s is the branch you have checked out here", into), Hint: "pull into another branch with --into, or switch branches first"}
+		return &client.UserError{Msg: into + " is the branch you have checked out here", Hint: "pull into another branch with --into, or switch branches first"}
 	}
 	sshCmd, err := client.GitSSHCommand(h)
 	if err != nil {

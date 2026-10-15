@@ -13,8 +13,8 @@ import (
 )
 
 // sendUpload uploads a file and pastes its remote path into the session.
-func (a *attacher) sendUpload(name string, data []byte) {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+func (a *attacher) sendUpload(ctx context.Context, name string, data []byte) {
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 	path, err := a.conn.Upload(ctx, a.o.Session, name, data)
 	if err != nil {
@@ -34,7 +34,7 @@ func (a *attacher) pasteText(t []byte) {
 
 // paste forwards a bracketed paste. When it is only local file paths (a file
 // dropped on the terminal), the files are uploaded and the paths rewritten.
-func (a *attacher) paste(p keys.Piece) {
+func (a *attacher) paste(ctx context.Context, p keys.Piece) {
 	files := localFiles(p.Text)
 	if len(files) == 0 {
 		_ = a.conn.Send(proto.TInput, p.Raw)
@@ -47,8 +47,8 @@ func (a *attacher) paste(p keys.Piece) {
 			_ = a.conn.Send(proto.TInput, p.Raw)
 			return
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		path, err := a.conn.Upload(ctx, a.o.Session, filepath.Base(f), data)
+		uctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		path, err := a.conn.Upload(uctx, a.o.Session, filepath.Base(f), data)
 		cancel()
 		if err != nil {
 			a.notify("upload failed: " + err.Error())

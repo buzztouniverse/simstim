@@ -86,8 +86,8 @@ type activityMsg struct {
 	text string
 }
 
-// scheduleActivity reads the selected session's screen now and then, while
-// its list is on screen.
+// readActivity reads the selected session's screen once, while its list is
+// on screen; the activity tick calls it now and then.
 func (m *Model) readActivity() tea.Cmd {
 	h, s := m.selectedPair()
 	if s == nil || h == nil || !h.online() || !s.Alive || m.modal != nil {

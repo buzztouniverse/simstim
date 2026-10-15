@@ -7,6 +7,8 @@ import (
 	"github.com/iamlakshya/simstim/internal/brand"
 )
 
+// notifyOthers shows a desktop notification, through the local terminal, when
+// another session on this host starts to need the user or ends.
 func (a *attacher) notifyOthers(list []Session) {
 	if a.seen == nil {
 		a.seen = map[string]string{}
@@ -46,8 +48,6 @@ func oscSafe(s string) string {
 		return r
 	}, s)
 }
-
-// frame handles one frame from the host. done is true when the attach is over.
 
 // notify raises a system notification (OSC 777). It draws nothing on the
 // screen, so the session keeps every row and column.

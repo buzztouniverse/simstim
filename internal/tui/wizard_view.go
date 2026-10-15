@@ -113,7 +113,7 @@ func (w *wizard) checkLines(m *Model, cw int) []string { return m.checkLines(w.c
 // checkLines draws the progress of a step: a spinner, then ✓ or ✕, the
 // check's name, and its detail.
 func (m *Model) checkLines(checks []check, cw int) []string {
-	var out []string
+	out := make([]string, 0, len(checks))
 	for _, c := range checks {
 		var mark string
 		switch c.state {

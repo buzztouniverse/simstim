@@ -56,12 +56,15 @@ func writeWrapper(h Host) (string, error) {
 	b.WriteString("    ConnectTimeout 15\n")
 	path := wrapperPath(h)
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return "", err
+		return "", fmt.Errorf("make %s: %w", filepath.Dir(path), err)
 	}
 	if old, err := os.ReadFile(path); err == nil && string(old) == b.String() {
 		return path, nil
 	}
-	return path, os.WriteFile(path, []byte(b.String()), 0o600)
+	if err := os.WriteFile(path, []byte(b.String()), 0o600); err != nil {
+		return path, fmt.Errorf("write the SSH config for %s: %w", h.Name, err)
+	}
+	return path, nil
 }
 
 func exists(p string) bool { _, err := os.Stat(p); return err == nil }
@@ -157,7 +160,7 @@ func (s *SSH) Run(ctx context.Context, remote string, stdin io.Reader) ([]byte, 
 
 // ExitMaster stops the ControlMaster for this host. Call it before reconnecting
 // after a network change, because a master on a dead TCP connection hangs new sessions.
-func (s *SSH) ExitMaster() {
+func (s *SSH) ExitMaster(ctx context.Context) {
 	if !controlMaster || s.Host.SSH == "" {
 		return
 	}
@@ -166,7 +169,10 @@ func (s *SSH) ExitMaster() {
 		return
 	}
 	args = append(args, "-O", "exit", s.Host.SSH)
-	cmd := exec.Command("ssh", args...)
+	// A master on a dead connection must not hang the reconnect for long.
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ssh", args...)
 	cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
 	_ = cmd.Run()
 }

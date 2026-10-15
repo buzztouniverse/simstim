@@ -149,22 +149,25 @@ func LoadHosts() ([]Host, error) {
 func SaveHosts(hosts []Host) error {
 	sort.Slice(hosts, func(i, j int) bool { return hosts[i].Name < hosts[j].Name })
 	if err := os.MkdirAll(ConfigDir(), 0o700); err != nil {
-		return err
+		return fmt.Errorf("make %s: %w", ConfigDir(), err)
 	}
 	tmp := hostsPath() + ".tmp"
 	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
-		return err
+		return fmt.Errorf("save the hosts: %w", err)
 	}
 	fmt.Fprintf(f, "# Hosts for %s. Edit with `%s host`.\n\n", brand.DisplayName, brand.Name)
 	if err := toml.NewEncoder(f).Encode(hostsFile{Hosts: hosts}); err != nil {
 		f.Close()
-		return err
+		return fmt.Errorf("save the hosts: %w", err)
 	}
 	if err := f.Close(); err != nil {
-		return err
+		return fmt.Errorf("save the hosts: %w", err)
 	}
-	return os.Rename(tmp, hostsPath())
+	if err := os.Rename(tmp, hostsPath()); err != nil {
+		return fmt.Errorf("save the hosts: %w", err)
+	}
+	return nil
 }
 
 // SaveHost adds h to the saved hosts, or replaces the host of the same name.

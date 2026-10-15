@@ -143,7 +143,7 @@ func destroyHost(ctx context.Context, name string, force, yes bool) error {
 		return err
 	}
 	if h.Machine == nil {
-		return &client.UserError{Msg: fmt.Sprintf("%s was not made by `host create`, so there is nothing to destroy", name), Hint: brand.Name + " host rm " + name + "   (forgets it)"}
+		return &client.UserError{Msg: name + " was not made by `host create`, so there is nothing to destroy", Hint: brand.Name + " host rm " + name + "   (forgets it)"}
 	}
 	lc, err := client.OpenMachine(h)
 	if err != nil {
@@ -166,7 +166,7 @@ func destroyHost(ctx context.Context, name string, force, yes bool) error {
 	if err := lc.Destroy(dctx); err != nil {
 		return err
 	}
-	(&client.SSH{Host: h}).ExitMaster()
+	(&client.SSH{Host: h}).ExitMaster(ctx)
 	if err := client.ForgetHost(name); err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func hostIdleCmd() *cobra.Command {
 				return err
 			}
 			if h.Machine == nil {
-				return &client.UserError{Msg: fmt.Sprintf("%s was not made by `host create`", h.Name), Hint: "Idle stop needs a host made by " + brand.Name + " host create."}
+				return &client.UserError{Msg: h.Name + " was not made by `host create`", Hint: "Idle stop needs a host made by " + brand.Name + " host create."}
 			}
 			if args[1] != "never" {
 				if d, err := time.ParseDuration(args[1]); err != nil || d < time.Minute {
@@ -253,7 +253,7 @@ func machineAction(ctx context.Context, h client.Host, action string) error {
 		if err := lc.Stop(ctx); err != nil {
 			return err
 		}
-		(&client.SSH{Host: h}).ExitMaster()
+		(&client.SSH{Host: h}).ExitMaster(ctx)
 		fmt.Printf("%s is stopped. Attaching to one of its sessions starts it again.\n", h.Name)
 	default:
 		st, err := lc.Status(ctx)

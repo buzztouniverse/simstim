@@ -338,7 +338,10 @@ func hostDoctorCmd() *cobra.Command {
 func printJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	return enc.Encode(v)
+	if err := enc.Encode(v); err != nil {
+		return fmt.Errorf("write JSON: %w", err)
+	}
+	return nil
 }
 
 func hostRestoreCmd() *cobra.Command {

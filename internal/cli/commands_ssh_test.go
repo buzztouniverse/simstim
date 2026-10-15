@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,7 +33,7 @@ func TestForward(t *testing.T) {
 			t.Errorf("remoteHost(%q) = %q, want %q", addr, got, want)
 		}
 	}
-	if p := freePort(); p == 0 || !free(p) {
+	if p := freePort(context.Background()); p == 0 || !free(context.Background(), p) {
 		t.Errorf("freePort = %d", p)
 	}
 }

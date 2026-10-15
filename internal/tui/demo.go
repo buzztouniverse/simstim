@@ -139,12 +139,12 @@ func (b *demoBackend) Attach(ctx context.Context, o client.AttachOptions) (clien
 	}
 	old, err := term.MakeRaw(int(in.Fd()))
 	if err != nil {
-		return client.AttachResult{}, err
+		return client.AttachResult{}, fmt.Errorf("put the terminal in raw mode: %w", err)
 	}
 	defer func() { _ = term.Restore(int(in.Fd()), old) }()
 	cr, err := cancelreader.NewReader(in)
 	if err != nil {
-		return client.AttachResult{}, err
+		return client.AttachResult{}, fmt.Errorf("read the terminal: %w", err)
 	}
 	defer cr.Close()
 	keys := make(chan []byte, 8)

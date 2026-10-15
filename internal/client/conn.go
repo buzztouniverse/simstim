@@ -93,7 +93,9 @@ func dial(ctx context.Context, h Host, rt route) (*Conn, error) {
 		// bridge ends itself when the pings stop.
 		remote += fmt.Sprintf(" --idle-exit %d", int(BridgeIdleExit.Seconds()))
 	}
-	proc, err := rt.t.Start(context.Background(), remote)
+	// The bridge lives as long as the connection, not as long as this dial:
+	// it keeps ctx's values but not its deadline.
+	proc, err := rt.t.Start(context.WithoutCancel(ctx), remote)
 	if err != nil {
 		return nil, err
 	}
@@ -122,12 +124,12 @@ func dial(ctx context.Context, h Host, rt route) (*Conn, error) {
 		}
 		if x.f.Type != proto.THello {
 			c.kill()
-			return nil, fmt.Errorf("unexpected first frame from host")
+			return nil, errors.New("unexpected first frame from host")
 		}
 		var hello proto.Hello
 		if err := json.Unmarshal(x.f.Payload, &hello); err != nil {
 			c.kill()
-			return nil, err
+			return nil, fmt.Errorf("read the host's hello: %w", err)
 		}
 		if err := hello.Check(version.Protocol); err != nil {
 			c.kill()
@@ -145,7 +147,7 @@ func dial(ctx context.Context, h Host, rt route) (*Conn, error) {
 		go c.keepAlive(ka.KeepAlive())
 	}
 	if l, ok := rt.lc.(Leaser); ok {
-		go keepLease(c, l, leasePeriod)
+		go keepLease(context.WithoutCancel(ctx), c, l, leasePeriod)
 	}
 	return c, nil
 }
@@ -195,6 +197,8 @@ func (c *Conn) readLoop(r *bufio.Reader) {
 			case <-c.done:
 				return
 			}
+		default:
+			// Other frames are not for this connection.
 		}
 	}
 }
@@ -242,7 +246,7 @@ func (c *Conn) Call(ctx context.Context, op string, args any, out any) error {
 	if args != nil {
 		b, err := json.Marshal(args)
 		if err != nil {
-			return err
+			return fmt.Errorf("encode the %s request: %w", op, err)
 		}
 		req.Args = b
 	}
@@ -274,7 +278,9 @@ func (c *Conn) Call(ctx context.Context, op string, args any, out any) error {
 			return errors.New("the host refused the request")
 		}
 		if out != nil && len(resp.Result) > 0 {
-			return json.Unmarshal(resp.Result, out)
+			if err := json.Unmarshal(resp.Result, out); err != nil {
+				return fmt.Errorf("read the answer to %s: %w", op, err)
+			}
 		}
 		return nil
 	}
@@ -331,7 +337,7 @@ func (c *Conn) Upload(ctx context.Context, session, name string, data []byte) (s
 		}
 		var r proto.UploadResult
 		if err := json.Unmarshal(resp.Result, &r); err != nil {
-			return "", err
+			return "", fmt.Errorf("read the answer to an upload: %w", err)
 		}
 		return r.Path, nil
 	}

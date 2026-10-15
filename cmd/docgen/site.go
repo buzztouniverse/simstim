@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/iamlakshya/simstim/internal/agents"
@@ -100,14 +101,14 @@ func sitePages(docs, out string) error {
 		return writePage(out, pages, filepath.ToSlash(filepath.Join(docs, rel)), dst, weightOf(rel), extra)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("write the site's pages from %s: %w", docs, err)
 	}
 	for _, h := range hosted {
 		if err := writePage(out, pages, h.src, h.dst, h.weight, ""); err != nil {
 			return err
 		}
 	}
-	index := "---\ntitle: \"Project\"\nweight: " + fmt.Sprint(sectionWeight["project"]) + "\n---\n" + projectIndex
+	index := "---\ntitle: \"Project\"\nweight: " + strconv.Itoa(sectionWeight["project"]) + "\n---\n" + projectIndex
 	if err := writeFile(filepath.Join(out, "content", "project", "_index.md"), []byte(index)); err != nil {
 		return err
 	}
@@ -151,7 +152,7 @@ func siteData(out string, pages map[string]string) error {
 		Support string `json:"support"`
 		Program string `json:"program"`
 	}
-	var list []agent
+	list := make([]agent, 0, len(agents.Table))
 	for _, a := range agents.Table {
 		list = append(list, agent{Title: a.Title, Kind: a.Kind, Support: string(a.Support), Program: a.Binaries[0]})
 	}
@@ -240,7 +241,7 @@ func writeFile(dst string, b []byte) error {
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return fmt.Errorf("make %s: %w", filepath.Dir(dst), err)
 	}
-	if err := os.WriteFile(dst, b, 0o644); err != nil {
+	if err := os.WriteFile(dst, b, 0o644); err != nil { //nolint:gosec // G703: dst is under the output folder named on the command line
 		return fmt.Errorf("write %s: %w", dst, err)
 	}
 	return nil

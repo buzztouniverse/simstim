@@ -97,7 +97,7 @@ func RegisterProvider(name string, open func(Host) (Lifecycle, error)) {
 // OpenMachine returns the lifecycle of the machine behind h.
 func OpenMachine(h Host) (Lifecycle, error) {
 	if h.Machine == nil {
-		return nil, &UserError{Msg: fmt.Sprintf("%s was not made by `host create`", h.Name), Hint: brand.Name + " host rm " + h.Name + "   (forgets a host you added)"}
+		return nil, &UserError{Msg: h.Name + " was not made by `host create`", Hint: brand.Name + " host rm " + h.Name + "   (forgets a host you added)"}
 	}
 	providersMu.RLock()
 	open := providers[h.Machine.Provider]
@@ -214,7 +214,7 @@ func ensureRunning(ctx context.Context, h Host, lc Lifecycle) error {
 			return err
 		}
 	}
-	(&SSH{Host: h}).ExitMaster()
+	(&SSH{Host: h}).ExitMaster(ctx)
 	return waitReady(ctx, h, lc, 4*time.Minute)
 }
 

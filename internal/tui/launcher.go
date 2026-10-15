@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 
 	"charm.land/lipgloss/v2"
@@ -168,7 +169,7 @@ func (m *Model) brandName() string {
 // gutter is the row's number, faint, for the first nine rows: 1–9 open them.
 func gutter(n int) seg {
 	if n >= 1 && n <= 9 {
-		return seg{fmt.Sprint(n), sFaint}
+		return seg{strconv.Itoa(n), sFaint}
 	}
 	return seg{" ", sPlain}
 }
@@ -272,6 +273,8 @@ func (m *Model) hostState(h *hostConn) string {
 		return sFaint.Render("offline")
 	case stFailed:
 		return sDanger.Render("not ready")
+	default:
+		// Online: the latency, the sessions and who needs you, below.
 	}
 	facts := sFaint.Render(fmtLatency(h.latency) + dot + plural(len(h.sessions), "session", "sessions"))
 	need := 0
@@ -324,6 +327,8 @@ func (m *Model) sessRowView(r sessRow, n int, c sessColumns, selected, withHost 
 			msg = "not ready"
 		}
 		return "  " + sDanger.Render(glyphFail) + " " + sFaint.Render(trunc(sentence(msg), c.name+c.folder+20))
+	default:
+		// A session row is drawn by the caller.
 	}
 	s := r.s
 	glyph, label := m.look(s)

@@ -50,8 +50,9 @@ func (m *Model) decode(text string, start time.Time) string {
 			b.WriteRune(' ')
 		default:
 			h := fnv.New32a()
-			_, _ = h.Write([]byte{byte(i), byte(frame), byte(frame >> 8)})
-			b.WriteRune(noise[h.Sum32()%uint32(len(noise))])
+			// Only a hash: the bytes may wrap, and noise is a short, fixed list.
+			_, _ = h.Write([]byte{byte(i), byte(frame), byte(frame >> 8)}) //nolint:gosec // G115: see above
+			b.WriteRune(noise[h.Sum32()%uint32(len(noise))])               //nolint:gosec // G115: see above
 		}
 	}
 	return b.String()

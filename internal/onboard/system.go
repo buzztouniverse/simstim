@@ -3,6 +3,7 @@ package onboard
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -49,7 +50,7 @@ var _ Local = System{}
 // Places probes this computer: ssh, limactl and docker on PATH, the SSH
 // config's hosts, and an E2B key.
 func (s System) Places() []Place {
-	var names []string
+	names := make([]string, 0, len(s.Providers))
 	for _, p := range s.Providers {
 		names = append(names, p.Name())
 	}
@@ -92,19 +93,19 @@ func (System) HasSSHHost(name string) bool { return slices.Contains(client.SSHCo
 func (System) AddSSHHost(lines string) error {
 	dir := sshDir()
 	if dir == "" {
-		return fmt.Errorf("cannot find the home folder")
+		return errors.New("cannot find the home folder")
 	}
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return err
+		return fmt.Errorf("make %s: %w", dir, err)
 	}
 	path := filepath.Join(dir, "config")
 	old, err := os.ReadFile(path)
 	if err != nil && !os.IsNotExist(err) {
-		return err
+		return fmt.Errorf("read %s: %w", path, err)
 	}
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
 	if err != nil {
-		return err
+		return fmt.Errorf("open %s: %w", path, err)
 	}
 	lead := ""
 	switch {
@@ -115,9 +116,12 @@ func (System) AddSSHHost(lines string) error {
 	}
 	if _, err := f.WriteString(lead + lines); err != nil {
 		f.Close()
-		return err
+		return fmt.Errorf("add to %s: %w", path, err)
 	}
-	return f.Close()
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("add to %s: %w", path, err)
+	}
+	return nil
 }
 
 // SSHWorks runs `ssh -o BatchMode=yes target true`: it works only when no

@@ -35,7 +35,7 @@ func (c *confirm) key(m *Model, k tea.KeyPressMsg) tea.Cmd {
 
 func (c *confirm) view(m *Model) string {
 	w := m.dialogWidth()
-	body := []string{""}
+	body := make([]string, 1, len(c.lines)+2) // a blank line first
 	for _, l := range c.lines {
 		body = append(body, wrap(l, w-4)...)
 	}

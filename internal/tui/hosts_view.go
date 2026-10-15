@@ -72,8 +72,10 @@ func (m *Model) hostRow(h *hostConn, n int, selected bool, cw, nameW int) string
 		detail[i].s = trunc(detail[i].s, detailW-used)
 		used += cells(detail[i].s)
 	}
-	segs := []seg{gutter(n), {" ", sPlain}, glyph, {" ", sPlain}}
-	segs = append(segs, nameSegs(h.name(), nameW, nameSt, "")...)
+	name := nameSegs(h.name(), nameW, nameSt, "")
+	segs := make([]seg, 0, 10+len(name)+len(detail))
+	segs = append(segs, gutter(n), seg{" ", sPlain}, glyph, seg{" ", sPlain})
+	segs = append(segs, name...)
 	segs = append(segs, seg{"  ", sPlain})
 	segs = append(segs, detail...)
 	segs = append(segs, seg{strings.Repeat(" ", max(detailW-used, 0)), sPlain}, seg{"  ", sPlain}, right, seg{"  ", sPlain},
@@ -84,7 +86,7 @@ func (m *Model) hostRow(h *hostConn, n int, selected bool, cw, nameW int) string
 // hostTrace is the trace of all of a host's sessions together.
 func (m *Model) hostTrace(h *hostConn) string {
 	k := sessKey{h.name(), ""}
-	var all []timeList
+	all := make([]timeList, 0, len(h.sessions))
 	for _, s := range h.sessions {
 		all = append(all, m.traces[sessKey{h.name(), s.ID}])
 	}
@@ -132,7 +134,7 @@ func (m *Model) hostDetail(h *hostConn, cw int) string {
 				parts = append(parts, s)
 			}
 		}
-		var names []string
+		names := make([]string, 0, len(i.Agents))
 		for k := range i.Agents {
 			names = append(names, k)
 		}

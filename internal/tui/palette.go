@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -87,6 +88,8 @@ func (c *command) applies(m *Model, b binding) bool {
 		return m.screen == scrHosts
 	case onSessions:
 		return m.screen == scrSessions
+	default:
+		// The command works anywhere.
 	}
 	return true
 }
@@ -399,9 +402,11 @@ func (m *Model) openSettings() tea.Cmd {
 	argv := strings.Fields(editor)
 	x := &funcExec{run: func(in, out *os.File) error {
 		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-			return err
+			return fmt.Errorf("make %s: %w", filepath.Dir(path), err)
 		}
-		cmd := exec.Command(argv[0], append(argv[1:], path)...)
+		// The user's own editor, from their $VISUAL or $EDITOR; no timeout,
+		// since they edit for as long as they like.
+		cmd := exec.CommandContext(context.Background(), argv[0], append(argv[1:], path)...) //nolint:gosec // G702: see above
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = in, out, os.Stderr
 		return cmd.Run()
 	}}
@@ -459,8 +464,9 @@ type KeyEntry struct {
 
 // Keymap returns the effective keymap for the given settings.
 func Keymap(s client.Settings) []KeyEntry {
-	var out []KeyEntry
-	for _, c := range withKeymap(registry(), s.Keymap) {
+	cmds := withKeymap(registry(), s.Keymap)
+	out := make([]KeyEntry, 0, len(cmds))
+	for _, c := range cmds {
 		e := KeyEntry{Command: c.name()}
 		for _, b := range c.keys {
 			e.Keys = append(e.Keys, b.key)

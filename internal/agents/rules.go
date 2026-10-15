@@ -64,7 +64,7 @@ type Screen struct {
 var (
 	rulesOnce sync.Once
 	rules     map[string][]Rule
-	rulesErr  error
+	errRules  error
 )
 
 // LoadRules parses the embedded rule files. It is called once.
@@ -73,23 +73,23 @@ func LoadRules() (map[string][]Rule, error) {
 		rules = map[string][]Rule{}
 		entries, err := ruleFiles.ReadDir("rules")
 		if err != nil {
-			rulesErr = err
+			errRules = err
 			return
 		}
 		for _, e := range entries {
 			b, err := ruleFiles.ReadFile("rules/" + e.Name())
 			if err != nil {
-				rulesErr = err
+				errRules = err
 				return
 			}
 			var f ruleFile
 			if _, err := toml.Decode(string(b), &f); err != nil {
-				rulesErr = fmt.Errorf("%s: %w", e.Name(), err)
+				errRules = fmt.Errorf("%s: %w", e.Name(), err)
 				return
 			}
 			for i := range f.Rules {
 				if err := f.Rules[i].compile(); err != nil {
-					rulesErr = fmt.Errorf("%s rule %s: %w", e.Name(), f.Rules[i].ID, err)
+					errRules = fmt.Errorf("%s rule %s: %w", e.Name(), f.Rules[i].ID, err)
 					return
 				}
 			}
@@ -97,21 +97,21 @@ func LoadRules() (map[string][]Rule, error) {
 			rules[f.Agent] = f.Rules
 		}
 	})
-	return rules, rulesErr
+	return rules, errRules
 }
 
 func (c *Condition) compile() error {
 	for _, p := range c.Regex {
 		re, err := regexp.Compile(p)
 		if err != nil {
-			return err
+			return fmt.Errorf("regex %q: %w", p, err)
 		}
 		c.re = append(c.re, re)
 	}
 	for _, p := range c.LineRegex {
 		re, err := regexp.Compile(p)
 		if err != nil {
-			return err
+			return fmt.Errorf("line regex %q: %w", p, err)
 		}
 		c.lineRe = append(c.lineRe, re)
 	}

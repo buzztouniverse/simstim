@@ -449,9 +449,9 @@ func TestBackoff(t *testing.T) {
 		d = nextBackoff(d)
 		got = append(got, d)
 	}
-	want := []time.Duration{1, 2, 4, 8, 16, 30, 30}
+	want := []int{1, 2, 4, 8, 16, 30, 30} // seconds
 	for i := range want {
-		if got[i] != want[i]*time.Second {
+		if got[i] != time.Duration(want[i])*time.Second {
 			t.Fatalf("backoff %v", got)
 		}
 	}
