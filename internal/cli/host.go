@@ -206,21 +206,24 @@ func hostRmCmd() *cobra.Command {
 				return err
 			}
 			out := hosts[:0]
-			found := false
+			var gone *client.Host
 			for _, h := range hosts {
 				if h.Name == args[0] {
-					found = true
+					gone = &h
 					continue
 				}
 				out = append(out, h)
 			}
-			if !found {
+			if gone == nil {
 				return &client.UserError{Msg: fmt.Sprintf("no host named %q", args[0]), Hint: brand.Name + " host ls"}
 			}
 			if err := client.SaveHosts(out); err != nil {
 				return err
 			}
 			fmt.Printf("Forgot %s. Its sessions and the helper stay on the host.\n", args[0])
+			if m := gone.Machine; m != nil {
+				fmt.Printf("Its %s machine %s is kept. `host destroy` would have deleted it; now delete it with %s's own tools.\n", m.Provider, m.ID, m.Provider)
+			}
 			return nil
 		},
 	}

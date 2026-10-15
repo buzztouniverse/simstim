@@ -171,6 +171,8 @@ type fakeEnvd struct {
 	// this process, instead of running them.
 	bridge  func(in io.Reader, out io.Writer, remote string) error
 	bridges []string
+	// home, when set, is HOME for the commands it runs.
+	home string
 }
 
 // serveBridge runs the bridge in this process, as if it were a command in
@@ -302,13 +304,16 @@ func (f *fakeEnvd) start(w http.ResponseWriter, r *http.Request) {
 		f.t.Error("Start: no Keepalive-Ping-Interval")
 	}
 	f.mu.Lock()
-	bridge := f.bridge
+	bridge, home := f.bridge, f.home
 	f.mu.Unlock()
 	if bridge != nil && strings.Contains(req.Process.Args[1], " bridge") {
 		f.serveBridge(w, req.Process.Args[1], bridge)
 		return
 	}
 	cmd := exec.Command("/bin/sh", "-c", req.Process.Args[1])
+	if home != "" {
+		cmd.Env = append(os.Environ(), "HOME="+home)
+	}
 	in, _ := cmd.StdinPipe()
 	out, _ := cmd.StdoutPipe()
 	errp, _ := cmd.StderrPipe()
