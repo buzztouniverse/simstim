@@ -669,7 +669,7 @@ func TestFit(t *testing.T) {
 	if got := fit("auth-refactor", 6); got != "auth-…" {
 		t.Errorf("fit = %q", got)
 	}
-	if got := truncPath("/home/dev/src/app/internal/auth", 20); got != "/home/dev/…/auth" {
+	if got := truncPath("/home/dev/src/app/internal/auth", 20); got != "/home/dev/src/…/auth" {
 		t.Errorf("truncPath = %q", got)
 	}
 	if got := fmtMemory(6549825126, 8<<30); got != "6.1 of 8 GiB" {

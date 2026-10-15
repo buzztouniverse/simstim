@@ -35,9 +35,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Alerts while attached: a desktop notification when another session on the host needs input or ends.
 - `--dir ~/…` on the command line maps the local home folder to the host's.
 - Respawn after a host restart: `restore` brings sessions back with each agent's resume or continue command, and a boot-time user unit runs it. `host restore` runs it on demand.
+- `just check-private` (also in `just lint` and CI): fails when a tracked file holds a personal path, a private or Tailscale address, a tailnet name or an email. Maintainers can add private words of their own in the git-ignored `private/deny.txt`.
 
 ### Changed
 
+- The repo holds nothing private: the working goal, the status page, the test-host log and the owner's checklist moved to the git-ignored `private/` folder, and examples use generic host names, users and documentation addresses.
 - Sessions are capped with `MemoryMax` only; `MemoryHigh` made a runaway process hang (decision 0008).
 - Commits carry no sign-off or attribution lines, and contributions are covered by Apache-2.0 section 5 (decision 0010, which replaces the DCO).
 - The home screen is now a light launcher (decisions 0009 and 0012). It has one column and one list: the hosts, then Enter for a host's sessions. The panes and the permanent preview are gone. The look is its own:

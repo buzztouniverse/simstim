@@ -2,9 +2,9 @@
   ⢄⡠⠊ simstim  hosts                                     3 hosts · 1 needs you
   ────────────────────────────────────────────────────────────────────────────
 
-  ▍ 1 ● atlas-dev  4 sessions · 1 needs you                     9ms  ⣀⣀⣀⣀⣀⣀⣀⣼
-    2 ◌ aws-gpu     offline                                           ⣀⣀⣀⣀⣀⣀⣀⣀
-    3 ● gcp-dev     2 sessions                                  41ms  ⣀⣀⣀⣀⣀⣀⣀⣼
+  ▍ 1 ● atlas-dev  4 sessions · 1 needs you                      9ms  ⣀⣀⣀⣀⣀⣀⣀⣼
+    2 ◌ aws-gpu    offline                                            ⣀⣀⣀⣀⣀⣀⣀⣀
+    3 ● gcp-dev    2 sessions                                   41ms  ⣀⣀⣀⣀⣀⣀⣀⣼
 
     ssh atlas-dev · Debian 13 · 4 CPUs · claude, codex, opencode, shell
 
@@ -13,7 +13,7 @@
 
 
 
-  ── atlas-dev ──────────────────────────── 9ms · 4 sessions · 1 needs you ──
+  ── atlas-dev ───────────────────────────── 9ms · 4 sessions · 1 needs you ──
 
     Route      atlas-dev
     System     Debian 13 · amd64 · 4 CPUs · 8 GiB · 61 GiB free

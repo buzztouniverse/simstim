@@ -39,6 +39,8 @@ jobs:
           done
       - name: Name check
         run: scripts/check-name.sh
+      - name: Private-detail check
+        run: scripts/check-private.sh
 
   windows:
     # The client also runs on Windows (with Windows OpenSSH); hosts are Linux.

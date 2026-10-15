@@ -1,6 +1,6 @@
 # simstim plan
 
-**Status:** accepted and built, 15 October 2026. v1, v1.x and v2 are implemented; progress against the goal, with evidence, is in [the status](status.md). The plan below is kept as written, for the reasons behind the design.
+**Status:** accepted and built, 15 October 2026. v1, v1.x and v2 are implemented. The plan below is kept as written, for the reasons behind the design.
 
 This page is the plan. [Architecture](architecture.md) says how it works, [UX](ux.md) says how it looks and feels, and [the research notes](research/README.md) hold the evidence.
 
@@ -32,7 +32,7 @@ The gap: **any agent, on any host you can reach by SSH, with the agent's bytes p
 The owner's spec, as given:
 
 1. Install the CLI on any device.
-2. At setup, connect a host: a VM on any provider (GCP, AWS, homelab, a VPS).
+2. At setup, connect a host: a VM on any provider (GCP, AWS, a homelab, a VPS).
 3. Browse connected hosts.
 4. Select a host and press Enter to start a session.
 5. View running sessions, delete them, select one and interact with it.
@@ -196,11 +196,11 @@ Each is proposed. Once decided, write it as a decision record in `docs/decisions
 | --- | --- |
 | Agents | Claude Code, Codex, opencode, Gemini CLI, Amp, a shell |
 | Terminals | Ghostty (first), iTerm2, WezTerm, kitty |
-| Transports | homelab (ProxyJump over Tailscale), Tailscale, plain SSH, GCP IAP, AWS SSM |
+| Transports | ProxyJump through a homelab jump host, Tailscale, plain SSH, GCP IAP, AWS SSM |
 
 - **Chaos:** kill the client, sleep the laptop (`pmset sleepnow`), drop the network, push an agent into its memory cap, and reboot the host (v2).
 - **Test hosts:**
-  - An homelab bench VM. This goes through homelab's own plan, in the homelab repo, not here.
+  - A homelab VM behind a jump host, set up outside this repo.
   - One cheap VPS, for example a Hetzner CX33: 4 vCPU and 8 GB for €8.49 a month.
   - Small GCP and AWS VMs, stopped when not in use, to check the provider recipes.
 

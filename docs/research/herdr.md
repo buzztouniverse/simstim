@@ -409,9 +409,9 @@ Blocked detection is strict by design. An unknown prompt shows as `idle`, not `b
 - `.github/MAINTAINERS` lists `ogulcancelik`, `JJLiebig` and `kangal-bot`.
 - **Can (Ogulcan) Celik wrote 1,301 of 1,861 commits (70%).**
 - JJ Liebig wrote 144, all since late July. That is 24% of commits since 1 August.
-- Bots wrote the rest. `akbash@herdr.dev` is the maintainer-controlled issue agent.
+- Bots wrote the rest. One account is the maintainer-controlled issue agent.
 - So the bus factor is about 2, and was 1 until July.
-- Contact: "enterprise / partnership: hey@herdr.dev" (`README.md`).
+- Contact: an email address for enterprise and partnership questions (`README.md`).
 
 **Governance.**
 

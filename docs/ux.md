@@ -58,7 +58,7 @@ The welcome plays as a short sequence:
 Every list screen has the same parts, top to bottom:
 
 ```
-  ⢄⡠⠊ simstim  › atlas-dev                     9ms · 4 sessions · 1 needs you   ← header
+  ⢄⡠⠊ simstim  › atlas-dev                      9ms · 4 sessions · 1 needs you   ← header
   ────────────────────────────────────────────────────────────────────────────   ← rule
 
   ▍ 1 ● auth-refact…  claude    ~/src/app         needs input     2m  ⣀⣀⣠⣴⣶⣦⣄⣀   ← the list
@@ -94,7 +94,7 @@ Every list screen has the same parts, top to bottom:
   ⢄⡠⠊ simstim  hosts                                     3 hosts · 1 needs you
   ────────────────────────────────────────────────────────────────────────────
 
-  ▍ 1 ● atlas-dev  4 sessions · 1 needs you                     9ms  ⣀⣀⣀⣀⣀⣀⣀⣼
+  ▍ 1 ● atlas-dev   4 sessions · 1 needs you                     9ms  ⣀⣀⣀⣀⣀⣀⣀⣼
     2 ◌ aws-gpu     offline                                           ⣀⣀⣀⣀⣀⣀⣀⣀
     3 ● gcp-dev     2 sessions                                  41ms  ⣀⣀⣀⣀⣀⣀⣀⣼
 
@@ -111,7 +111,7 @@ Every list screen has the same parts, top to bottom:
 ### 2.4 Sessions
 
 ```
-  ⢄⡠⠊ simstim  › atlas-dev                     9ms · 4 sessions · 1 needs you
+  ⢄⡠⠊ simstim  › atlas-dev                      9ms · 4 sessions · 1 needs you
   ────────────────────────────────────────────────────────────────────────────
 
     1 ● auth-refact…  claude    ~/src/app         needs input     2m  ⣀⣀⣀⣀⣀⣀⣀⣀

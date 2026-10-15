@@ -4,7 +4,7 @@ Instructions for any operator of this repo: a person or an AI agent.
 
 ## What this repo is
 
-A client and a host helper that run AI coding agents in sessions on remote hosts, and show the agent's real terminal UI locally, byte for byte. [The plan](docs/plan.md) has the goals, [the architecture](docs/architecture.md) the design, and [the UX spec](docs/ux.md) the screens. The working goal and its finish state are in [GOAL.md](GOAL.md). The progress against it is in [docs/status.md](docs/status.md).
+A client and a host helper that run AI coding agents in sessions on remote hosts, and show the agent's real terminal UI locally, byte for byte. [The plan](docs/plan.md) has the goals, [the architecture](docs/architecture.md) the design, and [the UX spec](docs/ux.md) the screens.
 
 | Path | Contents |
 | --- | --- |
@@ -26,11 +26,11 @@ A client and a host helper that run AI coding agents in sessions on remote hosts
 2. **Byte-exact while attached.** Only the input filter's two keys (detach, image paste) may be intercepted. Never send RIS (`ESC c`) to the user's terminal.
 3. **Agents are data** in `internal/agents`.
 4. **Nothing listens, nothing phones home.** No new ports, relays or telemetry.
-5. **Clean-room.** Never copy code, prompts or assets from closed-source tools. `docs/research/private/` is git-ignored and must stay out of history.
+5. **Clean-room and public-safe.** Never copy code, prompts or assets from closed-source tools. Keep private material (goals, status notes, logs, captures, host names, addresses, personal paths) in the git-ignored `private/` and `docs/research/private/` folders. Neither may enter the history.
 6. **Decisions** go in `docs/decisions/`. Do not edit an accepted record; supersede it.
 7. **Errors** carry a message and a "Try:" hint.
 8. **Commits:** one milestone or logical change each, pushed to `origin`. Run `just test lint` first. The message is a subject, a blank line and a body, and nothing more. Never add `Signed-off-by:`, `Co-Authored-By:`, `Claude-Session:` or any other trailer or attribution line, and never use `git commit -s` ([0010](docs/decisions/0010-no-commit-trailers.md)).
-9. **Docs:** plain English, short sentences, British spelling. Update `docs/status.md` when a finish-state item changes.
+9. **Docs:** plain English, short sentences, British spelling. A change ships with its docs and its CHANGELOG entry, in the same commit.
 
 ## Test hosts
 
@@ -38,7 +38,7 @@ End-to-end tests (`e2e/run.py`) drive the real client in a pseudo-terminal again
 
 To see a TUI the way a person would, use `e2e/ttyshot`: it runs a program in a pseudo-terminal, sends keys from a script, and prints the rendered screen (`go run ./e2e/ttyshot -script s.tty -- ./bin/<name>`).
 
-Any change made on a test host by hand goes in [docs/sandbox-log.md](docs/sandbox-log.md). Ask the owner before rebooting a host.
+Write each change you make by hand on a test host in a log of your own, outside the repo: a test host's name and address are private. Ask the host's owner before you reboot it.
 
 ## Commands
 

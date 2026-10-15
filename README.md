@@ -6,7 +6,7 @@ simstim runs Claude Code, Codex, opencode, Gemini CLI, Amp or a plain shell in a
 
 ![The launcher: the sessions on one host, each with its state, agent, folder, age and a trace of its output](docs/images/sessions.svg)
 
-> **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet. See [the status](docs/status.md).
+> **Status:** pre-release. Everything in v1 and v2 of [the plan](docs/plan.md) is built and passes 41 end-to-end checks on a Linux test host, including two real reboots. Nothing is released yet.
 
 ## Why
 

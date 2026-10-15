@@ -62,13 +62,17 @@ fuzz time="30s":
     go test ./internal/keys -run '^$' -fuzz FuzzFilter -fuzztime {{time}}
 
 # Static checks.
-lint: check-name
+lint: check-name check-private
     go vet ./...
     golangci-lint run
 
 # Fail if the product name is spelled outside the allowed places.
 check-name:
     scripts/check-name.sh
+
+# Fail if a tracked file holds a personal path, a private address or an email.
+check-private:
+    scripts/check-private.sh
 
 # Format the code.
 fmt:

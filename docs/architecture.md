@@ -284,7 +284,7 @@ simstim knows nothing about providers in v1. If OpenSSH can reach the host, sims
 | Recipe | Notes |
 | --- | --- |
 | Tailscale + plain OpenSSH | The recommended default for a VPS or a homelab. It roams best. |
-| homelab (homelab) | `ProxyJump bastion` over Tailscale. Guests have no Tailscale of their own. |
+| Homelab behind a jump host | `ProxyJump` through a host on Tailscale. The guests need no Tailscale of their own. |
 | Plain SSH (Hetzner, DigitalOcean, Linode, Vultr) | Simple. TCP dies when the laptop's IP changes, so reconnect handles it. |
 | GCP IAP | A `gcloud` ProxyCommand. It drops after 1 hour idle, and the heartbeat keeps traffic flowing. |
 | AWS SSM, EC2 Instance Connect Endpoint | SSM is slow (about 0.6 MB/s). EICE ends every connection at 1 hour, and simstim reconnects. |
