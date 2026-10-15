@@ -32,7 +32,7 @@ One static binary (Go in the proposed design).
 
 | Part | Job |
 | --- | --- |
-| Screens | Setup wizard, host browser, session list with preview, dialogs, palette, help. They run in the alternate screen and are built with Bubble Tea v2. See [UX](ux.md). |
+| Screens | The launcher: the hosts, then one host's sessions, one list at a time, with dialogs, the palette, the preview and the add-host wizard over it. It runs in the alternate screen and is built with Bubble Tea v2. While attached it draws nothing. See [UX](ux.md) and [0009](decisions/0009-light-launcher.md). |
 | CLI | `simstim host …`, `new`, `ls`, `attach`, `kill`, `doctor`, `update`, `completion`. `--json` on every list. |
 | SSH layer | Runs the system `ssh` with a generated config. Owns a private ControlMaster per host. Opens the bridge channel. Uploads files. |
 | Attach pump | Raw mode, an output pump with a passive mode tracker, the input filter, resize forwarding, the reset list on detach. |

@@ -12,5 +12,6 @@ Each record explains one choice: the context, the options and the outcome. Recor
 | [0006](0006-defaults.md) | Detach key, image key and memory cap defaults | Accepted |
 | [0007](0007-name-in-one-place.md) | The product name lives in one package | Accepted |
 | [0008](0008-memory-max-only.md) | Cap sessions with MemoryMax only, not MemoryHigh (replaces part of 0006) | Accepted |
+| [0009](0009-light-launcher.md) | A light launcher, and a session that owns the whole terminal (replaces the first home-screen design) | Accepted |
 
 Write a new record from [the template](template.md).

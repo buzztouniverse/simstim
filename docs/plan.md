@@ -108,7 +108,7 @@ Prove the feel before building.
   - an ordered reset list on detach, which never sends RIS.
 - Reconnect after sleep or a network change: detect it fast, reconnect with backoff, and replay missed output from the last byte offset.
 - Image paste and dropped files: upload over the same connection, then paste the remote path as one bracketed paste.
-- The screens: setup wizard, host browser, session list with a live preview, new-session dialog, command palette, help, toasts.
+- The screens: setup wizard, host browser, session list with a live preview, new-session dialog, command palette, help, toasts. (Rebuilt later as a light launcher, one list at a time: [0009](decisions/0009-light-launcher.md).)
 - CLI: `--json` on every list, `simstim doctor` (including a key tester), and shell completions.
 
 **Packaging:**
