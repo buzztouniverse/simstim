@@ -261,7 +261,8 @@ func lsCmd() *cobra.Command {
 					results[i].Host = h.Name
 					ctx, cancel := context.WithTimeout(cmd.Context(), 30*time.Second)
 					defer cancel()
-					conn, err := client.Dial(ctx, h, false)
+					// Listing does not boot stopped VMs or resume paused sandboxes.
+					conn, err := client.Dial(client.WithoutWake(ctx), h, false)
 					if err != nil {
 						results[i].Error = err.Error()
 						return

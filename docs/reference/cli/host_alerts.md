@@ -33,7 +33,7 @@ simstim host alerts <host> [flags]
 
 ## SEE ALSO
 
-* [simstim host](host.md)     - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, create, list, test and remove hosts
 * [simstim host alerts log](host_alerts_log.md)     - Show the host's last alert deliveries, and why any were not sent
 * [simstim host alerts off](host_alerts_off.md)     - Turn alerts off on a host: remove its alerts file
 * [simstim host alerts set](host_alerts_set.md)     - Choose where a host sends alerts, and which ones

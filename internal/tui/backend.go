@@ -65,7 +65,9 @@ func (realBackend) Memory() memory                    { return loadMemory() }
 func (realBackend) Remember(mem memory)               { _ = saveMemory(mem) }
 
 func (realBackend) Dial(ctx context.Context, h client.Host) (Conn, error) {
-	c, err := client.Dial(ctx, h, false)
+	// Opening the launcher must not boot every stopped VM or resume every
+	// paused sandbox; it says they are stopped instead.
+	c, err := client.Dial(client.WithoutWake(ctx), h, false)
 	if err != nil {
 		return nil, err
 	}

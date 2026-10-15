@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os/exec"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -23,13 +22,15 @@ import (
 // ErrClosed is returned after the connection to the host is gone.
 var ErrClosed = errors.New("the connection to the host closed")
 
-// Conn is one bridge connection to a host: an `ssh -T` running the helper's
-// bridge, carrying framed requests, an attach stream and uploads.
+// Conn is one bridge connection to a host: the helper's bridge, run over the
+// host's transport (usually `ssh -T`), carrying framed requests, an attach
+// stream and uploads.
 type Conn struct {
 	Host     Host
 	Features []string
 
-	cmd    *exec.Cmd
+	proc   Proc
+	hint   string
 	w      *proto.Writer
 	stdin  io.WriteCloser
 	nextID atomic.Uint64
@@ -41,7 +42,6 @@ type Conn struct {
 
 	lastRecv atomic.Int64
 	done     chan struct{}
-	stderr   strings.Builder
 }
 
 // ErrNotInstalled means the host has no helper of this client's version.
@@ -50,15 +50,22 @@ var ErrNotInstalled = errors.New("the helper is not installed")
 // Dial starts the bridge on the host and does the hello. For a saved host (one
 // the user added, and so agreed to the helper on), a missing helper of this
 // version is installed first: an upgrade never needs the user.
+//
+// A host that a provider made is asked for its state first, and started or
+// resumed when it is stopped, unless ctx comes from WithoutWake.
 func Dial(ctx context.Context, h Host, interactive bool) (*Conn, error) {
-	c, err := dial(ctx, h, interactive)
+	r, err := routeTo(ctx, h, interactive)
+	if err != nil {
+		return nil, err
+	}
+	c, err := dial(ctx, h, r)
 	var ue *UserError
 	if err != nil && h.Provider != nil && h.Provider.WakeOnAttach && errors.As(err, &ue) && strings.HasPrefix(ue.Msg, "cannot reach") {
 		// A stopped cloud host: start it through its provider script, then try again.
 		if werr := wake(ctx, h); werr != nil {
 			return nil, werr
 		}
-		c, err = dial(ctx, h, interactive)
+		c, err = dial(ctx, h, r)
 	}
 	if !errors.Is(err, ErrNotInstalled) {
 		return c, err
@@ -66,40 +73,34 @@ func Dial(ctx context.Context, h Host, interactive bool) (*Conn, error) {
 	if _, ferr := FindHost(h.Name); ferr != nil {
 		return nil, &UserError{Msg: fmt.Sprintf("the %s helper is not installed on %s", brand.Name, h.Name), Hint: brand.Name + " host add " + h.Name}
 	}
-	s := &SSH{Host: h, Interactive: interactive}
-	p, perr := Probe(ctx, s)
+	p, perr := Probe(ctx, r.t)
 	if perr != nil {
 		return nil, perr
 	}
 	if !p.Installed {
-		if ierr := Install(ctx, s, p); ierr != nil {
+		if ierr := Install(ctx, r.t, p); ierr != nil {
 			return nil, ierr
 		}
 	}
-	return dial(ctx, h, interactive)
+	return dial(ctx, h, r)
 }
 
-func dial(ctx context.Context, h Host, interactive bool) (*Conn, error) {
-	s := &SSH{Host: h, Interactive: interactive}
-	cmd, err := s.Command(context.Background(), RemoteHelper(HelperVersion())+" bridge", "-T")
+func dial(ctx context.Context, h Host, rt route) (*Conn, error) {
+	remote := RemoteHelper(HelperVersion()) + " bridge"
+	ka, _ := rt.t.(KeepAliver)
+	if ka != nil {
+		// This transport does not end the bridge when the client goes, so the
+		// bridge ends itself when the pings stop.
+		remote += fmt.Sprintf(" --idle-exit %d", int(BridgeIdleExit.Seconds()))
+	}
+	proc, err := rt.t.Start(context.Background(), remote)
 	if err != nil {
 		return nil, err
 	}
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, err
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	c := &Conn{Host: h, cmd: cmd, stdin: stdin, w: proto.NewWriter(stdin),
+	stdin := proc.Stdin()
+	c := &Conn{Host: h, proc: proc, hint: rt.t.ReachHint(), stdin: stdin, w: proto.NewWriter(stdin),
 		pending: map[uint64]chan proto.Response{}, stream: make(chan proto.Frame, 4096), done: make(chan struct{})}
-	cmd.Stderr = &lockedWriter{b: &c.stderr}
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-	r := bufio.NewReaderSize(stdout, 256<<10)
+	r := bufio.NewReaderSize(proc.Stdout(), 256<<10)
 	if err := c.w.WriteJSON(proto.THello, proto.Hello{Magic: proto.Magic, Protocol: version.Protocol, Version: version.Version, Role: "client"}); err != nil {
 		c.kill()
 		return nil, c.startError(err)
@@ -137,29 +138,21 @@ func dial(ctx context.Context, h Host, interactive bool) (*Conn, error) {
 	c.lastRecv.Store(time.Now().UnixNano())
 	go c.readLoop(r)
 	go func() {
-		_ = cmd.Wait()
+		_ = proc.Wait()
 		c.fail(ErrClosed)
 	}()
+	if ka != nil {
+		go c.keepAlive(ka.KeepAlive())
+	}
+	if l, ok := rt.lc.(Leaser); ok {
+		go keepLease(c, l, leasePeriod)
+	}
 	return c, nil
 }
 
-type lockedWriter struct {
-	mu sync.Mutex
-	b  *strings.Builder
-}
-
-func (l *lockedWriter) Write(p []byte) (int, error) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	if l.b.Len() < 8192 {
-		l.b.Write(p)
-	}
-	return len(p), nil
-}
-
 func (c *Conn) startError(err error) error {
-	waitErr := c.cmd.Wait()
-	msg := strings.TrimSpace(c.stderr.String())
+	waitErr := c.proc.Wait()
+	msg := strings.TrimSpace(c.proc.Stderr())
 	if strings.Contains(msg, "No such file") || strings.Contains(msg, "not found") {
 		return ErrNotInstalled
 	}
@@ -169,9 +162,8 @@ func (c *Conn) startError(err error) error {
 	if lines := strings.Split(msg, "\n"); len(lines) > 3 {
 		msg = strings.Join(lines[len(lines)-3:], "\n")
 	}
-	var ee *exec.ExitError
-	if errors.As(waitErr, &ee) && ee.ExitCode() == 255 {
-		return &UserError{Msg: fmt.Sprintf("cannot reach %s: %s", c.Host.Name, msg), Hint: fmt.Sprintf("ssh %s   (check that this works first)", c.Host.SSH)}
+	if errors.Is(waitErr, ErrUnreachable) {
+		return &UserError{Msg: fmt.Sprintf("cannot reach %s: %s", c.Host.Name, msg), Hint: c.hint}
 	}
 	return &UserError{Msg: fmt.Sprintf("the helper on %s did not start: %s", c.Host.Name, msg), Hint: brand.Name + " host doctor " + c.Host.Name}
 }
@@ -221,11 +213,7 @@ func (c *Conn) fail(err error) {
 	}
 }
 
-func (c *Conn) kill() {
-	if c.cmd.Process != nil {
-		_ = c.cmd.Process.Kill()
-	}
-}
+func (c *Conn) kill() { c.proc.Kill() }
 
 // Close ends the connection.
 func (c *Conn) Close() {

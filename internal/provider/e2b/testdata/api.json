@@ -1,0 +1,156 @@
+{
+  "about": "{{brand}} stands for the product name, from internal/brand. Request and response shapes of the E2B REST API, written from its OpenAPI spec (no live call was made). Each entry links the path and schema it follows. The tests serve these answers from a fake server and check the requests against them.",
+  "spec": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml",
+  "auth": {"header": "X-API-Key", "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml (securitySchemes.ApiKeyAuth)"},
+  "create": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L2916 (POST /v2/sandboxes; schemas NewSandboxV2 and Sandbox)",
+    "method": "POST",
+    "path": "/v2/sandboxes",
+    "request": {
+      "templateID": "{{brand}}",
+      "timeout": 900,
+      "autoPause": true,
+      "autoResume": {"enabled": false},
+      "network": {"allowPublicTraffic": false},
+      "metadata": {"{{brand}}-host": "cloud"}
+    },
+    "status": 201,
+    "response": {
+      "templateID": "rki5dems9wqfm4r03t7g",
+      "sandboxID": "i1a2b3c4d5e6f7g8h9j0k",
+      "alias": "{{brand}}",
+      "clientID": "6532622b",
+      "envdVersion": "0.6.4",
+      "envdAccessToken": "fake-envd-token",
+      "trafficAccessToken": "fake-traffic-token",
+      "domain": "e2b.app"
+    }
+  },
+  "get_running": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L3180 (GET /sandboxes/{sandboxID}; schema SandboxDetail)",
+    "method": "GET",
+    "path": "/sandboxes/i1a2b3c4d5e6f7g8h9j0k",
+    "status": 200,
+    "response": {
+      "templateID": "rki5dems9wqfm4r03t7g",
+      "alias": "{{brand}}",
+      "sandboxID": "i1a2b3c4d5e6f7g8h9j0k",
+      "clientID": "6532622b",
+      "startedAt": "2026-10-15T10:00:00Z",
+      "endAt": "2026-10-15T10:15:00Z",
+      "envdVersion": "0.6.4",
+      "envdAccessToken": "fake-envd-token",
+      "domain": "e2b.app",
+      "cpuCount": 2,
+      "memoryMB": 4096,
+      "diskSizeMB": 10240,
+      "metadata": {"{{brand}}-host": "cloud"},
+      "state": "running",
+      "network": {"allowPublicTraffic": false},
+      "lifecycle": {"autoResume": false, "onTimeout": "pause"}
+    }
+  },
+  "get_paused": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L3180 (GET /sandboxes/{sandboxID}; SandboxState is running or paused)",
+    "method": "GET",
+    "path": "/sandboxes/i1a2b3c4d5e6f7g8h9j0k",
+    "status": 200,
+    "response": {
+      "templateID": "rki5dems9wqfm4r03t7g",
+      "sandboxID": "i1a2b3c4d5e6f7g8h9j0k",
+      "clientID": "6532622b",
+      "startedAt": "2026-10-15T10:00:00Z",
+      "endAt": "2026-10-15T10:15:00Z",
+      "envdVersion": "0.6.4",
+      "cpuCount": 2,
+      "memoryMB": 4096,
+      "diskSizeMB": 10240,
+      "state": "paused",
+      "lifecycle": {"autoResume": false, "onTimeout": "pause"}
+    }
+  },
+  "not_found": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L180 (responses.404; schema Error)",
+    "status": 404,
+    "response": {"code": 404, "message": "sandbox \"i1a2b3c4d5e6f7g8h9j0k\" doesn't exist or you don't have access to it"}
+  },
+  "connect": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L3475 (POST /v2/sandboxes/{sandboxID}/connect: 200 was running, 201 resumed; schemas ConnectSandboxV2 and Sandbox)",
+    "method": "POST",
+    "path": "/v2/sandboxes/i1a2b3c4d5e6f7g8h9j0k/connect",
+    "request": {"timeout": 900},
+    "status": 201,
+    "response": {
+      "templateID": "rki5dems9wqfm4r03t7g",
+      "sandboxID": "i1a2b3c4d5e6f7g8h9j0k",
+      "clientID": "6532622b",
+      "envdVersion": "0.6.4",
+      "envdAccessToken": "fake-envd-token-2",
+      "domain": "e2b.app"
+    }
+  },
+  "timeout": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L3529 (POST /sandboxes/{sandboxID}/timeout; schema SandboxTimeoutRequest)",
+    "method": "POST",
+    "path": "/sandboxes/i1a2b3c4d5e6f7g8h9j0k/timeout",
+    "request": {"timeout": 3600},
+    "status": 204
+  },
+  "pause": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L3288 (POST /sandboxes/{sandboxID}/pause: 204, or 409 when paused already; schema SandboxPauseRequest)",
+    "method": "POST",
+    "path": "/sandboxes/i1a2b3c4d5e6f7g8h9j0k/pause",
+    "request": {"memory": true},
+    "status": 204
+  },
+  "kill": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L3180 (DELETE /sandboxes/{sandboxID})",
+    "method": "DELETE",
+    "path": "/sandboxes/i1a2b3c4d5e6f7g8h9j0k",
+    "status": 204
+  },
+  "templates": {
+    "source": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/openapi.yml#L3839 (GET /templates; schema Template)",
+    "method": "GET",
+    "path": "/templates",
+    "status": 200,
+    "response": [
+      {
+        "templateID": "rki5dems9wqfm4r03t7g",
+        "buildID": "b4c1d2e3-0000-4000-8000-000000000001",
+        "cpuCount": 2,
+        "memoryMB": 4096,
+        "diskSizeMB": 10240,
+        "public": false,
+        "aliases": ["{{brand}}"],
+        "names": ["my-team/{{brand}}"],
+        "createdAt": "2026-10-01T09:00:00Z",
+        "updatedAt": "2026-10-01T09:00:00Z",
+        "createdBy": null,
+        "lastSpawnedAt": null,
+        "spawnCount": 0,
+        "buildCount": 1,
+        "envdVersion": "0.6.4",
+        "buildStatus": "ready"
+      },
+      {
+        "templateID": "smalltmpl0000000000",
+        "buildID": "b4c1d2e3-0000-4000-8000-000000000002",
+        "cpuCount": 1,
+        "memoryMB": 512,
+        "diskSizeMB": 10240,
+        "public": false,
+        "aliases": ["tiny"],
+        "names": ["my-team/tiny"],
+        "createdAt": "2026-10-01T09:00:00Z",
+        "updatedAt": "2026-10-01T09:00:00Z",
+        "createdBy": null,
+        "lastSpawnedAt": null,
+        "spawnCount": 0,
+        "buildCount": 1,
+        "envdVersion": "0.6.4",
+        "buildStatus": "ready"
+      }
+    ]
+  }
+}

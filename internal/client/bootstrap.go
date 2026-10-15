@@ -33,7 +33,7 @@ type Platform struct {
 }
 
 // Probe finds the host's platform and whether the helper is installed.
-func Probe(ctx context.Context, s *SSH) (Platform, error) {
+func Probe(ctx context.Context, s Transport) (Platform, error) {
 	if err := EnsureHelpers(ctx); err != nil {
 		return Platform{}, err
 	}
@@ -72,7 +72,7 @@ func Probe(ctx context.Context, s *SSH) (Platform, error) {
 // Install uploads the helper for p, and the shadow terminal when this build
 // has one, checks each SHA-256 on the host, and moves them into place. It never
 // runs during a background reconnect.
-func Install(ctx context.Context, s *SSH, p Platform) error {
+func Install(ctx context.Context, s Transport, p Platform) error {
 	bin, ok := helpers.For(p.OS, p.Arch)
 	if !ok {
 		return &UserError{
@@ -102,7 +102,7 @@ func Install(ctx context.Context, s *SSH, p Platform) error {
 
 // upload sends one file into the versioned helper folder. The helper itself
 // goes last, because its presence is what marks the version as installed.
-func upload(ctx context.Context, s *SSH, ver, name string, data []byte, last bool) error {
+func upload(ctx context.Context, s Transport, ver, name string, data []byte, last bool) error {
 	sum := sha256.Sum256(data)
 	hexsum := hex.EncodeToString(sum[:])
 	dir := fmt.Sprintf(`"$HOME/.local/share/%s/bin/%s"`, brand.Name, ver)

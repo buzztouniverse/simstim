@@ -32,6 +32,9 @@ type Host struct {
 	Labels map[string]string `toml:"labels,omitempty"`
 	// Provider names a script that starts and stops the host. Optional.
 	Provider *Provider `toml:"provider,omitempty"`
+	// Machine records the VM, container or sandbox that `host create` made
+	// for this host. Hosts you added yourself have none.
+	Machine *Machine `toml:"machine,omitempty"`
 }
 
 // Settings are the user's preferences, from config.toml. The comments on its

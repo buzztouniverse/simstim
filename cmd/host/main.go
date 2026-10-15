@@ -23,6 +23,7 @@ Usage:
   %[1]s doctor [--json]     check this host
   %[1]s keytest             print every key the terminal sends
   %[1]s restore [--all]     start again sessions a restart (or, with --all, a crash) stopped
+  %[1]s idle setup <30m|never>   power this VM off when idle (a user timer runs "idle check")
   %[1]s version
 `
 
@@ -35,7 +36,12 @@ func main() {
 	var err error
 	switch os.Args[1] {
 	case "bridge":
-		err = host.RunBridge(os.Stdin, os.Stdout)
+		err = host.RunBridge(host.BridgeInput(os.Stdin, os.Args[2:]), os.Stdout)
+	case "idle":
+		var msg string
+		if msg, err = host.RunIdle(os.Args[2:]); err == nil {
+			fmt.Println(msg)
+		}
 	case "holder":
 		if len(os.Args) != 3 {
 			err = fmt.Errorf("usage: %s holder <id>", name)

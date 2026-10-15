@@ -88,6 +88,9 @@ func forwardCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if h.SSH == "" {
+				return &client.UserError{Msg: fmt.Sprintf("forward needs SSH, and %s is reached through %s", h.Name, h.Target()), Hint: "Forward from inside the host instead, for example with the provider's own port tools."}
+			}
 			s := &client.SSH{Host: h, Interactive: true}
 			c, err := s.Forward(cmd.Context(), pairs)
 			if err != nil {

@@ -30,7 +30,7 @@ simstim [flags]
 * [simstim doctor](doctor.md)     - Check this machine and its terminal
 * [simstim flip](flip.md)     - Switch sessions quickly: the session list of every host, then attach
 * [simstim forward](forward.md)     - Forward a session's ports to localhost (all of them if none are given)
-* [simstim host](host.md)     - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, create, list, test and remove hosts
 * [simstim kill](kill.md)     - Stop a session and remove it
 * [simstim ls](ls.md)     - List sessions on every host
 * [simstim new](new.md)     - Start a session on a host, and attach to it

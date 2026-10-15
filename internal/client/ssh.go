@@ -134,7 +134,7 @@ func (s *SSH) Run(ctx context.Context, remote string, stdin io.Reader) ([]byte, 
 // ExitMaster stops the ControlMaster for this host. Call it before reconnecting
 // after a network change, because a master on a dead TCP connection hangs new sessions.
 func (s *SSH) ExitMaster() {
-	if !controlMaster {
+	if !controlMaster || s.Host.SSH == "" {
 		return
 	}
 	args, err := s.baseArgs()

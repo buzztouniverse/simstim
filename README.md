@@ -70,7 +70,8 @@ While attached, the agent owns your terminal. **Ctrl+\\** detaches (press it twi
 | Command | Does |
 | --- | --- |
 | `host add/ls/rm/test/doctor/restore` | Manage hosts; `restore` starts again sessions a reboot stopped |
-| `host start/stop/status` | Start or stop a cloud VM through your provider script ([examples](examples/providers)) |
+| `host create lima/docker/e2b`, `host destroy` | Make a host in one step (a local Lima VM, a test container, an E2B sandbox), and delete it ([how to](docs/how-to/create-a-host.md)) |
+| `host start/stop/status/idle` | Start or stop a created host, or a cloud VM through your provider script ([examples](examples/providers)); set its idle stop |
 | `new <host> [--agent a] [--dir d] [--worktree] [--detach] [-- cmd…]` | Start a session |
 | `ls [--json]`, `attach`, `send`, `rename`, `kill` | Work with sessions |
 | `ports`, `forward` | See and forward the ports a session listens on |

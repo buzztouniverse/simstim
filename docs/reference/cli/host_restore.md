@@ -19,4 +19,4 @@ simstim host restore <name> [flags]
 
 ## SEE ALSO
 
-* [simstim host](host.md)     - Add, list, test and remove hosts
+* [simstim host](host.md)     - Add, create, list, test and remove hosts

@@ -7,6 +7,7 @@ New here? Start with [getting started](tutorials/getting-started.md).
 | [Tutorials](tutorials/README.md) | Learn by doing: getting started in five minutes |
 | [How-to guides](how-to/README.md) | One task per page: hosts, worktrees, ports, images, keys, troubleshooting |
 | [Reference](reference/_index.md) | Every command, the configuration, the keys and the agent table, generated from the code |
+| [Create a host](how-to/create-a-host.md) | Make a host in one step: a local Lima VM, a Docker container for testing, or an E2B sandbox |
 | [Roadmap](roadmap.md) | Every candidate feature, scored by demand, impact and effort: now, next and later |
 | [Design](explanation/design.md) | Why it exists, goals, non-goals, principles, risks |
 | [Architecture](explanation/architecture.md) | Components, flows, protocol, files and paths, providers |

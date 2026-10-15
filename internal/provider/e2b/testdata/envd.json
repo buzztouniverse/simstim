@@ -1,0 +1,57 @@
+{
+  "about": "Shapes of envd's process service over the Connect protocol with the JSON codec, written from process.proto and the Connect spec (no live call was made). Streams are envelopes: a flags byte, a 4-byte big-endian length, then one message; the last envelope has flag 0x02 and the end-of-stream JSON. Bytes fields are base64.",
+  "proto": "https://github.com/e2b-dev/E2B/blob/62a17df/spec/envd/process/process.proto",
+  "protocol": "https://connectrpc.com/docs/protocol/",
+  "headers": {
+    "X-Access-Token": "the sandbox's envdAccessToken (https://github.com/e2b-dev/infra/blob/ef1b99a/packages/envd/internal/api/auth.go)",
+    "Authorization": "Basic with the Linux user name and no password (https://github.com/e2b-dev/infra/blob/ef1b99a/packages/envd/internal/permissions/authenticate.go)",
+    "Keepalive-Ping-Interval": "seconds between keepalive events (https://github.com/e2b-dev/infra/blob/ef1b99a/packages/envd/internal/permissions/keepalive.go)",
+    "Connect-Timeout-Ms": "never sent: envd makes it the lifetime of the process (https://github.com/e2b-dev/infra/blob/ef1b99a/packages/envd/internal/services/process/start.go)"
+  },
+  "start": {
+    "path": "/process.Process/Start",
+    "content_type": "application/connect+json",
+    "request": {"process": {"cmd": "/bin/sh", "args": ["-c", "cat"]}, "tag": "{{brand}}-0a1b2c3d4e5f", "stdin": true},
+    "events": [
+      {"event": {"start": {"pid": 4242}}},
+      {"event": {"keepalive": {}}},
+      {"event": {"data": {"stdout": "AAEC/w=="}}},
+      {"event": {"data": {"stderr": "d2FybmluZwo="}}},
+      {"event": {"end": {"exitCode": 3, "exited": true, "status": "exit status 3"}}}
+    ],
+    "end_stream": {},
+    "end_stream_error": {"error": {"code": "unauthenticated", "message": "unauthorized access, please provide a valid access token or method signing if supported"}}
+  },
+  "send_input": {
+    "path": "/process.Process/SendInput",
+    "content_type": "application/json",
+    "request": {"process": {"pid": 4242}, "input": {"stdin": "aGVsbG8K"}},
+    "response": {}
+  },
+  "stream_input": {
+    "path": "/process.Process/StreamInput",
+    "content_type": "application/connect+json",
+    "requests": [
+      {"start": {"process": {"pid": 4242}}},
+      {"data": {"input": {"stdin": "aGVsbG8K"}}}
+    ],
+    "response": {}
+  },
+  "close_stdin": {
+    "path": "/process.Process/CloseStdin",
+    "content_type": "application/json",
+    "request": {"process": {"pid": 4242}},
+    "response": {}
+  },
+  "send_signal": {
+    "path": "/process.Process/SendSignal",
+    "content_type": "application/json",
+    "request": {"process": {"pid": 4242}, "signal": "SIGNAL_SIGKILL"},
+    "response": {}
+  },
+  "error": {
+    "content_type": "application/json",
+    "status": 404,
+    "response": {"code": "not_found", "message": "process with pid 4242 not found"}
+  }
+}

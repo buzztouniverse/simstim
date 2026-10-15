@@ -19,11 +19,11 @@ type field struct {
 }
 
 // configPage documents config.toml and hosts.toml from the comments on the
-// Settings, Host and Provider structs in internal/client.
+// Settings, Host, Provider and Machine structs in internal/client.
 func configPage(repo string) ([]byte, error) {
 	fset := token.NewFileSet()
 	types := map[string]*ast.StructType{}
-	for _, f := range []string{"config.go", "provider.go"} {
+	for _, f := range []string{"config.go", "provider.go", "machine.go"} {
 		file, err := parser.ParseFile(fset, filepath.Join(repo, "internal", "client", f), nil, parser.ParseComments)
 		if err != nil {
 			return nil, fmt.Errorf("parse %s: %w", f, err)
@@ -37,7 +37,7 @@ func configPage(repo string) ([]byte, error) {
 			return true
 		})
 	}
-	for _, want := range []string{"Settings", "Host", "Provider"} {
+	for _, want := range []string{"Settings", "Host", "Provider", "Machine"} {
 		if types[want] == nil {
 			return nil, fmt.Errorf("no struct %s in internal/client", want)
 		}

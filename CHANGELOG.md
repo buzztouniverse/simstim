@@ -6,6 +6,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `host create <provider> [name]` makes a host and sets it up in one step: a local Lima VM (`lima`), a Docker container for testing (`docker`, experimental) or an E2B sandbox (`e2b`). It creates the machine, installs the helper (printing what and where), and connects. `host destroy <name>` asks first, refuses while a session is working unless `--force`, deletes the machine, and forgets the host. `hosts.toml` records the provider and the machine in a `[host.machine]` table. See [Create a host](docs/how-to/create-a-host.md).
+- A transport seam: the bridge, the helper's install and the hello run over SSH, `docker exec -i`, or E2B's envd process API, with no SSH and no new port for the last two. Bridges started over envd end themselves when the client's pings stop for 30 s.
+- Idle stop for created VMs: a systemd user timer powers the VM off after 30 minutes with no client connected and no session working (`host idle <name> <time|never>`; it needs passwordless sudo, and `host doctor` says when it is missing). E2B sandboxes are kept on a lease instead: while a client is connected it is renewed every minute, for 60 minutes while a session works and 15 when none does.
+- Wake on attach for created hosts: the client asks the provider first, and starts or resumes a stopped host before it dials. `ls` and the launcher show a stopped host as stopped rather than starting it.
+- E2B's API key comes from `E2B_API_KEY`, the E2B CLI's own login (read only), or a `token_command`; it is never written, logged or sent to a host.
 - The docs site has its own address, [simstim.astrel.sh](https://simstim.astrel.sh), and release builds take the address GitHub Pages reports, so each version's docs link to the right place.
 - `pull <host>/<session>` (roadmap N7): fetches the branch a session's folder has checked out into a branch of the repository you are in, through the client's own SSH connection, without touching either working tree.
 - Keep your terminal's scrollback (roadmap N2): the agent table records each agent's inline mode (Claude Code's classic renderer, Codex's `--no-alt-screen`), `new --inline` or `agents.inline` in `config.toml` starts agents that way, and a session started inline comes back inline after a reboot. Each session reports whether it draws full screen (`full_screen` in `ls --json`), and `host doctor` names those sessions and how to start them inline.
@@ -59,6 +64,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Changed
 
+- `host start`, `host stop` and `host status` drive a created host through its provider, as well as hosts with a provider script. `forward` says plainly that it needs SSH on hosts reached through `docker exec` or E2B.
 - `go install github.com/iAmLakshya/simstim@latest` installs the client under its own name: its main moved to the root of the module, and the command tree to `internal/cli`.
 - CI is hardened: every action is pinned to a full commit SHA, each job asks for the least token permissions, the checkout keeps no credentials, and zizmor lints the workflows. govulncheck runs on every push, and the toolchain is Go 1.26.9, which fixes two standard-library issues it found.
 - Releases are signed and traceable: cosign signs `checksums.txt` without a key (a Sigstore bundle), each archive gets an SBOM, a GitHub attestation and a SLSA level 3 provenance file, and the notes come from this CHANGELOG (`scripts/release-notes.sh`). A Homebrew cask is built with every release, ready for a tap.

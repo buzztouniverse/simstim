@@ -18,11 +18,12 @@ import (
 )
 
 func hostCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "host", Short: "Add, list, test and remove hosts"}
+	cmd := &cobra.Command{Use: "host", Short: "Add, create, list, test and remove hosts"}
 	cmd.AddCommand(hostAddCmd(), hostLsCmd(), hostRmCmd(), hostTestCmd(), hostDoctorCmd(), hostRestoreCmd(), hostAlertsCmd(),
-		hostProviderCmd("start", "Start the host through its provider script"),
-		hostProviderCmd("stop", "Stop the host through its provider script (its sessions stop too)"),
-		hostProviderCmd("status", "Ask the provider script whether the host is running"))
+		hostCreateCmd(), hostDestroyCmd(), hostIdleCmd(),
+		hostProviderCmd("start", "Start the host through its provider or provider script"),
+		hostProviderCmd("stop", "Stop the host through its provider or provider script (a VM's sessions stop too; a sandbox's are paused)"),
+		hostProviderCmd("status", "Ask the provider or provider script whether the host is running"))
 	return cmd
 }
 
@@ -65,11 +66,15 @@ func hostAddCmd() *cobra.Command {
 }
 
 func addHost(ctx context.Context, h client.Host, yes bool) error {
-	s := &client.SSH{Host: h, Interactive: true}
 	step := func(format string, a ...any) { fmt.Printf("  "+format+"\n", a...) }
-	fmt.Printf("Connecting to %s (%s)…\n", h.Name, h.SSH)
+	fmt.Printf("Connecting to %s (%s)…\n", h.Name, h.Target())
 	start := time.Now()
 	pctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	s, err := client.HostTransport(pctx, h, true)
+	if err != nil {
+		cancel()
+		return err
+	}
 	p, err := client.Probe(pctx, s)
 	cancel()
 	if err != nil {
@@ -181,7 +186,7 @@ func hostLsCmd() *cobra.Command {
 				if h.SSHConfig != "" {
 					extra = "  (+ " + h.SSHConfig + ")"
 				}
-				fmt.Printf("%-16s %s%s\n", h.Name, h.SSH, extra)
+				fmt.Printf("%-16s %s%s\n", h.Name, h.Target(), extra)
 			}
 			return nil
 		},
@@ -354,6 +359,9 @@ func hostProviderCmd(action, short string) *cobra.Command {
 			}
 			ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Minute)
 			defer cancel()
+			if h.Machine != nil {
+				return machineAction(ctx, h, action)
+			}
 			out, err := client.RunProvider(ctx, h, action)
 			if err != nil {
 				return err

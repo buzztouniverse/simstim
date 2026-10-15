@@ -4,7 +4,8 @@ What the tool does to keep your hosts and your laptop safe, and what it leaves t
 
 **Rules:**
 
-- **Nothing new listens on a host.** sshd is the only door. There is no relay and no telemetry.
+- **Nothing new listens on a host.** sshd is the only door, or, for a host made with `host create docker` or `e2b`, the provider's own authenticated exec API (Docker's socket, E2B's envd). There is no relay and no telemetry.
+- **Provider credentials are read, never kept.** An E2B API key comes from your environment, the E2B CLI's own login, or a command you name. It is kept in memory, and never written, logged or sent to a host. Lima and Docker need none.
 - **simstim stores no secrets.** Agent logins live on the host, scoped to that host. Fine-grained GitHub tokens should be per host.
 - **SSH agent forwarding is off by default.** If a user turns it on, the stable `SSH_AUTH_SOCK` link makes it work across reconnects. The risk is written in the docs.
 - **Helpers are released signed,** and checked by SHA-256 before install.

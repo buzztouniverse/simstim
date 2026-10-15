@@ -254,7 +254,34 @@ The security model has its own page: [security model](security.md).
 
 ## 8. Providers
 
-simstim knows nothing about providers in v1. If OpenSSH can reach the host, simstim can. [The connectivity note](../research/connectivity-and-providers.md#4-provider-recipes) has a ready `ssh_config` block for each recipe.
+A host is anything simstim can run one command on and talk to over its stdin and stdout. Most hosts are SSH hosts you add yourself. `host create` can also make a host with a provider ([0013](../contributing/decisions/0013-host-providers.md); [how to](../how-to/create-a-host.md)).
+
+### 8.1 The transport seam
+
+The helper's protocol needs only a two-way, binary-safe byte stream to one process. The client gets one from a `Transport` (`internal/client/transport.go`): start a remote command, then a stdin writer, a stdout reader and a wait. Bootstrap (`uname -sm`, then `cat > f; sha256sum -c; chmod; mv`) and the hello run over any transport, unchanged.
+
+| Transport | Used by | How |
+| --- | --- | --- |
+| SSH | Hosts you add, and Lima VMs | The system `ssh -T`, with the generated config (Lima's `ssh.config` is included) |
+| Docker | `host create docker` | `docker exec -i <container> sh -c …`. The daemon kills the command when the client goes. |
+| E2B | `host create e2b` | envd's process API over Connect: `Start` streams stdout; ordered `SendInput` calls, or one `StreamInput`, carry stdin. No `Connect-Timeout-Ms` header, so envd sets no deadline. |
+
+Each command started over envd has a tag of its own. A dropped request does not end it there, so the client pings the bridge every 10 s and the bridge exits when the pings stop for 30 s (`bridge --idle-exit 30`). Closing a connection closes stdin and then kills the old bridge. `forward` needs an SSH master, so it stays SSH-only.
+
+### 8.2 Lifecycle
+
+Each provider is a package under `internal/provider` (`lima`, `docker`, `e2b`). It creates a machine, and for a host it made, gives a lifecycle: status, start or resume, stop or pause, destroy, and a transport. `hosts.toml` records the provider and the machine's ID in the host's `[host.machine]` table.
+
+- **Create:** make the machine, save the host, then the normal add: probe, install the helper (showing what and where), set up linger and terminfo, and connect.
+- **Wake on attach:** before it dials, the client asks the provider for the machine's state. If it is stopped or paused, the client starts or resumes it (`limactl start`, `docker start`, `POST /v2/sandboxes/{id}/connect`), waits until a command runs, reads the address again, then dials. The launcher does not wake hosts by itself; attaching does. Provider scripts keep working as before.
+- **Idle stop, VMs:** a systemd user timer runs `<helper> idle check` every few minutes. With no client connected (no bridge running) and no session working for the idle time (30 minutes by default), it runs `sudo -n systemctl poweroff`. No credential is kept on the host. A new boot starts the count again.
+- **Idle stop, sandboxes:** a lease. While any client is connected, it renews the sandbox's timeout every minute: 60 minutes while a session works, 15 when none does. When nobody renews it, the sandbox pauses with its memory.
+- **Destroy:** asks first, refuses while a session works unless `--force`, deletes the machine, then forgets the host and its generated SSH config.
+- **Credentials:** read when needed (an environment variable, the provider CLI's own login, or a command you name), kept in memory, and never written, logged or sent to a host.
+
+### 8.3 SSH recipes
+
+For a host you add yourself, if OpenSSH can reach it, simstim can. [The connectivity note](../research/connectivity-and-providers.md#4-provider-recipes) has a ready `ssh_config` block for each recipe.
 
 | Recipe | Notes |
 | --- | --- |
