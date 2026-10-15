@@ -34,7 +34,6 @@ var strands = []strand{
 // brailleBit is the dot of a braille cell at column x (0–1) and row y (0–3).
 var brailleBit = [4][2]uint{{0, 3}, {1, 4}, {2, 5}, {6, 7}}
 
-// markLines draws the mark at the current moment.
 // markDots draws the mark's strands at time t on a grid of braille dots,
 // opened from the middle to the share grow of its width.
 func markDots(t, grow float64) [][]bool {
@@ -81,6 +80,7 @@ func brailleCell(dots [][]bool, cx, cy int) (pattern, n int) {
 	return pattern, n
 }
 
+// markLines draws the mark at the current moment.
 func (m *Model) markLines() []string {
 	t := 0.0
 	if m.motion {
