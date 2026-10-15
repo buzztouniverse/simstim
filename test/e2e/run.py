@@ -33,22 +33,21 @@ def host_machine():
     """The [host.machine] table of a host made by `host create`, or {}."""
     return host_entry().get("machine") or {}
 
-def host_ssh(cmd, data=None):
-    """Run a shell command on the host, the way the client reaches it."""
+def host_argv(cmd):
+    """The command that runs cmd on the host, the way the client reaches it."""
     h = host_entry()
     machine = h.get("machine") or {}
     if machine.get("provider") == "docker":  # made by `host create docker`: no SSH
-        argv = ["docker", "exec", "-i", "-u", machine.get("user", "root"), machine["id"], "sh", "-c", cmd]
-    else:
-        argv = ["ssh", "-F", WRAPPER, "-o", "BatchMode=yes", h["ssh"], cmd]
-    return subprocess.run(argv, input=data, capture_output=True, check=True)
+        return ["docker", "exec", "-i", "-u", machine.get("user", "root"), machine["id"], "sh", "-c", cmd]
+    return ["ssh", "-F", WRAPPER, "-o", "BatchMode=yes", h["ssh"], cmd]
+
+def host_ssh(cmd, data=None):
+    """Runs cmd on the host, and fails the suite if it fails."""
+    return subprocess.run(host_argv(cmd), input=data, capture_output=True, check=True)
 
 def host_rc(cmd, data=None):
     """Runs cmd on the host and returns its exit code; data goes to its stdin."""
-    import tomllib
-    hosts = tomllib.load(open(os.path.join(os.path.dirname(os.path.dirname(WRAPPER)), "hosts.toml"), "rb"))["host"]
-    target = [h for h in hosts if h["name"] == HOST][0]["ssh"]
-    return subprocess.run(["ssh", "-F", WRAPPER, "-o", "BatchMode=yes", target, cmd], input=data, capture_output=True).returncode
+    return subprocess.run(host_argv(cmd), input=data, capture_output=True).returncode
 
 def start(name, *argv):
     t = Term([cli, "new", HOST, "--name", name, "--detach", "--"] + list(argv), env=env)
@@ -76,7 +75,11 @@ ok(code == 0 and m, "new --detach: " + out.strip().splitlines()[-1])
 sid = m.group(1); created.append(sid)
 # 2. Attach, type, see the output.
 t = Term([cli, "attach", HOST + "/" + sid], env=env)
-ok(t.wait_for(rb":~\$", 30), "attach shows the shell prompt")
+# The prompt ends in "$" whatever the PS1 (user@host:~$ on most hosts): with
+# a space after it when it arrives live, and with the cursor move after it
+# when it arrives in the screen snapshot, which drops trailing spaces.
+if not ok(t.wait_for(rb"\$( |\x1b)", 30), "attach shows the shell prompt"):
+    print("  the screen ended with: %r" % t.buf[-300:])
 t.send(b"echo MARK-$((40+2))\r")
 ok(t.wait_for(rb"MARK-42", 10), "typed command runs on the host and its output comes back")
 # 3. Detach with Ctrl+\ (legacy byte), wait for the double-tap window.
@@ -361,22 +364,35 @@ ok("e2e-fullscreen" in doc and "full screen" in doc, "full screen: host doctor n
 # N. pull (roadmap N7): a session's branch comes to a local repository over
 #    the client's SSH, and the local working tree is untouched.
 import tempfile
-host_ssh("rm -rf ~/e2e-pull && git init -q -b main ~/e2e-pull && cd ~/e2e-pull && "
-         "git -c user.name=e2e -c user.email=e2e@example.com commit -q --allow-empty -m base && git switch -q -c e2e-topic && "
-         "git -c user.name=e2e -c user.email=e2e@example.com commit -q --allow-empty -m 'from the session'")
-t = Term([cli, "new", HOST, "--name", "e2e-pull", "--dir", "~/e2e-pull", "--detach"], env=env)
-t.exit_code(30)
-ls = subprocess.run([cli, "ls", "--json"], capture_output=True, text=True).stdout
-sid_pull = [s["id"] for h in json.loads(ls) for s in (h["sessions"] or []) if s["name"] == "e2e-pull"][0]
-created.append(sid_pull)
-local = tempfile.mkdtemp()
-subprocess.run(["git", "init", "-q", "-b", "mine", local], check=True)
-r = subprocess.run([cli, "pull", HOST + "/" + sid_pull], cwd=local, capture_output=True, text=True, env=dict(os.environ, **env))
-log = subprocess.run(["git", "log", "--format=%s", "e2e-topic"], cwd=local, capture_output=True, text=True).stdout
-ok(r.returncode == 0 and "from the session" in log, "pull: the session's branch reaches the local repository (%s)" % (r.stderr or r.stdout).strip()[:80])
-r2 = subprocess.run([cli, "pull", HOST + "/" + sid_pull, "--into", "mine"], cwd=local, capture_output=True, text=True, env=dict(os.environ, **env))
-ok(r2.returncode != 0 and "checked out here" in r2.stderr, "pull: refuses to fetch into the branch checked out here")
-host_ssh("rm -rf ~/e2e-pull")
+try:
+    host_ssh("command -v git >/dev/null")
+    host_git = True
+except subprocess.CalledProcessError:
+    host_git = False
+if host_machine().get("provider") == "docker":
+    local = tempfile.mkdtemp()
+    subprocess.run(["git", "init", "-q", local], check=True)
+    r = subprocess.run([cli, "pull", HOST + "/" + sid], capture_output=True, text=True, cwd=local)
+    ok(r.returncode != 0 and "needs SSH" in r.stderr, "pull: says it needs SSH on a host without it")
+elif not host_git:
+    print("SKIP pull: the host has no git")
+else:
+    host_ssh("rm -rf ~/e2e-pull && git init -q -b main ~/e2e-pull && cd ~/e2e-pull && "
+             "git -c user.name=e2e -c user.email=e2e@example.com commit -q --allow-empty -m base && git switch -q -c e2e-topic && "
+             "git -c user.name=e2e -c user.email=e2e@example.com commit -q --allow-empty -m 'from the session'")
+    t = Term([cli, "new", HOST, "--name", "e2e-pull", "--dir", "~/e2e-pull", "--detach"], env=env)
+    t.exit_code(30)
+    ls = subprocess.run([cli, "ls", "--json"], capture_output=True, text=True).stdout
+    sid_pull = [s["id"] for h in json.loads(ls) for s in (h["sessions"] or []) if s["name"] == "e2e-pull"][0]
+    created.append(sid_pull)
+    local = tempfile.mkdtemp()
+    subprocess.run(["git", "init", "-q", "-b", "mine", local], check=True)
+    r = subprocess.run([cli, "pull", HOST + "/" + sid_pull], cwd=local, capture_output=True, text=True, env=dict(os.environ, **env))
+    log = subprocess.run(["git", "log", "--format=%s", "e2e-topic"], cwd=local, capture_output=True, text=True).stdout
+    ok(r.returncode == 0 and "from the session" in log, "pull: the session's branch reaches the local repository (%s)" % (r.stderr or r.stdout).strip()[:80])
+    r2 = subprocess.run([cli, "pull", HOST + "/" + sid_pull, "--into", "mine"], cwd=local, capture_output=True, text=True, env=dict(os.environ, **env))
+    ok(r2.returncode != 0 and "checked out here" in r2.stderr, "pull: refuses to fetch into the branch checked out here")
+    host_ssh("rm -rf ~/e2e-pull")
 
 # Clean up.
 for s in created:

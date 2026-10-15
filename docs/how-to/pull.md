@@ -13,6 +13,7 @@ simstim pull my-server/auth-fix
 - `--into review/auth-fix` fetches into another branch name.
 - `pull` stops if the local branch has commits that the session's branch does not. `--force` replaces it.
 - It will not fetch into the branch you have checked out.
+- It needs SSH, so it does not work with hosts made by `host create docker` or `e2b`.
 - Uncommitted changes in the session stay on the host; `pull` says how many there are. Ask the agent to commit them, or commit them yourself in the session.
 
 Sessions started with `--worktree` work best: each has a branch of its own ([worktrees](worktrees.md)).

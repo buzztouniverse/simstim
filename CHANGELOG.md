@@ -22,7 +22,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - CI makes a host in a container with `host create docker`, runs the end-to-end suite against it over `docker exec`, and destroys it. The suite skips the memory cap check there, since a container has no systemd.
 - E2B's API key comes from `E2B_API_KEY`, the E2B CLI's own login (read only), or a `token_command`; it is never written, logged or sent to a host.
 - The docs site has its own address, [simstim.astrel.sh](https://simstim.astrel.sh), and release builds take the address GitHub Pages reports, so each version's docs link to the right place.
-- `pull <host>/<session>` (roadmap N7): fetches the branch a session's folder has checked out into a branch of the repository you are in, through the client's own SSH connection, without touching either working tree.
+- `pull <host>/<session>` (roadmap N7), for hosts reached over SSH: fetches the branch a session's folder has checked out into a branch of the repository you are in, through the client's own SSH connection, without touching either working tree.
 - Keep your terminal's scrollback (roadmap N2): the agent table records each agent's inline mode (Claude Code's classic renderer, Codex's `--no-alt-screen`), `new --inline` or `agents.inline` in `config.toml` starts agents that way, and a session started inline comes back inline after a reboot. Each session reports whether it draws full screen (`full_screen` in `ls --json`), and `host doctor` names those sessions and how to start them inline.
 - `w` in the launcher goes to the next session that needs you, on any host, and says what it waits for; pressing it again goes to the one after (roadmap N3).
 - `go install github.com/iAmLakshya/simstim@latest` gives a working client: with no helpers inside it, it fetches its release's helper bundle (a new release asset, `helpers_<version>.tar.gz`), checks the release's SSH signature and the bundle's SHA-256, and caches it. Its version comes from Go's build information.
@@ -116,6 +116,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
+- `scripts/check-scripts.sh` never ran on macOS, whose grep has no `-P`; it uses perl now, and no longer flags its own comment on Linux.
 - `new` could read a session's record before the host's holder wrote the agent's start, return a row that had not started, and save it over the holder's record. It now waits up to 5 s for the start.
 - A host with no sessions, or one that is offline, no longer offers attach, peek and rename in the launcher's footer: it shows the keys that work there.
 - Old helper versions piled up on hosts, about 5 MB for each version installed; a test host had 33 of them. After each install the new helper now removes the versions that nothing uses: it keeps the newest three, the current one, any that a session's holder or shadow terminal runs from, any that a unit file names, and any installed in the last hour. `host doctor --fix` uses the same rule.

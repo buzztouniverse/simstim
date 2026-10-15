@@ -86,9 +86,11 @@ def secret_checks(c, envx, token, created):
     c.ok(named == 0, "secrets: the search of the host's state folder finds the secret's name (grep %d)" % named)
     rc = c.host_rc("grep -rqF -f - ~/.local/state/%s/" % c.NAME, pat)
     c.ok(rc == 1, "secrets: no file in the host's state folder holds the value (manifests, holder logs) (grep %d)" % rc)
-    seen = c.host_rc("exec 3<&0; ps -eo args= | grep -qF -f /dev/fd/3", b"sleep 600\n")
+    # Command lines come from /proc, which every Linux host has; ps may be missing.
+    cmdlines = "for f in /proc/[0-9]*/cmdline; do tr '\\0' ' ' < $f; echo; done 2>/dev/null"
+    seen = c.host_rc("exec 3<&0; " + cmdlines + " | grep -qF -f /dev/fd/3", b"sleep 600\n")
     c.ok(seen == 0, "secrets: the search of command lines finds the session's own (grep %d)" % seen)
-    rc = c.host_rc("exec 3<&0; ps -eo args= | grep -qF -f /dev/fd/3", pat)
+    rc = c.host_rc("exec 3<&0; " + cmdlines + " | grep -qF -f /dev/fd/3", pat)
     c.ok(rc == 1, "secrets: no command line on the host holds the value (grep %d)" % rc)
     unit = m["runtime"].get("unit") or ""
     if unit:
@@ -103,6 +105,9 @@ def secret_checks(c, envx, token, created):
 
 
 def setup_checks(c, envx, tmp, created):
+    if c.host_rc("command -v git >/dev/null") != 0:
+        print("SKIP setup scripts: the host has no git")
+        return
     env_name = c.NAME.upper() + "_"
     script = ('#!/bin/sh\\necho "SETUP-RAN name=$%sSESSION_NAME new=$%sWORKTREE_NEW"\\n'
               'exit $(cat "$HOME/.e2e-setup-exit" 2>/dev/null || echo 0)\\n') % (env_name, env_name)
@@ -156,8 +161,13 @@ def setup_checks(c, envx, tmp, created):
 
 
 def fix_checks(c):
-    sock = c.host_ssh("d=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/%s/s; mkdir -p $d; p=$d/e2estale.sock; "
-                      "python3 -c 'import socket,sys; socket.socket(socket.AF_UNIX).bind(sys.argv[1])' $p; echo $p" % c.NAME).stdout.decode().strip()
+    if c.host_rc("command -v python3 >/dev/null") != 0:
+        print("SKIP fix: the host has no python3 to make a stale socket with")
+        return
+    # The helper's runtime folder: under XDG_RUNTIME_DIR, or in /tmp without one.
+    sock = c.host_ssh("if [ -d \"${XDG_RUNTIME_DIR:-}\" ]; then d=$XDG_RUNTIME_DIR/%s; else d=/tmp/%s-$(id -u); fi; "
+                      "d=$d/s; mkdir -p $d; p=$d/e2estale.sock; "
+                      "python3 -c 'import socket,sys; socket.socket(socket.AF_UNIX).bind(sys.argv[1])' $p; echo $p" % (c.NAME, c.NAME)).stdout.decode().strip()
     c.ok(c.host_rc("test -S " + sock) == 0, "fix: made a stale socket at " + sock)
     t = c.Term([c.cli, "host", "doctor", c.HOST, "--fix"], env=c.env)
     answered, seen = [], 0

@@ -39,6 +39,9 @@ func pullCmd() *cobra.Command {
 }
 
 func pull(ctx context.Context, h client.Host, s *client.Session, into string, force bool) error {
+	if h.SSH == "" {
+		return &client.UserError{Msg: fmt.Sprintf("pull needs SSH, and %s is reached through %s", h.Name, h.Target()), Hint: "Push the branch from the session to a remote you share, then fetch it here."}
+	}
 	repo, err := client.SessionRepo(ctx, h, s.Cwd)
 	if err != nil {
 		return err
