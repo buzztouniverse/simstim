@@ -71,7 +71,7 @@ The comparison, the six extra features, the support tiers and the docs index mov
 ### Supply chain
 
 - Node 24.21.0 and pnpm 12.6.0, pinned with their SHA-256 in `scripts/tools.lock` and installed by `scripts/setup.sh`.
-- Three direct dependencies, at exact versions: `astro` 7.3.8, `@astrojs/starlight` 0.42.6, and `@astrojs/markdown-satteri` 0.4.3, Astro's Markdown, named only to turn smart punctuation off. The lockfile pins 270 packages with their hashes. pnpm waits a week before it uses a new release and runs no install script but esbuild's. Dependabot watches them with the same seven-day cooldown as the rest.
+- Three direct dependencies, at exact versions: `astro` 7.3.8, `@astrojs/starlight` 0.42.6, and `@astrojs/markdown-satteri` 0.4.3, Astro's Markdown, named only to turn smart punctuation off. The lockfile pins 270 packages with their hashes. pnpm waits a week before it uses a new release and runs no package's install script. Dependabot watches them with the same seven-day cooldown as the rest.
 - Astro's telemetry is turned off in every build (`ASTRO_TELEMETRY_DISABLED=1`).
 - The fonts stay committed files, made by `scripts/site-vendor.sh` from pinned downloads.
 

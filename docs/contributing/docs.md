@@ -64,7 +64,7 @@ The name is never spelled in `site/`: pages take it from the site's title and fr
 
 ### Third-party files
 
-The site loads only its own files: no CDN, no web fonts from elsewhere, no analytics, and Astro's telemetry is off in every build. The npm packages are pinned in `site/pnpm-lock.yaml`; pnpm waits a week before it uses a new release, and runs no package's install script except esbuild's. The fonts are committed files: `scripts/site-vendor.sh` fetches them at pinned versions, checks each one's SHA-256, and cuts them down. Run it only to change a version, then commit the result.
+The site loads only its own files: no CDN, no web fonts from elsewhere, no analytics, and Astro's telemetry is off in every build. The npm packages are pinned in `site/pnpm-lock.yaml`; pnpm waits a week before it uses a new release, and runs no package's install script. The fonts are committed files: `scripts/site-vendor.sh` fetches them at pinned versions, checks each one's SHA-256, and cuts them down. Run it only to change a version, then commit the result.
 
 | File | What | Licence |
 | --- | --- | --- |

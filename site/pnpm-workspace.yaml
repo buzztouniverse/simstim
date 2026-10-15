@@ -5,8 +5,6 @@ packages:
 # Wait a week before using a new release, as Dependabot does, so a bad
 # release is usually pulled before it reaches us. In minutes.
 minimumReleaseAge: 10080
-# No dependency may run an install script, except these, which fetch or
-# build their platform's binary.
-allowBuilds:
-  esbuild: true
+# No dependency may run an install script: the install fails if one
+# wants to. Platform binaries come as packages of their own.
 strictDepBuilds: true
