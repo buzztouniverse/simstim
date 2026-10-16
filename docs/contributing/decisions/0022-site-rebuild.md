@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-10-16
 ---
 
 # 0022 The site: Starlight for the docs, three tabs, and a landing page that tells its story in a drawing
 
-**Status:** proposed, for the owner's review. The site is built this way on the `website` branch. Once accepted, this record replaces parts of three earlier records:
+**Status:** Accepted. The owner reviewed the site on 15 October 2026, chose the Blueprint direction and no pause for the hero on 16 October, and accepted the built site the same day. This record replaces parts of three earlier records:
 
 - from [0015](0015-docs-toolchain.md), the site's toolchain, Hugo with the Hextra theme. The rest of 0015 stays: Diátaxis folders in `docs/`, the generated reference, the version layout, and the checks.
 - from [0021](0021-site-design.md), the landing page's sections, the three.js field, "keep Hextra", the site's look (the launcher's colours, from the UX spec) and its motion setting with a pause button. The rest of 0021 stays: one domain with one header and one search, links that stay on the site, a still frame for every animation, and no request to anyone else.
