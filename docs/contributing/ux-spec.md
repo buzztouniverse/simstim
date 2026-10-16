@@ -186,6 +186,7 @@ Enter attaches the selected result, and Esc closes the search.
   - Enter starts the session and attaches, and `ctrl+enter` starts it detached.
   - `ctrl+f` opens the full form (2.7) with the line filled in.
   - While the session starts, the line shimmers "Starting claude on atlas-dev…". An error appears above the rule.
+  - Esc while it starts stops the wait, here and in the form. The session can still start. A toast then says so, and the launcher neither attaches to it nor asks about it.
 
 ### 2.7 Sheets
 
@@ -488,7 +489,7 @@ The launcher is the home, and every action also has a command, for scripts and t
 | `simstim host ls`, `test`, `doctor`, `rm` | Host management |
 | `simstim host restore <name> [--all]` | Starts again the sessions that a host restart stopped (or, with `--all`, a crash) |
 | `simstim host start\|stop\|status <name>` | Runs the host's provider script |
-| `simstim new <host> [--agent claude] [--dir ~/src/app] [--name x] [--worktree [--base ref]] [--detach] [-- cmd…]` | Starts a session, and attaches unless `--detach` |
+| `simstim new <host> [--agent claude] [--dir ~/src/app [--mkdir]] [--name x] [--worktree [--base ref]] [--detach] [-- cmd…]` | Starts a session, and attaches unless `--detach` |
 | `simstim ls [--host h] [--json]` | Lists sessions, with their state and where the state came from |
 | `simstim attach <host>/<session>`, `attach -` | Attaches directly; `-` is the last session. Good for a Ghostty keybinding. |
 | `simstim flip [<host>/<session>]` | A quick switch: the sessions of every host in one list, then attach |

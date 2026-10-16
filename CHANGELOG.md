@@ -6,11 +6,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 
+- `new` and the launcher offer to make a session's folder when it does not exist on the host, instead of failing. The host asks only after it finds the agent. It makes the folder, and any missing folders above it, only after a yes, and removes them again if the start then fails. `new --mkdir` makes it without asking. Without a terminal, a missing folder is still an error. The host makes only a full path, such as `~/src/app`, and a new worktree still needs an existing repository. With an older host helper, `new --mkdir` says that the helper is too old. The helper's own `new` command takes `--mkdir` too, and its errors now show their hints.
 - The Setup workflow (`scripts/setup.sh` on bare runners and in the devcontainer's image) can be started by hand, and runs when the workflow itself changes.
 - The README shows the OpenSSF Scorecard badge: 8.1 of 10 after the first release.
 
 ### Fixed
 
+- Esc on a start that is still running now stops the launcher's wait for it. The launcher no longer asks about the start later, or attaches to its session. If the session starts anyway, a toast says so.
+- A question about a start no longer leaves the form or the quick-start line stuck in "Starting…" when the host goes away. After an answer, the launcher sends the secrets that it fetched for the first try, and does not fetch them again.
+- `new` asked about a setup script when stdin was a terminal, even with its output in a pipe. It then waited for an answer to a question that nobody saw. It now asks only when stdin and stdout are both terminals.
 - The benchmark check on pull requests failed now and then on a noisy runner, also for changes that did not touch the attach pump. A slow benchmark now runs again, alone, for 12 more rounds, and the check fails only if it is still slow.
 - A release's notes on GitHub came out empty: the provenance job's upload replaced the draft's body. A last job now writes the notes from the CHANGELOG, with links made absolute (`LINK_BASE` in `scripts/release-notes.sh`) so they work on the release's page.
 
