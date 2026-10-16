@@ -1,23 +1,17 @@
 ---
-// Starlight's head, plus the site's own: the motion setting, set before
-// anything draws; the fonts, preloaded; and the bar colour on phones. Every
-// file is the site's own: no request goes to anyone else.
+// Starlight's head, plus the site's own: a mark that script runs (the
+// hero's story waits for it before it plays), the fonts, preloaded, and the
+// bar colour on phones. Every file is the site's own: no request goes to
+// anyone else.
 import Default from '@astrojs/starlight/components/Head.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
 <Default />
 <script is:inline>
-	/* Motion: "auto" follows prefers-reduced-motion; "on" and "off" are the reader's choice. */
-	(function () {
-		var m = 'auto';
-		try { m = localStorage.getItem('motion') || 'auto'; } catch (e) {}
-		var on = m === 'on' || (m === 'auto' && !matchMedia('(prefers-reduced-motion: reduce)').matches);
-		document.documentElement.dataset.motion = on ? 'on' : 'off';
-		document.documentElement.dataset.js = '';
-	})();
+	document.documentElement.dataset.js = '';
 </script>
 <link rel="preload" href={`${base}fonts/sans.woff2`} as="font" type="font/woff2" crossorigin />
 <link rel="preload" href={`${base}fonts/display.woff2`} as="font" type="font/woff2" crossorigin />
-<meta name="theme-color" content="#0B0E14" media="(prefers-color-scheme: dark)" />
-<meta name="theme-color" content="#F6F5F1" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#111215" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#FBFBFA" media="(prefers-color-scheme: light)" />

@@ -39,8 +39,8 @@ const items = [
 		position: relative;
 		display: block;
 		padding: 0.35rem 0.7rem;
-		border-radius: 8px;
-		color: var(--sl-color-gray-2);
+		border-radius: 6px;
+		color: var(--sl-color-gray-3);
 		font-size: 0.9375rem;
 		font-weight: 500;
 		text-decoration: none;
@@ -48,19 +48,18 @@ const items = [
 	}
 	a:hover {
 		color: var(--sl-color-white);
-		background: color-mix(in srgb, var(--sl-color-gray-5) 40%, transparent);
+		background: var(--site-tint);
 	}
 	a[aria-current='page'] {
 		color: var(--sl-color-white);
-		background: var(--site-tint);
 	}
+	/* The current tab: the site's orange, as a rule under it. */
 	a[aria-current='page']::after {
 		content: '';
 		position: absolute;
 		inset-inline: 0.7rem;
-		bottom: -0.15rem;
+		bottom: -0.2rem;
 		height: 2px;
-		border-radius: 2px;
-		background: var(--sl-color-text-accent);
+		background: var(--site-orange);
 	}
 </style>

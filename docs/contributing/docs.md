@@ -56,7 +56,8 @@ The site has three tabs, each with its own sidebar: **Docs** (Overview, Get star
 | `site/src/route-data.js` | Shows the current tab's sidebar only, keeps previous and next inside it, and works out the breadcrumbs |
 | `site/src/components/overrides/` | Starlight's parts we replace: the top bar, the sidebar, the title with its breadcrumbs, the footer, the source links |
 | `site/src/pages/index.astro` | The landing page |
-| `site/src/scripts/` | The live launcher, the figures' stories, the welcome mark, the motion setting |
+| `site/src/components/landing/` | The landing page's drawings: the hero's story (`HeroStory.astro`), the hosts, and the plates' corner marks |
+| `site/src/scripts/` | The live launcher and the copy buttons |
 | `site/src/styles/` | The look (`theme.css`), the fonts, and the landing page |
 | `site/package.json`, `site/pnpm-lock.yaml` | The npm packages, at exact versions, with their hashes |
 
@@ -75,7 +76,9 @@ The site loads only its own files: no CDN, no web fonts from elsewhere, no analy
 
 ### Motion
 
-Every animation follows one setting: "auto" follows the reader's reduced-motion setting, and the footer's switch and the button under the launcher change it for this browser. With motion off, nothing moves and every figure shows its whole story at once. Each animation stops when it is off screen or the tab is hidden. A figure that tells a story has its steps beside it as buttons, so it also works by hand. Keep it that way for anything new: draw the still frame first, in the HTML, and add motion on top.
+One thing moves by itself: the hero's story, about 14 s, played once, then held on its last frame. It plays only while it is on screen and the tab is visible. The live launcher moves only while a reader points at it or gives it focus. There is no motion switch on the site: motion follows the reader's reduced-motion setting, and with it set, the story stands still on one frame that tells it (the lid shut, the agents still working). [Decision 0022](decisions/0022-site-rebuild.md) records why there is no pause, and what that costs.
+
+The story is inline SVG. Every moving part reads its times from one table in `HeroStory.astro`, and the build writes the CSS keyframes from it; only `transform` and `opacity` move, so the browser runs it off the main thread. To change the story, change the table. Keep the rest that way for anything new: draw the still frame first, in the HTML, and add motion on top.
 
 ### Versions
 

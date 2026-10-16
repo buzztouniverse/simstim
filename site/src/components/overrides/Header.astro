@@ -31,7 +31,9 @@ const hasSidebar = Astro.locals.starlightRoute.hasSidebar;
 		!hasSidebar && (
 			<details class="phone-menu">
 				<summary aria-label="Menu">
-					<span aria-hidden="true">menu</span>
+					<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+						<path d="M2 4.5h12M2 8h12M2 11.5h12"></path>
+					</svg>
 				</summary>
 				<div class="sheet">
 					<nav aria-label="Main">
@@ -110,21 +112,22 @@ const hasSidebar = Astro.locals.starlightRoute.hasSidebar;
 	.phone-menu summary {
 		display: grid;
 		place-items: center;
+		width: 2rem;
 		height: 2rem;
-		padding: 0 0.7rem;
+		padding: 0;
 		border: 1px solid var(--sl-color-hairline-light);
-		border-radius: 8px;
+		border-radius: 6px;
+		background: var(--site-raised);
 		list-style: none;
 		cursor: pointer;
 		font: 500 0.8125rem var(--sl-font-mono);
-		color: var(--sl-color-gray-2);
+		color: var(--sl-color-white);
 	}
 	.phone-menu summary::-webkit-details-marker {
 		display: none;
 	}
 	.phone-menu[open] summary {
-		border-color: var(--sl-color-text-accent);
-		color: var(--sl-color-white);
+		border-color: var(--sl-color-white);
 	}
 	.sheet {
 		position: absolute;
@@ -133,10 +136,10 @@ const hasSidebar = Astro.locals.starlightRoute.hasSidebar;
 		z-index: 30;
 		width: min(18rem, calc(100vw - 2rem));
 		padding: 0.75rem;
-		border: 1px solid var(--sl-color-gray-5);
-		border-radius: 12px;
+		border: 1px solid var(--sl-color-hairline-light);
+		border-radius: 8px;
 		background: var(--sl-color-black);
-		box-shadow: var(--sl-shadow-lg);
+		box-shadow: 0 12px 32px -12px rgba(22, 24, 29, 0.25);
 	}
 	.sheet :global(.tabs) {
 		flex-direction: column;

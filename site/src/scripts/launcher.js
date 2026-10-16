@@ -7,6 +7,11 @@
 //
 // Keys work while it has focus: up and down (or j and k), enter, 1 to 9, esc,
 // / to search, ? for the keys, y to copy an attach command. Tab leaves it.
+//
+// It moves only while the reader is using it (it has focus, or the pointer
+// is over it), and for the second its boot and each change of view take.
+// The rest of the time it is a still screen, so the hero's story is the one
+// thing on the page that moves by itself.
 
 import { braille, motionOn, onMotionChange, everyFrame } from "./signal.js";
 
@@ -164,6 +169,7 @@ export class Launcher {
     this.revealAt = -1;
     this.activityAt = -1;
     this.jack = null;
+    this.engaged = false;
     this.events = new Map();
     this.seedTraces();
     this.build();
@@ -171,7 +177,15 @@ export class Launcher {
     const r = screen.getBoundingClientRect();
     if (r.top < innerHeight && r.bottom > 0) this.bootAt = this.now();
     this.render(this.now());
-    this.loop = everyFrame(20, () => this.render(this.now()), () => motionOn() || this.busy(), () => this.render(this.now()), screen);
+    this.loop = everyFrame(20, () => this.render(this.now()), () => (motionOn() && this.engaged) || this.busy(), () => this.render(this.now()), screen);
+    const engage = (on) => {
+      this.engaged = on || screen.matches(":focus-within, :hover");
+      this.loop.update();
+    };
+    screen.addEventListener("focusin", () => engage(true));
+    screen.addEventListener("focusout", () => engage(false));
+    screen.addEventListener("pointerenter", () => engage(true));
+    screen.addEventListener("pointerleave", () => engage(false));
     onMotionChange(() => this.render(this.now()));
     new ResizeObserver(() => {
       if (this.measure()) this.render(this.now());
@@ -188,8 +202,13 @@ export class Launcher {
     return performance.now() / 1000;
   }
 
+  // Busy: an attach is playing, or the boot or a change of view is still
+  // easing in. These run to their end even when the reader looks away.
   busy() {
-    return !!this.jack;
+    if (this.jack) return true;
+    if (!motionOn()) return false;
+    const t = this.now();
+    return [this.bootAt, this.slideAt, this.revealAt, this.activityAt].some((at) => at >= 0 && t - at < 1.2);
   }
 
   // Output times for each session: steady bursts for the working ones, and,

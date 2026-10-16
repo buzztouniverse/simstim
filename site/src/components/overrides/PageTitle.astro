@@ -1,6 +1,7 @@
 ---
 // Where the page sits (the tab and its groups, from src/route-data.js),
-// then its title. The landing page draws its own heading.
+// then its title. A trail of one, the tab alone, is left out: the lit tab
+// in the top bar says it already. The landing page draws its own heading.
 const route = Astro.locals.starlightRoute;
 const crumbs = Astro.locals.crumbs ?? [];
 ---
@@ -8,7 +9,7 @@ const crumbs = Astro.locals.crumbs ?? [];
 {
 	!route.entry.data.landing && (
 		<>
-			{crumbs.length > 0 && (
+			{crumbs.length > 1 && (
 				<nav class="crumbs" aria-label="Breadcrumbs">
 					<ol>
 						{crumbs.map((c) => (

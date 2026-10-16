@@ -1,0 +1,411 @@
+---
+// The hero's story, told with no words (decision 0022): your laptop is
+// linked over SSH to your host, where three agents work. The lid shuts; the
+// night passes; the agents keep working and finish. The lid opens, the
+// laptop replays what it missed, and both screens match again.
+//
+// It is inline SVG, animated by CSS keyframes on transform and opacity only,
+// so the browser runs it off the main thread. Every moving part reads its
+// times from one table below, and the build writes the keyframes from it.
+// The story is 14 s long and plays once, while it is in view and the tab is
+// visible, then rests on its last frame. With reduced motion, it stops on
+// the frame at STILL: the lid shut, the agents still working. There is no
+// pause or replay control: the owner chose that, and decision 0022 records
+// what it costs (WCAG 2.2.2).
+//
+// Two drawings share the classes and the keyframes: a wide one, and a tall
+// one for phones, with the laptop above the host.
+
+import Marks from './Marks.astro';
+
+const T = 14; // the story's length, in seconds
+const STILL = 6.9; // the frame shown with reduced motion
+const CELLS = 16; // cells in each bar
+
+// ---------- The phase table ----------
+// Times in seconds. A crossfade fades out what it names and fades in the
+// next over FADE seconds, centred on its time.
+const FADE = 0.25;
+const P = {
+	connect: [0, 2], // packets run along the link; bars grow on both screens
+	fold: [2, 2.8], // the lid shuts
+	open: [8.2, 9], // the lid opens
+	replay: [9.1, 10.3], // a burst back from the host; the laptop catches up
+	sync: 11.2, // both screens marked as one
+};
+// The clock, through the night.
+const CLOCK = [
+	['18:05', 0],
+	['18:30', 2.2],
+	['21:40', 3.8],
+	['00:15', 5.3],
+	['02:10', 6.6],
+	['07:45', 8.2],
+];
+// Each agent's bar on the host, in cells over time, and on the laptop. The
+// laptop's bars stop when the lid shuts, then jump to the host's in the replay.
+const AGENTS = [
+	{ name: 'claude', host: [[0, 4], [2, 6], [7.6, 16]], lap: [[0, 4], [2, 6], [9.4, 6], [10.3, 16]] },
+	{ name: 'codex', host: [[0, 2], [2, 4], [8, 12], [10.2, 15], [11, 16]], lap: [[0, 2], [2, 4], [9.4, 4], [10.3, 15], [11, 16]] },
+	{ name: 'opencode', host: [[0, 7], [2, 9], [5.8, 16]], lap: [[0, 7], [2, 9], [9.4, 9], [10.3, 16]] },
+];
+// Packets: when each crosses the link, and which way.
+const PACKETS = [
+	{ id: 'f1', at: 0.25, dur: 0.8, back: false },
+	{ id: 'f2', at: 1.15, dur: 0.8, back: false },
+	{ id: 'r1', at: 9.1, dur: 0.5, back: true },
+	{ id: 'r2', at: 9.3, dur: 0.5, back: true },
+	{ id: 'r3', at: 9.5, dur: 0.5, back: true },
+	{ id: 'r4', at: 9.7, dur: 0.5, back: true },
+	{ id: 's1', at: 11.9, dur: 0.8, back: false },
+	{ id: 's2', at: 12.9, dur: 0.8, back: false },
+];
+
+// ---------- Keyframes from the table ----------
+
+const pct = (t) => `${((Math.min(Math.max(t, 0), T) / T) * 100).toFixed(3)}%`;
+const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+// points: [time, css, timing function for the segment after it]
+function frames(name, points) {
+	const out = [];
+	const pts = [...points].sort((a, b) => a[0] - b[0]);
+	if (pts[0][0] > 0) out.push(`0%{${pts[0][1]}}`);
+	for (const [t, css, fn] of pts) out.push(`${pct(t)}{${css}${fn ? `;animation-timing-function:${fn}` : ''}}`);
+	if (pts[pts.length - 1][0] < T) out.push(`100%{${pts[pts.length - 1][1]}}`);
+	return `@keyframes ${name}{${out.join('')}}`;
+}
+const op = (v) => `opacity:${v}`;
+// Shown from a to b (crossfades at both ends; b may be past the end).
+const shown = (a, b, start = 0) => {
+	const p = [];
+	if (a <= 0) p.push([0, op(1)]);
+	else p.push([0, op(start)], [a - FADE / 2, op(0)], [a + FADE / 2, op(1)]);
+	if (b < T) p.push([b - FADE / 2, op(1)], [b + FADE / 2, op(0)]);
+	return p;
+};
+// A bar: cells over time, filling cell by cell.
+const bar = (pts) =>
+	pts.map(([t, c], i) => {
+		const next = pts[i + 1];
+		const d = next ? Math.abs(next[1] - c) : 0;
+		return [t, `transform:scaleX(${(c / CELLS).toFixed(4)})`, d ? `steps(${d})` : 'linear'];
+	});
+const doneAt = (pts) => (pts[pts.length - 1][1] >= CELLS ? pts[pts.length - 1][0] : Infinity);
+
+const css = [];
+const tracks = {}; // class name -> keyframes name (shared by both drawings)
+const add = (cls, points) => {
+	css.push(frames(`hs-${cls}`, points));
+	tracks[cls] = `hs-${cls}`;
+};
+
+add('lidfold', [
+	[0, 'transform:scaleY(1)'],
+	[P.fold[0], 'transform:scaleY(1)', EASE],
+	[P.fold[1], 'transform:scaleY(0.05)'],
+	[P.open[0], 'transform:scaleY(0.05)', OUT],
+	[P.open[1], 'transform:scaleY(1)'],
+]);
+add('lidfade', [
+	[0, op(1)],
+	[P.fold[1] - 0.2, op(1)],
+	[P.fold[1], op(0)],
+	[P.open[0], op(0)],
+	[P.open[0] + 0.2, op(1)],
+]);
+add('lidshut', [
+	[0, op(0)],
+	[P.fold[1] - 0.2, op(0)],
+	[P.fold[1], op(1)],
+	[P.open[0], op(1)],
+	[P.open[0] + 0.2, op(0)],
+]);
+// The link's two states swap in turn, so their labels never overlap.
+add('linkon', [
+	[0, op(1)],
+	[P.fold[0] + 0.2, op(1)],
+	[P.fold[0] + 0.4, op(0)],
+	[P.open[1] - 0.05, op(0)],
+	[P.open[1] + 0.15, op(1)],
+]);
+add('linkoff', [
+	[0, op(0)],
+	[P.fold[0] + 0.4, op(0)],
+	[P.fold[0] + 0.6, op(1)],
+	[P.open[1] - 0.25, op(1)],
+	[P.open[1] - 0.05, op(0)],
+]);
+CLOCK.forEach(([, at], i) => add(`c${i}`, shown(at, CLOCK[i + 1]?.[1] ?? T + 1)));
+AGENTS.forEach((a, i) => {
+	add(`hb${i}`, bar(a.host));
+	add(`lb${i}`, bar(a.lap));
+	add(`hd${i}`, [[0, op(0)], [doneAt(a.host), op(0), OUT], [doneAt(a.host) + 0.3, op(1)]]);
+	add(`ld${i}`, [[0, op(0)], [doneAt(a.lap), op(0), OUT], [doneAt(a.lap) + 0.3, op(1)]]);
+});
+add('tag', [[0, op(0)], [P.replay[0] + 0.3, op(0), OUT], [P.replay[0] + 0.6, op(1)]]);
+add('sync', [[0, op(0)], [P.sync, op(0), OUT], [P.sync + 0.4, op(1)]]);
+
+// Packets move along x in the wide drawing and along y in the tall one.
+const DRAW = {
+	w: { box: '0 0 1000 360', link: [400, 584], axis: 'X' },
+	t: { box: '0 0 400 432', link: [164, 210], axis: 'Y' },
+};
+for (const k of Object.keys(DRAW)) {
+	const [a, b] = DRAW[k].link;
+	const d = b - a;
+	for (const p of PACKETS) {
+		const from = p.back ? d : 0;
+		const to = p.back ? 0 : d;
+		const tr = (v) => `transform:translate${DRAW[k].axis}(${v}px)`;
+		css.push(
+			frames(`hs-${p.id}-${k}`, [
+				[0, `${tr(from)};${op(0)}`],
+				[p.at - 0.01, `${tr(from)};${op(0)}`],
+				[p.at, `${tr(from)};${op(1)}`, 'linear'],
+				[p.at + p.dur, `${tr(to)};${op(1)}`],
+				[p.at + p.dur + 0.01, `${tr(to)};${op(0)}`],
+			]),
+		);
+	}
+}
+
+const rules = [
+	`.hs .k{animation-duration:${T}s;animation-fill-mode:both;animation-iteration-count:1;animation-timing-function:linear;animation-play-state:paused}`,
+	...Object.entries(tracks).map(([cls, kf]) => `.hs .k-${cls}{animation-name:${kf}}`),
+	...Object.keys(DRAW).flatMap((k) => PACKETS.map((p) => `.hs-${k} .k-${p.id}{animation-name:hs-${p.id}-${k}}`)),
+	`.hs.run .k,:root:not([data-js]) .hs .k{animation-play-state:running}`,
+	`@media (prefers-reduced-motion:reduce){.hs .k{animation-delay:-${STILL}s!important;animation-play-state:paused!important}}`,
+];
+const style = `<style>${css.join('')}${rules.join('')}</style>`;
+
+// ---------- The drawings ----------
+
+const r = (x, y, w, h, cls, extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="${cls}"${extra}/>`;
+const text = (x, y, s, cls, fs, anchor = 'start') =>
+	`<text x="${x}" y="${y}" font-size="${fs}" class="${cls}" text-anchor="${anchor}">${s}</text>`;
+const g = (cls, inner) => `<g class="${cls}">${inner}</g>`;
+
+// Rows of agents: name, bar (track, fill, done, cell gaps) and a tick.
+function rows(o, side) {
+	const cw = o.barW / CELLS;
+	return AGENTS.map((a, i) => {
+		const y = o.y + i * o.gap;
+		const bx = o.x + o.label;
+		const by = y - o.cellH / 2 - 2;
+		let gaps = '';
+		for (let c = 1; c < CELLS; c++) gaps += `M${(bx + c * cw - 1).toFixed(2)} ${by}h2v${o.cellH}h-2z`;
+		const tx = bx + o.barW + 8;
+		const ty = by + o.cellH / 2;
+		return [
+			text(o.x, y + o.fs * 0.33, a.name, 'tx ink', o.fs),
+			r(bx, by, o.barW, o.cellH, 'track'),
+			r(bx, by, o.barW, o.cellH, `fill k k-${side}b${i}`),
+			r(bx, by, o.barW, o.cellH, `done k k-${side}d${i}`),
+			`<path d="${gaps}" class="gap"/>`,
+			`<path d="M${tx} ${ty}l${o.cellH * 0.35} ${o.cellH * 0.38}l${o.cellH * 0.7} ${-o.cellH * 0.8}" class="tick k k-${side}d${i}"/>`,
+		].join('');
+	}).join('');
+}
+
+function packets(d) {
+	const [a] = d.link;
+	return PACKETS.map((p) => (d.axis === 'X' ? r(a, 194, 12, 12, `pk k k-${p.id}`) : r(194, a, 12, 12, `pk k k-${p.id}`))).join('');
+}
+
+function clocks(x, y, fs) {
+	return CLOCK.map(([s], i) => text(x, y, `[ ${s} ]`, `tx muted k k-c${i}`, fs)).join('');
+}
+
+function wide() {
+	const d = DRAW.w;
+	return [
+		clocks(40, 52, 15),
+		// The laptop: its base, the open lid with its screen, the shut lid.
+		r(96, 268, 300, 14, 'box', ' rx="3"'),
+		g('k k-lidfade', g('k k-lidfold lid', r(112, 82, 268, 186, 'box', ' rx="6"') + rows({ x: 132, y: 128, gap: 36, label: 72, barW: 136, cellH: 10, fs: 13 }, 'l'))),
+		r(112, 258, 268, 10, 'box k k-lidshut', ' rx="3"'),
+		// The host, with its three agents.
+		r(600, 40, 320, 252, 'box', ' rx="8"'),
+		'<path d="M600 76H920" class="rule"/>',
+		text(618, 63, 'my-server', 'tx muted', 14, 'start'),
+		rows({ x: 620, y: 120, gap: 52, label: 92, barW: 170, cellH: 12, fs: 15 }, 'h'),
+		// The link: live, or dropped while the lid is shut.
+		g('k k-linkon', '<path d="M400 200H596" class="wire"/>' + text(498, 184, '[ ssh ]', 'tx ink', 14, 'middle')),
+		g('k k-linkoff', '<path d="M400 200H596" class="wire off"/>' + text(498, 184, '[ lid shut ]', 'tx muted', 14, 'middle')),
+		packets(d),
+		// Back: what was replayed, and the same screen on both.
+		g('k k-tag', r(163, 44, 166, 26, 'tagbg') + text(246, 62, 'replayed 18 KiB', 'tx on', 14, 'middle')),
+		g('k k-sync', r(122, 100, 248, 148, 'mark', ' rx="3"') + r(610, 88, 300, 192, 'mark', ' rx="3"')),
+		text(246, 320, 'your laptop', 'tx muted', 14, 'middle'),
+		text(760, 320, 'your host', 'tx muted', 14, 'middle'),
+	].join('');
+}
+
+function tall() {
+	const d = DRAW.t;
+	return [
+		clocks(16, 26, 13),
+		r(90, 152, 220, 10, 'box', ' rx="3"'),
+		g('k k-lidfade', g('k k-lidfold lid', r(104, 44, 192, 108, 'box', ' rx="6"') + rows({ x: 116, y: 74, gap: 26, label: 60, barW: 92, cellH: 8, fs: 11 }, 'l'))),
+		r(104, 144, 192, 8, 'box k k-lidshut', ' rx="3"'),
+		text(90, 182, 'your laptop', 'tx muted', 12),
+		g('k k-linkon', '<path d="M200 164V222" class="wire"/>' + text(212, 198, '[ ssh ]', 'tx ink', 12)),
+		g('k k-linkoff', '<path d="M200 164V222" class="wire off"/>' + text(212, 198, '[ lid shut ]', 'tx muted', 12)),
+		packets(d),
+		r(40, 224, 320, 180, 'box', ' rx="8"'),
+		'<path d="M40 258H360" class="rule"/>',
+		text(56, 246, 'my-server', 'tx muted', 12),
+		rows({ x: 58, y: 290, gap: 34, label: 84, barW: 180, cellH: 11, fs: 13 }, 'h'),
+		g('k k-tag', r(125, 10, 150, 24, 'tagbg') + text(200, 27, 'replayed 18 KiB', 'tx on', 12, 'middle')),
+		g('k k-sync', r(110, 54, 180, 90, 'mark', ' rx="3"') + r(50, 268, 300, 126, 'mark', ' rx="3"')),
+		text(200, 424, 'your host', 'tx muted', 12, 'middle'),
+	].join('');
+}
+
+const svg = (k, inner) =>
+	`<svg class="hs-${k}" viewBox="${DRAW[k].box}" role="img" aria-labelledby="hs-desc" focusable="false">${inner}</svg>`;
+const drawings = svg('w', wide()) + svg('t', tall());
+---
+
+<figure class="hs plate grid" data-story>
+	<Fragment set:html={style} />
+	<Fragment set:html={drawings} />
+	<p id="hs-desc" class="sr-only">
+		Animation: your laptop is linked over SSH to your host, where three coding agents work. You close the lid. Through
+		the night the agents keep working on the host, and finish one by one. You open the lid: the laptop replays the 18 KiB
+		it missed, and both screens show the same thing again.
+	</p>
+	<Marks />
+</figure>
+
+<script>
+	// Play the story only while it is in view and the tab is visible. With
+	// reduced motion, the stylesheet holds it still whatever this does.
+	const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+	for (const fig of document.querySelectorAll<HTMLElement>('[data-story]')) {
+		let seen = false;
+		const set = () => fig.classList.toggle('run', seen && !document.hidden && !reduce.matches);
+		new IntersectionObserver(
+			(entries) => {
+				const e = entries[entries.length - 1];
+				seen = e.isIntersecting && e.intersectionRatio >= 0.35;
+				set();
+			},
+			{ threshold: [0, 0.35, 0.7, 1] },
+		).observe(fig);
+		document.addEventListener('visibilitychange', set);
+		reduce.addEventListener('change', set);
+	}
+</script>
+
+<style>
+	.hs {
+		--hs-ink: var(--sl-color-white);
+		--hs-muted: var(--sl-color-gray-3);
+		--hs-faint: var(--sl-color-gray-4);
+		--hs-ground: var(--sl-color-black);
+		--hs-track: var(--sl-color-gray-5);
+		--hs-orange: var(--site-orange);
+		position: relative;
+		margin: 0;
+	}
+	.hs :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+		margin-inline: auto;
+		overflow: visible;
+	}
+	.hs :global(.hs-w) {
+		max-width: 68rem;
+		aspect-ratio: 1000 / 360;
+	}
+	.hs :global(.hs-t) {
+		display: none;
+		max-width: 26rem;
+		aspect-ratio: 400 / 432;
+	}
+	@media (max-width: 48rem) {
+		.hs :global(.hs-w) {
+			display: none;
+		}
+		.hs :global(.hs-t) {
+			display: block;
+		}
+	}
+	.hs :global(.tx) {
+		font-family: var(--sl-font-mono);
+		fill: var(--hs-muted);
+	}
+	.hs :global(.tx.ink) {
+		fill: var(--hs-ink);
+	}
+	.hs :global(.tx.on) {
+		fill: #16181d;
+		font-weight: 600;
+	}
+	.hs :global(.box) {
+		fill: var(--hs-ground);
+		stroke: var(--hs-ink);
+		stroke-width: 2;
+	}
+	.hs :global(.rule) {
+		stroke: var(--hs-ink);
+		stroke-width: 1;
+	}
+	.hs :global(.wire) {
+		fill: none;
+		stroke: var(--hs-ink);
+		stroke-width: 2;
+	}
+	.hs :global(.wire.off) {
+		stroke: var(--hs-faint);
+		stroke-dasharray: 4 6;
+	}
+	.hs :global(.track) {
+		fill: var(--hs-track);
+	}
+	.hs :global(.fill),
+	.hs :global(.pk),
+	.hs :global(.tagbg) {
+		fill: var(--hs-orange);
+	}
+	.hs :global(.done) {
+		fill: var(--hs-ink);
+	}
+	.hs :global(.gap) {
+		fill: var(--hs-ground);
+	}
+	.hs :global(.tick) {
+		fill: none;
+		stroke: var(--hs-ink);
+		stroke-width: 2;
+		stroke-linecap: square;
+	}
+	.hs :global(.mark) {
+		fill: none;
+		stroke: var(--hs-orange);
+		stroke-width: 2;
+	}
+	.hs :global(.fill) {
+		transform-box: fill-box;
+		transform-origin: 0 50%;
+	}
+	.hs :global(.lid) {
+		transform-box: fill-box;
+		transform-origin: 50% 100%;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+</style>

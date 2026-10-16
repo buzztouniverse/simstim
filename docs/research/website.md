@@ -1,7 +1,7 @@
 # Websites for developer tools: what works (research for the site)
 
 - Date: 15 October 2026
-- Lane: the public web. The landing pages and docs of terminal and developer tools that developers praise, their source where it is open, and well-known write-ups. Sections 1 to 10 were used for [decision 0021](../contributing/decisions/0021-site-design.md), the first design of this project's site. Sections 11 to 16 are a second round, after the owner's review of that site, and were used for [decision 0022](../contributing/decisions/0022-site-rebuild.md), which rebuilt it.
+- Lane: the public web. The landing pages and docs of terminal and developer tools that developers praise, their source where it is open, and well-known write-ups. Sections 1 to 10 were used for [decision 0021](../contributing/decisions/0021-site-design.md), the first design of this project's site. Sections 11 to 16 are a second round, after the owner's review of that site, and were used for [decision 0022](../contributing/decisions/0022-site-rebuild.md), which rebuilt it. Sections 17 to 21 are a third round, after the owner's review of the rebuilt site, and set the look and the hero of 0022 as it stands.
 - Method: a script drove headless Chrome over the DevTools protocol, at desktop size (1440 × 1800) and phone size (390 × 844, at 2×, with touch), with the cache off. For each page it recorded every request and its size, took a screenshot, read the fonts, colours and contrast, pressed Tab to see the focus style, scrolled to the bottom, and counted animation frames at the top, at the bottom and under reduced motion. It also searched each page's own scripts for reduced-motion, IntersectionObserver and visibility handling. Where the source is public, I read it.
 - Clean-room: this note describes what the sites do, in our own words. It copies no code, art or text, and the site copies nothing from them.
 - Each weight is one run on one network, so treat the numbers as rough. Headless Chrome drew some WebGL heroes empty; I say where. Anything I could not confirm is marked **UNVERIFIED**.
@@ -453,3 +453,5 @@ From sections 18 to 20, three directions for the redesign were drawn as static c
 | C, Terminal | navy #0B1530 band over a light page | peach #FFB088 | JetBrains Mono throughout | box-drawing text frames: the laptop's box folds to a line, the link breaks, the host's bars keep filling, a status line counts the hours |
 
 All three pass 4.5:1 for text (the orange headline words in A, at 72 px, pass the 3:1 for large text). The recommendation is A: it is the closest to the owner's three references, the lightest to build (an SVG of a few KB), the easiest to read, and the one that carries over to the docs' chrome without fighting the text.
+
+The owner chose A on 16 October 2026, with no pause control for the hero; [decision 0022](../contributing/decisions/0022-site-rebuild.md) records the choice and its cost.

@@ -1,12 +1,11 @@
 ---
-// The site's mark: the launcher's moving braille logo and the name in the
-// brand gradient. The name comes from the site's title (internal/brand).
-import { logo } from '../scripts/logo.js';
+// The site's mark: a small orange square and the name. The name comes from
+// the site's title (internal/brand).
 const name = Astro.locals.starlightRoute?.siteTitle ?? '';
 ---
 
 <a class="site-logo" href={import.meta.env.BASE_URL} aria-label={`${name}, home`}>
-	<span class="mark" data-logo aria-hidden="true">{logo(0)}</span>
+	<span class="mark" aria-hidden="true"></span>
 	<span class="name">{name}</span>
 </a>
 
@@ -15,20 +14,17 @@ const name = Astro.locals.starlightRoute?.siteTitle ?? '';
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
+		color: var(--sl-color-white);
 		text-decoration: none;
-		font-family: var(--sl-font-mono);
-		font-weight: 700;
-		font-size: 1.0625rem;
+		font-family: var(--site-display);
+		font-weight: 620;
+		font-size: 1.1875rem;
+		letter-spacing: -0.025em;
 		white-space: nowrap;
 	}
 	.mark {
-		color: var(--site-brand-b);
-		letter-spacing: -0.05em;
-	}
-	.name {
-		background: linear-gradient(90deg, var(--site-brand-a), var(--site-brand-b));
-		-webkit-background-clip: text;
-		background-clip: text;
-		color: transparent;
+		width: 0.625rem;
+		height: 0.625rem;
+		background: var(--site-orange);
 	}
 </style>
