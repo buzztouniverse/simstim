@@ -183,7 +183,9 @@ func agentVersion(bin string, env []string) string {
 	// A child that keeps the output open must not hold up the doctor.
 	cmd.WaitDelay = time.Second
 	b, err := cmd.Output()
-	if err != nil {
+	// ErrWaitDelay means the program succeeded, but left a child holding
+	// its output open: what it printed is still its version.
+	if err != nil && !errors.Is(err, exec.ErrWaitDelay) {
 		return ""
 	}
 	first, _, _ := strings.Cut(strings.TrimSpace(string(b)), "\n")

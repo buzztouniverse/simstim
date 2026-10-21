@@ -77,10 +77,11 @@ func TestAgentVersions(t *testing.T) {
 		"codex":  prog("codex", `echo "codex-cli 0.46.0"`),
 		"aider":  prog("aider", `echo; echo "aider 0.86.1"`),
 		"cursor": prog("agent", `echo "2025.10.02-a1b2c3d"`),
+		"child":  prog("child", `sleep 3 & echo "1.4.0"`),
 		"failed": prog("failed", `echo "1.0.0"; exit 1`),
 		"none":   prog("none", `echo "usage: none [flags]"`),
 	}, []string{"PATH=/usr/bin:/bin"})
-	want := map[string]string{"claude": "2.1.3", "codex": "0.46.0", "aider": "0.86.1", "cursor": "2025.10.02-a1b2c3d"}
+	want := map[string]string{"claude": "2.1.3", "codex": "0.46.0", "aider": "0.86.1", "cursor": "2025.10.02-a1b2c3d", "child": "1.4.0"}
 	if !maps.Equal(got, want) {
 		t.Fatalf("versions: got %v, want %v", got, want)
 	}
